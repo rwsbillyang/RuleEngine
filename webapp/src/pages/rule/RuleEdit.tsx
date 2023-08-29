@@ -5,7 +5,7 @@ import { RuleAction, AllDomainKey, Domain, DomainQueryParams, Rule, basicExpress
 import { Host } from "@/Config"
 import { Condition, ConditionEditor } from "../components/ConditionEditor"
 import { useLocation, useNavigate } from "react-router-dom"
-import { Form } from "antd"
+import { Button, Form } from "antd"
 import { saveOne } from "@/myPro/MyProTable"
 import { rubleTableProps } from "./RuleTable"
 
@@ -17,12 +17,18 @@ export const RuleEdit = () => {
     const [condition, setCondition] = useState<Condition>({exprId: record?.exprId, meta: record?.metaStr? JSON.parse(record.metaStr): undefined})
 
     return <ProForm<Rule> layout="horizontal" initialValues={record} 
+    submitter={{
+        render: (props, doms) => doms.concat(<Button htmlType="button" onClick={()=>{navigate(-1)}} key="back">返回</Button>),
+      }}
     onFinish={async (values) => {
         values.exprId = condition.exprId
         values.meta = condition.meta
         console.log("RuleEdit onFinish: values=");
         console.log(values);
-        saveOne(values, rubleTableProps, isAdd, record)
+
+        //新增也有可能相同的条件，从而id相同，算是更新，因此都有
+        
+        saveOne(values, rubleTableProps, undefined, record)
        
         navigate(-1)
 
@@ -36,7 +42,7 @@ export const RuleEdit = () => {
                 query: { pagination: { pageSize: -1, sKey: "id", sort: 1 } },
                 convertFunc: (item) => { return { label: item.label, value: item.id } }
             })} />
-            <ProFormText width="md" name={"label"} label="名称" />
+            <ProFormText width="md" name={"label"} label="名称" required/>
 
         </ProForm.Group>
 
@@ -46,11 +52,11 @@ export const RuleEdit = () => {
             <ProFormDigit width="xs" name={"threshhold"} label="可信度" />
         </ProForm.Group>
 
-        <ProFormSelect name={"tagList"} label="标签" fieldProps={{ mode: "tags" }} />
+       
 
         <ProFormDependency name={["domainId"]}>
             {({ domainId }) => {
-                return <Form.Item label="条件">
+                return <Form.Item label="条件" required>
                      {basicExpressionMeta2String(condition.meta)} <ConditionEditor onDone={setCondition}
                       domainId={domainId} exprId={condition.exprId} meta={condition.meta} />
                 </Form.Item> 
@@ -59,6 +65,7 @@ export const RuleEdit = () => {
 
         <ProForm.Group>
             <ProFormSelect width="md" name={"thenAction"} label="Then动作" tooltip="条件为true时执行"
+            required
             request={() => asyncSelectProps2Request<RuleAction, RuleActionQueryParams>({
                 key: "allActions", //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
                 url: `${Host}/api/rule/composer/list/action`,
@@ -71,7 +78,7 @@ export const RuleEdit = () => {
                 convertFunc: (item) => { return { label: item.label || item.actionKey, value: item.actionKey } }
             })} />
         </ProForm.Group>
-
+        <ProFormSelect name={"tagList"} label="标签" fieldProps={{ mode: "tags" }} />
         <ProFormTextArea name={"remark"} label="备注" />
     </ProForm>
 }

@@ -17,6 +17,14 @@ export const DomainTable: React.FC = () => {
     {
       title: '名称',
       dataIndex: 'label',
+      formItemProps: {
+        rules: [
+          {
+            required: true,
+            message: '此项为必填项',
+          },
+        ],
+      },
     }
   ]
   

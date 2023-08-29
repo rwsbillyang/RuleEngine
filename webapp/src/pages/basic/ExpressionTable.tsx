@@ -20,11 +20,6 @@ const columns: ProColumns[] = [
     dataIndex: 'label',
   },
   {
-    title: '类别',
-    dataIndex: 'type',
-    valueEnum: { "Basic": "基本", "Complex": "复合" }
-  },
-  {
     title: '所属',
     key: "domainId",
     dataIndex: ['domain', 'label'],
@@ -35,6 +30,11 @@ const columns: ProColumns[] = [
       query: { pagination: { pageSize: -1, sKey: "id", sort: 1 } },
       convertFunc: (item) => { return { label: item.label, value: item.id } }
     })
+  },
+  {
+    title: '类型',
+    dataIndex: 'type',
+    valueEnum: { "Basic": "基本", "Complex": "复合" }
   },
   {
     title: '备注',

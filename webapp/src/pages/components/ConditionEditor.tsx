@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import ProForm, { ModalForm, ProFormDependency, ProFormInstance, ProFormSelect } from "@ant-design/pro-form";
+import { ModalForm, ProFormDependency, ProFormInstance, ProFormSelect } from "@ant-design/pro-form";
 import { BasicExpressionMeta, Expression, Param, ParamQueryParams } from "../DataType";
 
 import { Cache } from "@rwsbillyang/usecache"
@@ -38,7 +38,7 @@ export const ConditionEditor: React.FC<{
       const meta = expression?.metaStr ? JSON.parse(expression?.metaStr) : undefined
       console.log("=====update newMeta by newExprId=" + newExprId)
       //console.log(meta)
-      setNewMeta(meta)
+      if(meta) setNewMeta(meta)
 
       //子组件因为使用了useState，传入的meta不能生效，故采用发送事件方式更新
       //dispatch({ type: "updateMetaValue", payload: meta })

@@ -334,13 +334,16 @@ export interface RuleGroupQueryParams extends BasePageQuery{
     enable?: boolean
 }
 export interface RuleGroup extends BaseRecord {
-    id: String, //md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
+    id: string, //md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
 
-    label: String,
+    label: string,
     exclusive: boolean // default true,
 
     enable: boolean // default true,
+    
     tags?: string,
+    tagList?: string[] // only for front end
+
     remark?: string,
     priority?: number,
 

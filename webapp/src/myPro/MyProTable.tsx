@@ -223,7 +223,7 @@ function EditorHub<T extends BaseRecord, Q extends BasePageQuery>(props: EditPro
       } else {
         const state = {record, isAdd}
         if (style === 'Button'){
-          if(MyProConfig.EnableLog)console.log("prepare jump goto newOne")
+          //if(MyProConfig.EnableLog)console.log("prepare jump goto newOne")
           return <Button type="primary" onClick={() => { navigate(path, { state:state }) }} key="editLink">{isAdd ? '新建' : '修改'}</Button>
         }else {
           return <Link to={path} state={state} key="editLink">{isAdd ? '新建' : '修改'}</Link>
@@ -259,7 +259,7 @@ function MySchemaFormEditor<T extends BaseRecord, Q extends BasePageQuery>(props
 
 }
 
-export function saveOne<T extends BaseRecord, Q extends BasePageQuery>(values: T, tableProps: MyProTableProps<T, Q>, isAdd: boolean, oldValues?: Partial<T>) {
+export function saveOne<T extends BaseRecord, Q extends BasePageQuery>(values: T, tableProps: MyProTableProps<T, Q>, isAdd?: boolean, oldValues?: Partial<T>) {
   // if(MyProConfig.EnableLog){
   //   console.log("saveOne: oldValues=", oldValues)
   //   console.log("saveOne:  values=", values)
@@ -277,13 +277,16 @@ export function saveOne<T extends BaseRecord, Q extends BasePageQuery>(values: T
       const cacheKey = tableProps.cacheKey
       if (cacheKey) {
         const idKey = tableProps.idKey || UseCacheConfig.defaultIdentiyKey || "_id"
-        if (isAdd) {
+        if(isAdd === undefined){//未定状态，如Rule的新增也可能是更新
+          if(!Cache.onEditOne(cacheKey, data, idKey)){//未找到更新，则按新增处理
+            Cache.onAddOne(cacheKey, data)
+          }
+        }else if (isAdd) {
           Cache.onAddOne(cacheKey, data)
-          dispatch("refreshList-" + tableProps.listApi)
         } else {
           Cache.onEditOne(cacheKey, data, idKey)
-          dispatch("refreshList-" + tableProps.listApi)
         }
+        dispatch("refreshList-" + tableProps.listApi)
       }
     }
 

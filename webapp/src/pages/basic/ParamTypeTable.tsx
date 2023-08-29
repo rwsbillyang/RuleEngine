@@ -21,7 +21,7 @@ export const ParamTypeTable: React.FC = () => {
     //   hideInSearch: true
     // },
     {
-      title: '类型',
+      title: '符号',
       dataIndex: 'code',
       hideInSearch: true
     },

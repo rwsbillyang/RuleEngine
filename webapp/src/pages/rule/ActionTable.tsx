@@ -16,6 +16,14 @@ export const ActionTable: React.FC = () => {
         title: 'key',
         dataIndex: 'actionKey',
         tooltip: "使用时必须调用RuleEngine注册该key对应的动作",
+        formItemProps: {
+          rules: [
+            {
+              required: true,
+              message: '此项为必填项',
+            },
+          ],
+        },
       },
       {
         title: '名称',
@@ -25,6 +33,7 @@ export const ActionTable: React.FC = () => {
       {
         title: '备注',
         dataIndex: 'remark',
+        valueType: 'textarea',
         hideInSearch: true
       }
     ]

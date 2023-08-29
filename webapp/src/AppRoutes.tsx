@@ -15,6 +15,7 @@ import { BasicExpressionTable, ComplexExpressionTable, ComplexExpressionEditor} 
 import { RuleTable } from './pages/rule/RuleTable'
 import { RuleEdit } from './pages/rule/RuleEdit'
 import { ActionTable } from './pages/rule/ActionTable'
+import { RuleGroupTable } from './pages/rule/RuleGroupTable'
 
 
 
@@ -106,8 +107,8 @@ const menuRoutes: MyRouteObject[] = [
       },
       {
         path: '/rule/group',
-        id: '规则集',
-        element: lazyLoad(<RuleTable />)
+        id: '规则组',
+        element: lazyLoad(<RuleGroupTable />)
       }
     
     ]
