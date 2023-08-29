@@ -1,0 +1,42 @@
+{
+  "name": "webapp",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ant-design/pro-form": "^2.17.2",
+    "@ant-design/pro-layout": "^7.16.7",
+    "@ant-design/pro-table": "^3.10.4",
+    "@rwsbillyang/usecache": "^1.0.3",
+    "antd": "^5.8.3",
+    "dayjs": "^1.11.9",
+    "md5": "^2.3.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.14.1",
+    "use-bus": "^2.5.2"
+  },
+  "devDependencies": {
+    "@types/md5": "^2.3.2",
+    "@types/node": "^20.4.5",
+    "@types/react": "^18.0.37",
+    "@types/react-dom": "^18.0.11",
+    "@typescript-eslint/eslint-plugin": "^5.59.0",
+    "@typescript-eslint/parser": "^5.59.0",
+    "@vitejs/plugin-react-swc": "^3.0.0",
+    "eslint": "^8.38.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.3.4",
+    "typescript": "^4.9.5",
+    "vite": "^4.3.9"
+  },
+  "overrides": {
+    "esbuild": "npm:esbuild-wasm@latest"
+  }
+}

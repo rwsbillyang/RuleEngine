@@ -1,0 +1,5 @@
+rootProject.name = "composer"
+
+
+include ":core"
+project(':core').projectDir = file("$rootDir/../core")

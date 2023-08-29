@@ -1,0 +1,50 @@
+//https://www.tslang.cn/docs/handbook/tsconfig-json.html
+{
+  "compilerOptions": {
+      "allowSyntheticDefaultImports": true, // 允许从没有设置默认导出的模块中默认导入。这并不影响代码的输出，仅为了类型检查。
+      "outDir": "./dist/", // 重定向输出目录
+      "sourceMap": true, // 生成相应的 .map文件
+      //"target": "es6", // 指定ECMAScript目标版本
+      "module": "esnext",
+      "moduleResolution": "node", // 决定如何处理模块
+      "lib": [
+          "esnext",
+          "dom"
+      ], // 编译过程中需要引入的库文件的列表。
+      "skipLibCheck": true, //忽略所有库中的声明文件（ *.d.ts）的类型检查。
+      "jsx": "react", // 在 .tsx文件里支持JSX
+      "declaration": true,
+      "baseUrl": ".", // 查找非相对路径的模块的起始位置
+      "rootDir": ".",
+      "forceConsistentCasingInFileNames": true,
+      "noImplicitAny": false, // 在表达式和声明上有隐含的 any类型时报错。（默认为false，个人建议也为false，可以兼容之前的js代码，这里改为true是为了我自己检测哪些类型需要处理）
+      "noImplicitReturns": true,
+      "noImplicitThis": true,
+      "importHelpers": true,
+      "strictNullChecks": true,
+      "esModuleInterop": true,
+      "noUnusedLocals": true,
+      "allowJs": true,
+      "experimentalDecorators": true,
+      "strict": true,
+      "paths": {
+          "@/*": ["./src/*"],
+        }
+  },
+  "include": [
+      "./src/**/*", // 这个表示处理根目录的src目录下所有的.ts和.tsx文件，并不是所有文件
+      //"./declaration.d.ts",
+      "typings/**/*", "public/myTable",
+  ],
+  "exclude": [ //排除文件
+      "node_modules",
+      "build",
+      "dist",
+      "scripts",
+      "acceptance-tests",
+      "webpack",
+      "jest",
+      "src/setupTests.ts",
+      "*.js"
+  ]
+}

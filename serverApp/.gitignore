@@ -1,5 +1,6 @@
 .idea/
-myTable/
+build/
+.gradle/
 
 # Compiled class file
 *.class

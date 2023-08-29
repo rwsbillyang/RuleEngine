@@ -1,5 +1,5 @@
 .idea/
-myTable/
+build/
 
 # Compiled class file
 *.class
