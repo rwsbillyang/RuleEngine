@@ -121,11 +121,15 @@ class BaseCrudController : KoinComponent {
         }
         Name_rule -> {
             val e = call.receive<Rule>()
-            MySerializeJson.encodeToString(DataBox.ok(service.save(Meta.rule,e,e.isAdd?:false, "rule/${e.id}").apply{toBean(service)}))
+            //TODO: 查询再插入，非原子性，并发时容易出问题
+            val old = service.findOne(Meta.rule, { Meta.rule.id eq e.id }, "rule/${e.id}")
+            MySerializeJson.encodeToString(DataBox.ok(service.save(Meta.rule,e,old == null, "rule/${e.id}").apply{toBean(service)}))
         }
         Name_ruleGroup -> {
             val e = call.receive<RuleGroup>()
-            MySerializeJson.encodeToString(DataBox.ok(service.save(Meta.ruleGroup,e,e.isAdd?:false,"ruleGroup/${e.id}").apply{toBean(service)}))
+            //TODO: 查询再插入，非原子性，并发时容易出问题
+            val old = service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq e.id }, "ruleGroup/${e.id}")
+            MySerializeJson.encodeToString(DataBox.ok(service.save(Meta.ruleGroup,e,old == null,"ruleGroup/${e.id}").apply{toBean(service)}))
         }
         Name_action -> {
             val e = call.receive<RuleAction>()
