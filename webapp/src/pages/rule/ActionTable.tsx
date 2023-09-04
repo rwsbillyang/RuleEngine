@@ -2,9 +2,10 @@
 import React from "react"
 
 import { ProColumns } from "@ant-design/pro-table"
-import { moduleTableProps } from "../moduleTableProps"
+
 import { RuleAction, RuleActionQueryParams } from "../DataType"
 import { MyProTable } from "@/myPro/MyProTable"
+import { defaultProps } from "../moduleTableProps"
 
 
 export const ActionTable: React.FC = () => {
@@ -38,7 +39,7 @@ export const ActionTable: React.FC = () => {
       }
     ]
   
-    const props = moduleTableProps<RuleAction>({title: "动作", name}) 
+    const props = defaultProps(name) 
 
-    return <MyProTable<RuleAction, RuleActionQueryParams> {...props}  columns={columns}   />
+    return <MyProTable<RuleAction, RuleActionQueryParams> myTitle="动作" {...props}  columns={columns}   />
   }

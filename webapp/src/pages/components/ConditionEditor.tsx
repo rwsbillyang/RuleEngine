@@ -36,7 +36,7 @@ export const ConditionEditor: React.FC<{
     if (newExprId) {
       const expression: Expression | undefined = Cache.findOne("expression/domain/" + domainId, newExprId, "id")
       const meta = expression?.metaStr ? JSON.parse(expression?.metaStr) : undefined
-      console.log("=====update newMeta by newExprId=" + newExprId)
+      //console.log("=====update newMeta by newExprId=" + newExprId)
       //console.log(meta)
       if(meta) setNewMeta(meta)
 
@@ -63,7 +63,7 @@ export const ConditionEditor: React.FC<{
       destroyOnClose: false,
     }}
     onValuesChange={(v) => {
-      console.log("onValuesChange:" + JSON.stringify(v))
+     // console.log("onValuesChange:" + JSON.stringify(v))
       setNewExprId(v?.exprId)
       //setNewMeta({ ...newMeta, paramId: v?.paramId, opId: v?.opId })
     }}
@@ -72,7 +72,7 @@ export const ConditionEditor: React.FC<{
       console.log("ConditionEditor: ModalForm.onFinish: values=");
       //console.log(values); //{paramId: 2, opId: 1}
       const c = { exprId: newExprId, meta: newMeta }
-      console.log(c);
+      //console.log(c);
       onDone(c)
       return true
     }}>

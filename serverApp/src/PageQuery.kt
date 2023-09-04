@@ -268,6 +268,7 @@ class RuleQueryParams(
     val domainId: Int? = null,
     val enable: Boolean? = null,
     val tags: String? = null,
+    val level: Int? = null,
     val threshhold: Int? = null
 ) : IUmiPaginationParams {
     override fun toSqlPagination(): SqlPagination {
@@ -297,10 +298,10 @@ class RuleQueryParams(
             { meta.tags like "%${tags}%" }
         } else null
         val w5: WhereDeclaration? = threshhold?.let { { meta.threshhold greaterEq threshhold } }
-
+        val w6: WhereDeclaration? = level?.let { { meta.level eq it } }
         //pageSize为-1时表示该查询条件下的全部数据
         return SqlPagination(sort, pagination.pageSize, (pagination.current - 1) * pagination.pageSize)
-            .addWhere(w1, w2, w3, w4, w5, lastW)
+            .addWhere(w1, w2, w6,w3, w4, w5, lastW)
     }
 
 }
@@ -312,6 +313,7 @@ class RuleGroupQueryParams(
     val label: String? = null,
     val domainId: Int? = null,
     val enable: Boolean? = null,
+    val level: Int? = null
 ) : IUmiPaginationParams {
     override fun toSqlPagination(): SqlPagination {
         val meta = Meta.ruleGroup
@@ -336,9 +338,10 @@ class RuleGroupQueryParams(
         } else null
         val w2: WhereDeclaration? = domainId?.let { { meta.domainId eq it } }
         val w3: WhereDeclaration? = enable?.let { { meta.enable eq it } }
+        val w6: WhereDeclaration? = level?.let { { meta.level eq it } }
         //pageSize为-1时表示该查询条件下的全部数据
         return SqlPagination(sort, pagination.pageSize, (pagination.current - 1) * pagination.pageSize)
-            .addWhere(w1, w2, w3, lastW)
+            .addWhere(w1, w2, w6, w3, lastW)
     }
 }
 

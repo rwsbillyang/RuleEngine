@@ -290,19 +290,37 @@ export interface RuleQueryParams extends BasePageQuery{
     enable?: boolean,
     tags?: string,
     threshhold?: number
+    level?:number
+}
+
+export interface RuleCommon{
+    parentPath: number[], // parent: Rule.id or RuleGroup.id
+    rule?: Rule,//RuleCommon数据来源Rule
+    ruleGroup?: RuleGroup,//RuleCommon数据来源RuleGroup
+    
+    id?: number, //不再使用这种方式：md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
+    level?: number,
+    label?: string,
+    priority?: number ,
+    remark?: string,
+    enable: boolean ,
+    tags?: string, 
+    domainId?: number,
+    domain?: Domain, //前端列表数据需要
+    children?: RuleCommon[]
 }
 
 
 export interface Rule extends BaseRecord {
-    id: string, //md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
-
+    id: number, //md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
+    level: number
     label?: string,
     priority?: number,
     remark?: string,
     enable: boolean // default true,
     
     tags?: string,
-    tagList?: string[] // only for front end
+    tagList?: string[] //only for front end
 
     threshhold?: number, //percent
 
@@ -314,17 +332,23 @@ export interface Rule extends BaseRecord {
     elseAction?: string, //else do
 
     domainId?: number,
-    domain?: Domain, //前端列表数据需要
+    domain?: Domain, //only for front 前端列表数据需要
 
-    expr? : BasicExpression | ComplexExpression,//由exprStr解析或前端提供 only for front end
-    meta?: BasicExpressionMeta | ComplexExpressionMeta//由metaStr解析或前端提供 only for front end
+    expr? : BasicExpression | ComplexExpression,// only for front end 由exprStr解析或前端提供
+    meta?: BasicExpressionMeta | ComplexExpressionMeta//only for front end 由metaStr解析或前端提供
 
+    ruleChildrenIds?: string, // json string of Rule.id List, 后端维护该值，前端不做任何变动，insert/save one when create a child in front end
+    ruleGroupChildrenIds?: string,// json string of RuleGroup.id List, 后端维护该值，前端不做任何变动，insert one when create a child in front end
+   
+    ruleParentIds?: string, // json string of Rule.id List, 后端维护该值，前端不做任何变动，insert/save one when create a child in front end
+    ruleGroupParentIds?: string,// json string of RuleGroup.id List,后端维护该值，前端不做任何变动， insert one when create a child in front end
+    
+    //ruleParentIdList?: string[], //only for frontend
+    //ruleGroupParentIdList?: string[]//only for frontend
 
-    ruleChildrenIds?: string, // json string of Rule.id List, insert/save one when create a child in front end
-    ruleChildren?: Rule[],
-
-    ruleGroupChildrenIds?: string,// json string of RuleGroup.id List, insert one when create a child in front end
-    ruleGroupChildren?: RuleGroup[]
+    //ruleChildren?: Rule[],//setup from backend for frontend tree
+     //ruleGroupChildren?: RuleGroup[]//setup from backend for frontend tree
+    
 }
 
 
@@ -332,10 +356,11 @@ export interface RuleGroupQueryParams extends BasePageQuery{
     label?: string,
     domainId?: number,
     enable?: boolean
+    level?:0
 }
 export interface RuleGroup extends BaseRecord {
-    id: string, //md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
-
+    id: number, //md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
+    level: number
     label: string,
     exclusive: boolean // default true,
 
@@ -348,13 +373,19 @@ export interface RuleGroup extends BaseRecord {
     priority?: number,
 
     domainId?: number,
-    domain?: Domain,
+    domain?: Domain,//only for front end
 
-    ruleChildrenIds?: string, // json string of Rule.id List, insert/save one when create a child in front end
-    ruleChildren?: Rule[],
+    ruleChildrenIds?: string, // json string of Rule.id List, 后端维护该值，前端不做任何变动，insert/save one when create a child in front end
+    ruleGroupChildrenIds?: string,// json string of RuleGroup.id List, 后端维护该值，前端不做任何变动，insert one when create a child in front end
 
-    ruleGroupChildrenIds?: string,// json string of RuleGroup.id List, insert one when create a child in front end
-    ruleGroupChildren?: RuleGroup[]
+    ruleParentIds?: string, // json string of Rule.id List, 后端维护该值，前端不做任何变动，insert/save one when create a child in front end
+    ruleGroupParentIds?: string,// json string of RuleGroup.id List, 后端维护该值，前端不做任何变动，insert one when create a child in front end
+
+    //ruleParentIdList?: string[], //only for frontend
+    //ruleGroupParentIdList?: string[]//only for frontend
+
+    //ruleChildren?: Rule[],//setup from backend for frontend tree
+     //ruleGroupChildren?: RuleGroup[]//setup from backend for frontend tree
 }
 
 export interface RuleActionQueryParams extends BasePageQuery{

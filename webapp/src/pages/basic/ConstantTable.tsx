@@ -6,11 +6,11 @@ import { ProColumns } from "@ant-design/pro-table"
 
 import { MyProTable } from "@/myPro/MyProTable"
 
-import { asyncSelectProps2Request } from "@/myPro/MyProTableProps"
+import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps"
 import { Host } from "@/Config"
 import { AllDomainKey, AllParamTypeKey, Constant, ConstantQueryParams, Domain, DomainQueryParams, ParamType, ParamTypeQueryParams } from "../DataType"
 import { DatePicker, Input, InputNumber, Select, Switch } from "antd"
-import {  moduleTableProps } from "../moduleTableProps"
+import {  defaultProps } from "../moduleTableProps"
 
 
 
@@ -133,7 +133,7 @@ export const ConstantTable: React.FC = () => {
   ]
 
   //提交保存前数据转换
-  const transform = (e: Constant) => {
+  const transformBeforeSave = (e: Constant) => {
     if (e.typeInfo){
        e.jsonValue = { _class: e.typeInfo.label + (e.isEnum? "Set": ""), value: e.jsonValue?.value }//若选择枚举，则存储类型为容器。故_class加上Set
        e.typeId = +e.typeInfo.value
@@ -145,12 +145,14 @@ export const ConstantTable: React.FC = () => {
   }
 
   //bugfix: 值类型在编辑时不能回显，即使提供了typeInfo，因为后面的值编辑控件需要得到ParamType.code，故将值类型设置了：fieldProps: { labelInValue: true }
-  const convertValue = (e: Constant) => {
-    if(e.paramType)
+  const transformBeforeEdit = (e?: Partial<Constant>) => {
+    if(e?.paramType)
       e.typeInfo = {label: e.paramType.code, value: e.paramType.id || ""}
     return e
   }
-  const props = moduleTableProps<Constant>({title: "常量", name, transform, convertValue})  
-  return <MyProTable<Constant, ConstantQueryParams> {...props} columns={columns} initialValues={{ isEnum: false }} initialQuery={initialQuery} />
+
+  const props : MyProTableProps<Constant, ConstantQueryParams> = {...defaultProps(name), transformBeforeSave, transformBeforeEdit } 
+  
+  return <MyProTable<Constant, ConstantQueryParams> {...props} myTitle="常量" columns={columns} initialValues={{ isEnum: false }} initialQuery={initialQuery} />
 }
 

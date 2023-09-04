@@ -22,5 +22,6 @@ npm i --save dayjs @formily/core @formily/react @formily/antd-v5   //https://ant
 
 npm i @ant-design/pro-table  @ant-design/pro-form @ant-design/pro-layout
 
-npm i md5 --save
-npm i --save-dev @types/md5
+npm i tslib
+//npm i md5 --save
+//npm i --save-dev @types/md5

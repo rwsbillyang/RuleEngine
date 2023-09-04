@@ -5,7 +5,8 @@ import React from "react"
 import { MyProTable } from "../../myPro/MyProTable"
 import { ProColumns } from "@ant-design/pro-table"
 import { ParamType, ParamTypeQueryParams } from "../DataType"
-import { moduleTableProps } from "../moduleTableProps"
+import { defaultProps } from "../moduleTableProps"
+
 
 
 
@@ -48,11 +49,12 @@ export const ParamTypeTable: React.FC = () => {
     },
   ]
 
-  const props = moduleTableProps<ParamType>({
-    title: "类型", name, 
-    supportDel: false, 
-    needLoadMore: false, 
-    edit: (e)=> e?.isSys === false ? 'ModalForm': undefined}) 
-    
-  return <MyProTable<ParamType, ParamTypeQueryParams>  {...props} initialQuery={initialQuery} columns={columns} />
+
+    const props = {
+      ...defaultProps(name, false),
+      needLoadMore: false,
+      editForm: (e) => e?.isSys === false ? 'ModalForm' : undefined
+    }
+
+  return <MyProTable<ParamType, ParamTypeQueryParams> myTitle="类型" {...props} initialQuery={initialQuery} columns={columns} />
 }

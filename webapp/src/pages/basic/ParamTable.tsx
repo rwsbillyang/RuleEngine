@@ -6,12 +6,12 @@ import { AllDomainKey, AllParamTypeKey, Constant, ConstantQueryParams, Domain, D
 import { useSearchParams } from "react-router-dom"
 
 import { MyProTable } from "@/myPro/MyProTable"
-import { asyncSelectProps2Request } from "@/myPro/MyProTableProps"
+import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps"
 import { ProColumns } from "@ant-design/pro-table"
 import { Host } from "@/Config"
 import { getBasicTypeId } from "./utils"
 
-import { moduleTableProps } from "../moduleTableProps"
+import { defaultProps } from "../moduleTableProps"
 
 
 export const ParamTable: React.FC = () => {
@@ -106,7 +106,7 @@ export const ParamTable: React.FC = () => {
     }
   ]
   //提交保存前数据转换
-  const transform = (e: Param) => {
+  const transformBeforeSave = (e: Param) => {
     if (e.constantIds && e.constantIds.length > 0) {
       e.valueScopeIds = e.constantIds.join(",")
       e.constantIds = undefined
@@ -118,14 +118,19 @@ export const ParamTable: React.FC = () => {
     return e
   }
   //编辑前转换
-  const convertValue = (e: Param) => {
+  const transformBeforeEdit = (e?: Partial<Param>) => {
+    if(!e) return e
     if (e.valueScopeIds)
       e.constantIds = e.valueScopeIds.split(",").map((e) => +e)
     return e
   }
 
-  const props = moduleTableProps<Param>({
-    title: "变量", name, transform, convertValue}) 
 
-  return <MyProTable<Param, ParamQueryParams> {...props} columns={columns} initialQuery={initialQuery} />
+    const props: MyProTableProps<Param, ParamQueryParams> = {
+      ...defaultProps(name),
+      transformBeforeSave,
+      transformBeforeEdit
+    }
+
+  return <MyProTable<Param, ParamQueryParams> myTitle="变量" {...props} columns={columns} initialQuery={initialQuery} />
 }

@@ -5,7 +5,8 @@ import React from "react"
 import { Domain, DomainQueryParams } from "../DataType"
 import { MyProTable } from "@/myPro/MyProTable"
 import { ProColumns } from "@ant-design/pro-table"
-import { moduleTableProps } from "../moduleTableProps"
+import { defaultProps } from "../moduleTableProps"
+
 
 
 
@@ -28,7 +29,7 @@ export const DomainTable: React.FC = () => {
     }
   ]
   
-  const props = moduleTableProps<Domain>({title: "领域", name}) 
+  const props = defaultProps(name) 
 
-  return <MyProTable<Domain, DomainQueryParams>  {...props}  columns={columns}   />
+  return <MyProTable<Domain, DomainQueryParams>  myTitle="领域" {...props}  columns={columns}   />
 }

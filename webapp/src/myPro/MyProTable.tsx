@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { PlusOutlined, ExclamationCircleFilled } from '@ant-design/icons';
-import ProTable, { ProColumns } from '@ant-design/pro-table';
+import ProTable, { ProColumns, ProTableProps } from '@ant-design/pro-table';
 import { Cache, BasePageQuery, StorageType, CacheStorage, useCacheList, BaseRecord, UseCacheConfig, cachedFetch, cachedFetchPromise, contains } from '@rwsbillyang/usecache';
 import { EditProps, MyProTableProps } from './MyProTableProps';
 import { MyProConfig } from './MyProConfig';
@@ -23,7 +23,7 @@ import { Link, useNavigate } from 'react-router-dom';
  * 8 新增属性：myTitle，用于作为列表页和编辑页的title
  * 9. 支持自定义toolBarRender，若不提供，将默认有”新增“按钮（如果支持编辑的话）
  */
-export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BasePageQuery>(props: MyProTableProps<T, Q>) => {
+export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BasePageQuery>(props: MyProTableProps<T, Q> & Omit<ProTableProps<T, Q, 'text'>, 'params' | 'request' | 'dataSource'>) => {
 
   const { isLoading, isError, errMsg, loadMoreState, setQuery, refreshCount, setRefresh, list, setUseCache, setIsLoadMore }
     = useCacheList<T, Q>(props.listApi, props.cacheKey, props.initialQuery, props.needLoadMore === false ? false : true)
@@ -93,7 +93,7 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
     dataIndex: 'actions',
     render: (text, row) => [
       // EditorHub('Link', false, row, props.columns, props.editConfig), //报错，undefined of length
-      <EditorHub tableProps={props} style='Link' isAdd={false} record={props.editConfig?.convertValue ? props.editConfig?.convertValue(row) : row} columns={props.columns} key="edit" />,// //编辑某行数据时，编辑前对其进行变换
+      <EditorHub tableProps={props} style='Link' isAdd={false} record={row} columns={props.columns} key="edit" />,// //编辑某行数据时，编辑前对其进行变换
       props.delApi ? <a onClick={() => deleteOne(props, row)} key="delete" >删除</a> : undefined,
     ].filter((e) => !!e)
   }
@@ -101,9 +101,9 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
   //给currentQuery中的初始值设置到columns中去，以让searchForm有正确的初始值
   //顺带添加一些actions操作
   const applyinitalQuery = (columns?: ProColumns[], query?: Q) => {
-    const supportEdit = props.editConfig?.edit && typeof props.editConfig.edit === "function" && props.editConfig.edit()
+    //const supportEdit = props.editForm && typeof props.editForm === "function" && props.editForm()
     
-    if ((supportEdit || props.delApi) && columns && columns.length > 0 ){
+    if ((props.saveApi || props.delApi) && columns && columns.length > 0 ){
       if(!contains(columns, actions, (e1, e2) => e1.title === e2.title)){
         columns.push(actions)
       } 
@@ -147,7 +147,7 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
       loading={isLoading}
       columns={props.columns}
       formRef={formRef} // 赋值ref
-      dataSource={list}
+      dataSource={props.listTransform? props.listTransform(list): list}
       rowKey={props.idKey || "_id"}
       pagination={props.pagination ? props.pagination : false}
       onReset={searchReset}
@@ -211,17 +211,23 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
  */
 function EditorHub<T extends BaseRecord, Q extends BasePageQuery>(props: EditProps<T, Q>) {
   const navigate = useNavigate();
-  if (!props.tableProps?.editConfig) return null
+  if (!props.tableProps?.editForm) return null
 
-  const { style, isAdd, record } = props
-  const editConfig = props.tableProps?.editConfig
-  if (typeof editConfig.edit === "function") {
-    const path = editConfig.edit(record)
+ 
+  const oldValue = props.isAdd ? props.tableProps.initialValues : props.record
+
+  const transformBeforeEdit = props.tableProps.transformBeforeEdit
+  props.record = transformBeforeEdit ? transformBeforeEdit(oldValue) : oldValue//edit之前进行转换
+
+  const editFormConfig = props.tableProps?.editForm
+  if (typeof editFormConfig === "function") {
+    const path = editFormConfig(oldValue)
     if (path) {
       if (path === 'ModalForm' || path === 'DrawerForm') {
         return <MySchemaFormEditor {...props} key="editOne" />
       } else {
-        const state = {record, isAdd}
+        const { style, isAdd } = props
+        const state = {record: props.record, isAdd}
         if (style === 'Button'){
           //if(MyProConfig.EnableLog)console.log("prepare jump goto newOne")
           return <Button type="primary" onClick={() => { navigate(path, { state:state }) }} key="editLink">{isAdd ? '新建' : '修改'}</Button>
@@ -245,77 +251,121 @@ function MySchemaFormEditor<T extends BaseRecord, Q extends BasePageQuery>(props
   const layout = props.tableProps.layoutType || 'ModalForm'
   const columns = props.columns
 
+
   return <BetaSchemaForm<T>
     title={props.tableProps.myTitle}
     trigger={props.isAdd === true ? <Button type="primary"> <PlusOutlined />新增</Button> : <a>编辑</a>}
     layoutType={layout}
-    initialValues={props.isAdd ? props.tableProps.initialValues : props.record}
+    initialValues={props.record}
     columns={columns ? (columns as any) : undefined}
     onFinish={async (values) => {
-      return saveOne(values, props.tableProps, props.isAdd, props.isAdd ? props.tableProps.initialValues : props.record)
+      return saveOne(values, 
+        props.isAdd ? props.tableProps.initialValues : props.record, 
+        props.tableProps.saveApi, 
+        props.tableProps.transformBeforeSave, 
+        undefined,
+        props.isAdd,
+        props.tableProps.listApi,
+        props.tableProps.cacheKey,
+        props.tableProps.idKey)
     }}
     layout="horizontal"
   />
 
 }
 
-export function saveOne<T extends BaseRecord, Q extends BasePageQuery>(values: T, tableProps: MyProTableProps<T, Q>, isAdd?: boolean, oldValues?: Partial<T>) {
-  // if(MyProConfig.EnableLog){
-  //   console.log("saveOne: oldValues=", oldValues)
-  //   console.log("saveOne:  values=", values)
-  // }
-  const newValues: T = { ...oldValues, ...values }
-  // if(MyProConfig.EnableLog){
-  //   //此处输出的newValues值是后续已经transform的，因为输出延迟，拿到的值已经被transform
-  //   console.log("after values merge oldValues, new values=", newValues) 
-  // }
 
-  if (tableProps?.editConfig) {
-
-    const onOK = (data: T) => {
-      message.success('保存成功');
-      const cacheKey = tableProps.cacheKey
-      if (cacheKey) {
-        const idKey = tableProps.idKey || UseCacheConfig.defaultIdentiyKey || "_id"
-        if(isAdd === undefined){//未定状态，如Rule的新增也可能是更新
-          if(!Cache.onEditOne(cacheKey, data, idKey)){//未找到更新，则按新增处理
-            Cache.onAddOne(cacheKey, data)
-          }
-        }else if (isAdd) {
-          Cache.onAddOne(cacheKey, data)
-        } else {
-          Cache.onEditOne(cacheKey, data, idKey)
-        }
-        dispatch("refreshList-" + tableProps.listApi)
-      }
+/**
+ * 
+ * @param values 需要保存的新值，将与旧值合并，因为编辑时并不是编辑全部信息，新值只有form中的信息
+ * @param oldValues 旧值，未被编辑的值将存在于旧值中
+ * @param saveApi 必须提供，否则给出错误提示
+ * @param transformBeforeSave 保存前对值进行变换
+ * @param onSaveOK 保存成功后的动作，若不提供将使用缺省的更新缓存操作 参数data是保存后后端返回的更新的值，往往新增了id字段
+ * @param isAdd 是否新增
+ * @param listApi 保存成功后的动作 更新缓存后需决定向哪个列表发送消息
+ * @param cacheKey 保存成功后的动作：更新缓存需要
+ * @param idKey 保存成功后的动作：更新缓存需要
+ * @returns 
+ */
+export function saveOne<T extends BaseRecord>(
+  values: T,  
+  oldValues?: Partial<T>,
+  saveApi?: string,
+  transformBeforeSave?: (data: T) => T, 
+  onSaveOK?: (data)=> void, //若提供了onSaveOK，可不提供后面的信息（用于更新缓存）
+  isAdd?: boolean, 
+  listApi?: string,
+  cacheKey?: string,
+  idKey?: string
+  ) {
+    if(!saveApi){
+      console.warn("no saveApi")
+      alert("no saveApi")
+      return false
     }
 
-    const transform = tableProps.editConfig?.transform //提交数据前对数据进行变换
-    const transformedData =   transform ? transform(newValues) : newValues
-    if (MyProConfig.EnableLog) {
-      console.log("after transformed, values=", transformedData);
-    }
-
-    cachedFetchPromise<T>(tableProps.editConfig?.saveApi, 'POST', transformedData)//undefined, StorageType.OnlySessionStorage, undefined,undefined,false
-      .then((data) => {
-        if (data)
-          onOK(data)
-        else { console.log("no data return after save") }
-        return new Promise((resolve) => { resolve(true) });
-      }).catch((err) => {
-        console.warn("exception: " + err)
-        message.error(err)
-      })
-
-  } else {
-    console.warn("no tableProps.editConfig")
-    message.warning('没有配置editConfig信息');
+  if(MyProConfig.EnableLog){
+    console.log("saveOne: oldValues=", oldValues)
+    console.log("saveOne:  values=", values)
   }
+  const newValues: T = { ...oldValues, ...values }
+  if(MyProConfig.EnableLog){
+    //此处输出的newValues值是后续已经transform的，因为输出延迟，拿到的值已经被transform
+    console.log("after values merge oldValues, new values=", newValues) 
+  }
+
+  const onOK = onSaveOK || ((data: T) => {
+    message.success('保存成功');
+ 
+    if (cacheKey) {
+      const myIdKey = idKey || UseCacheConfig.defaultIdentiyKey || "id"
+      if(isAdd === undefined){//未定状态，如Rule的新增也可能是更新
+        if(!Cache.onEditOne(cacheKey, data, myIdKey)){//未找到更新，则按新增处理
+          Cache.onAddOne(cacheKey, data)
+        }
+      }else if (isAdd) {
+        Cache.onAddOne(cacheKey, data)
+      } else {
+        Cache.onEditOne(cacheKey, data, myIdKey)
+      }
+      if(listApi) dispatch("refreshList-" + listApi)
+    }
+  })
+
+
+  const transformedData =  transformBeforeSave ? transformBeforeSave(newValues) : newValues//提交数据前对数据进行变换
+  if (MyProConfig.EnableLog) {
+    console.log("after transformed, values=", transformedData);
+  }
+
+  cachedFetchPromise<T>(saveApi, 'POST', transformedData)//undefined, StorageType.OnlySessionStorage, undefined,undefined,false
+    .then((data) => {
+      if (data){
+        onOK(data)
+      }
+      else { console.log("no data return after save") }
+      return new Promise((resolve) => { resolve(true) });
+    }).catch((err) => {
+      console.warn("exception: " + err)
+      message.error(err)
+    })
 
   return true;
 }
 
-export function deleteOne<T extends BaseRecord, Q extends BasePageQuery>(pageProps: MyProTableProps<T, Q>, item?: Record<string, any>) {
+export function deleteOne<T extends BaseRecord, Q extends BasePageQuery>(
+  pageProps: MyProTableProps<T, Q>, 
+  item?: Record<string, any>, 
+  delApi?: string, 
+  onDelOk?: (count: number)=>void) {
+  if(!delApi && !pageProps.delApi)
+  {
+    alert("no del api")
+    console.warn("no del api")
+    return
+  }
+
   const id = item ? item[pageProps.idKey || UseCacheConfig.defaultIdentiyKey] : undefined
   if (!id) {
     alert("no id")
@@ -328,16 +378,18 @@ export function deleteOne<T extends BaseRecord, Q extends BasePageQuery>(pagePro
     content: '删除后不能恢复',
     onOk: () => {
       cachedFetch<number>({
-        url: pageProps.delApi + "/" + id,
+        url: delApi || (pageProps.delApi + "/" + id),
         method: "GET",
         attachAuthHeader: true,
         isShowLoading: true,
-        onOK: () => {
+        onOK: onDelOk || ((count) => {
           if (MyProConfig.EnableLog) console.log("successfully del:" + id)
           if (pageProps.cacheKey) Cache.onDelOneById(pageProps.cacheKey, id, pageProps.idKey)
+          
+          message.success(count + "条被删除")
 
           dispatch("refreshList-" + pageProps.listApi) //删除完毕，发送refreshList，告知ListView去更新
-        }
+        })
       });
     }
   });

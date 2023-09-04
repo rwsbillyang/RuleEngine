@@ -190,16 +190,36 @@ data class Domain(
     val id: Int? = null
 )
 
+/**
+ * 前端树形数据子列表
+ * 前端树形列表数据统一使用公共字段RuleCommon，避免children既有Rule又有RuleGroup
+ * */
+@Serializable
+class RuleCommon(
+    val parentPath: List<Int?>, //此字段用于前端向上遍历找到父节点数据，根节点id在最前面，当前叶子节点id在最后
+    val rule: Rule?,//RuleCommon自身是rule，也就是数据来源Rule
+    val ruleGroup: RuleGroup?,//RuleCommon自身是RuleGroup，数据来源RuleGroup
+
+    val id: Int?, //不再使用这种方式：md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
+    val level: Int?,
+    val label: String?,
+    val priority: Int? ,
+    val remark: String?,
+    val enable: Boolean ,
+    val tags: String?,
+    val domainId: Int?,
+    var domain: Domain? , //前端列表数据需要
+    var children: List<RuleCommon> ? = null //为前端构造tree型列表展示，不再使用List<Rule>和List<RuleGroup>，让前端子列表统一
+)
+
 
 @Serializable
 @KomapperEntity
 @KomapperTable("t_rule")
 data class Rule(
-    // 前端填写，用于确定是添加还是更新
-    @KomapperIgnore val isAdd:Boolean? = null, //id由前端按一定算法生成，不再用id是否为空来判断添加还是更新
-
-    @KomapperId
-    val id: String, //md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
+    @KomapperId @KomapperAutoIncrement
+    val id: Int ? = null, //不再使用这种方式：md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
+    val level: Int? = null,
     val label: String? = null,
     val priority: Int? = null ,
     val remark: String? = null,
@@ -222,43 +242,69 @@ data class Rule(
 
 
     val ruleChildrenIds: String? = null, // json string of Rule.id List, insert/save one when create a child in front end
-    @KomapperIgnore var ruleChildren: List<Rule>? = null,
-
     val ruleGroupChildrenIds: String? = null,// json string of RuleGroup.id List, insert one when create a child in front end
-    @KomapperIgnore var ruleGroupChildren: List<RuleGroup>? = null
+
+    var ruleParentIds: String? = null,
+    var ruleGroupParentIds: String? = null,
+
+    //@KomapperIgnore var ruleChildren: List<Rule>? = null,
+    //@KomapperIgnore var ruleGroupChildren: List<RuleGroup>? = null,
+    //@KomapperIgnore var children: MutableList<RuleCommon> ? = null //为前端构造tree型列表展示，不再使用List<Rule>和List<RuleGroup>，让前端子列表统一
 ){
-    fun setupChildren(service: BaseCrudService){
-        if(ruleChildrenIds != null && ruleChildren == null){
-            ruleChildren = ruleChildrenIds.split(",").mapNotNull{
-                service.findOne(Meta.rule, {Meta.rule.id eq it}, "rule/${it}")?.apply { setupChildren(service) }
-            }
-        }
-        if(ruleGroupChildrenIds != null && ruleGroupChildren == null){
-            ruleGroupChildren = ruleGroupChildrenIds.split(",").mapNotNull{
-                service.findOne(Meta.ruleGroup, {Meta.ruleGroup.id eq it}, "ruleGroup/${it}")?.apply { setupChildren(service) }
-            }
-        }
+    fun toRuleCommon(service: BaseCrudService, path: MutableList<Int?>? = null): RuleCommon  {
+        val pair = getChildrenTree(service, path)
+        return RuleCommon(
+            pair.first, this, null, id, level, label, priority, remark, enable, tags, domainId, domain, pair.second
+        )
     }
 
     //数据库中的字段转换成给前端展示需要的字段
-    fun toBean(service: BaseCrudService){
-        domain = domainId?.let{service.findOne(Meta.domain, {Meta.domain.id eq it}, "domain/${it}")}
+    fun getChildrenTree(service: BaseCrudService, path: MutableList<Int?>?): Pair<List<Int?>, List<RuleCommon>?>{
+        domain = domainId?.let{service.findOne(Meta.domain, {Meta.domain.id eq it})}
+
+        //为前端构造tree型列表展示
+        val myPath = path?: mutableListOf() //顶级节点负责创建path
+        myPath.add(id)//将当前节点id添加进path，子节点中递归调用时，都将当前id加入，形成parentPath
+
+        val list = myPath.toList()//记录下parentPath，相当于copy
+
+        //为前端构造tree型列表展示
+        if(!ruleChildrenIds.isNullOrEmpty() || !ruleGroupChildrenIds.isNullOrEmpty()){
+            val children = mutableListOf<RuleCommon>()
+            ruleChildrenIds?.split(",")?.mapNotNull{
+                service.findOne(Meta.rule, {Meta.rule.id eq it.toInt()}, "rule/${it}")?.toRuleCommon(service, myPath)
+            }?.forEach {
+                children.add(it)
+            }
+            ruleGroupChildrenIds?.split(",")?.mapNotNull{
+                service.findOne(Meta.ruleGroup, {Meta.ruleGroup.id eq it.toInt()}, "ruleGroup/${it}")?.toRuleCommon(service, myPath)
+            }?.forEach {
+                children.add(it)
+            }
+
+//            val log = LoggerFactory.getLogger("Rule")
+//            log.info("id=$id, myPath:${list.joinToString(",")}")
+
+            myPath.removeLast()//返回时出栈，从子节点中递归时删除当前，避免从子节点返回时，仍然在path中有子节点id
+            return Pair(list, children.toList())
+        }
+
+        myPath.removeLast()//返回时出栈，从子节点中递归时删除当前，避免从子节点返回时，仍然在path中有子节点id
+        return Pair(list, null)
     }
 
     fun getExpr() = if(exprStr != null) MySerializeJson.decodeFromString<LogicalExpr>(exprStr) else null
     fun getExprMeta() = if(metaStr != null) MySerializeJson.decodeFromString<ExpressionMeta>(metaStr) else null
-
 }
 
 @Serializable
 @KomapperEntity
 @KomapperTable("t_rule_group")
 data class RuleGroup(
-    // 前端填写，用于确定是添加还是更新
-    @KomapperIgnore val isAdd:Boolean? = null, //id由前端按一定算法生成，不再用id是否为空来判断添加还是更新
+    @KomapperId @KomapperAutoIncrement
+    val id: Int ? = null, //不再使用这种方式：md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
+    val level: Int? = null,
 
-    @KomapperId
-    val id: String, //md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
     val label: String,
     val exclusive: Boolean = true,
 
@@ -271,29 +317,46 @@ data class RuleGroup(
     @KomapperIgnore var domain: Domain? = null,
 
     val ruleChildrenIds: String? = null, // json string of Rule.id List, insert/save one when create a child in front end
-    @KomapperIgnore var ruleChildren: List<Rule>? = null,
-
     val ruleGroupChildrenIds: String? = null,// json string of RuleGroup.id List, insert one when create a child in front end
-    @KomapperIgnore var ruleGroupChildren: List<RuleGroup>? = null
+
+    var ruleParentIds: String? = null,
+    var ruleGroupParentIds: String? = null,
+
+    //@KomapperIgnore var ruleChildren: List<Rule>? = null,
+    //@KomapperIgnore var ruleGroupChildren: List<RuleGroup>? = null,
 ){
-    fun setupChildren(service: BaseCrudService){
-        if(ruleChildrenIds != null && ruleChildren == null){
-            ruleChildren = ruleChildrenIds.split(",").mapNotNull{
-                service.findOne(Meta.rule, {Meta.rule.id eq it}, "rule/${it}")?.apply { setupChildren(service) }
-            }
-        }
-        if(ruleGroupChildrenIds != null && ruleGroupChildren == null){
-            ruleGroupChildren = ruleGroupChildrenIds.split(",").mapNotNull{
-                service.findOne(Meta.ruleGroup, {Meta.ruleGroup.id eq it}, "ruleGroup/${it}")?.apply { setupChildren(service) }
-            }
-        }
+    fun toRuleCommon(service: BaseCrudService, path: MutableList<Int?>? = null): RuleCommon  {
+        val pair = getChildrenTree(service, path)
+        return RuleCommon(
+            pair.first, null, this, id, level, label, priority, remark, enable, tags, domainId, domain, pair.second
+        )
     }
 
     //数据库中的字段转换成给前端展示需要的字段
-    fun toBean(service: BaseCrudService){
+    fun getChildrenTree(service: BaseCrudService, path: MutableList<Int?>?): Pair<List<Int?>, List<RuleCommon>?>{
         domain = domainId?.let{service.findOne(Meta.domain, {Meta.domain.id eq it})}
 
-        setupChildren(service)
+        //为前端构造tree型列表展示
+        val myPath = path?: mutableListOf() //顶级节点负责创建path
+        myPath.add(id)//将当前节点id添加进path，并赋值给CommonRule, 然后构建children，重复此种动作添加节点id
+
+        //为前端构造tree型列表展示
+        if(!ruleChildrenIds.isNullOrEmpty() || !ruleGroupChildrenIds.isNullOrEmpty()){
+            val children = mutableListOf<RuleCommon>()
+            ruleChildrenIds?.split(",")?.mapNotNull{
+                service.findOne(Meta.rule, {Meta.rule.id eq it.toInt()}, "rule/${it}")?.toRuleCommon(service, myPath)
+            }?.forEach {
+                children.add(it)
+            }
+            ruleGroupChildrenIds?.split(",")?.mapNotNull{
+                service.findOne(Meta.ruleGroup, {Meta.ruleGroup.id eq it.toInt()}, "ruleGroup/${it}")?.toRuleCommon(service, myPath)
+            }?.forEach {
+                children.add(it)
+            }
+            return Pair(myPath.toList() , children.toList())
+        }
+
+        return Pair(myPath.toList(), null)
     }
 }
 

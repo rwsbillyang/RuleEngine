@@ -5,44 +5,45 @@ import React from "react"
 import { MyProTable } from "@/myPro/MyProTable"
 import { ProColumns } from "@ant-design/pro-table"
 import { Operator, OperatorQueryParams } from "../DataType"
-import { moduleTableProps } from "../moduleTableProps"
+import { defaultProps } from "../moduleTableProps"
+
 
 
 
 
 export const OperatorTable: React.FC = () => {
-    const name = "operator"
-  
-    const initialQuery = {pagination: {pageSize: -1, sKey: "id", sort: 1}} //pageSize=-1 means all data
+  const name = "operator"
 
-    const columns: ProColumns[] = [
-      // {
-      //   title: 'ID',
-      //   dataIndex: 'id',
-      //   hideInSearch: true
-      // },
-      {
-        title: '符号',
-        dataIndex: 'code',
-        hideInSearch: true
-      },
-      {
-        title: '名称',
-        dataIndex: 'label',
-      },
-     
-      {
-        title: '备注',
-        dataIndex: 'remark',
-        hideInSearch: true
-      },
-    ]
-    
-    const props = moduleTableProps<Operator>({
-      title: "比较符", name, 
-      supportDel: false, 
-      needLoadMore: false, 
-      edit: (e)=> e?.isSys === false ? 'ModalForm': undefined}) 
+  const initialQuery = { pagination: { pageSize: -1, sKey: "id", sort: 1 } } //pageSize=-1 means all data
 
-    return <MyProTable<Operator, OperatorQueryParams> {...props}  initialQuery={initialQuery} columns={columns}  />
+  const columns: ProColumns[] = [
+    // {
+    //   title: 'ID',
+    //   dataIndex: 'id',
+    //   hideInSearch: true
+    // },
+    {
+      title: '符号',
+      dataIndex: 'code',
+      hideInSearch: true
+    },
+    {
+      title: '名称',
+      dataIndex: 'label',
+    },
+
+    {
+      title: '备注',
+      dataIndex: 'remark',
+      hideInSearch: true
+    },
+  ]
+
+  const props = {
+    ...defaultProps(name, false),
+    needLoadMore: false,
+    editForm: (e) => e?.isSys === false ? 'ModalForm' : undefined
   }
+
+  return <MyProTable<Operator, OperatorQueryParams> myTitle="比较符" {...props} initialQuery={initialQuery} columns={columns} />
+}
