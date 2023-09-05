@@ -94,7 +94,7 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
     render: (text, row) => [
       // EditorHub('Link', false, row, props.columns, props.editConfig), //报错，undefined of length
       <EditorHub tableProps={props} style='Link' isAdd={false} record={row} columns={props.columns} key="edit" />,// //编辑某行数据时，编辑前对其进行变换
-      props.delApi ? <a onClick={() => deleteOne(props, row)} key="delete" >删除</a> : undefined,
+      props.delApi ? <a onClick={() => deleteOne(row, props.delApi + "/" + row[(props.idKey || UseCacheConfig.defaultIdentiyKey || "id")], undefined, props.listApi, props.cacheKey, props.idKey)} key="delete" >删除</a> : undefined,
     ].filter((e) => !!e)
   }
 
@@ -102,11 +102,11 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
   //顺带添加一些actions操作
   const applyinitalQuery = (columns?: ProColumns[], query?: Q) => {
     //const supportEdit = props.editForm && typeof props.editForm === "function" && props.editForm()
-    
-    if ((props.saveApi || props.delApi) && columns && columns.length > 0 ){
-      if(!contains(columns, actions, (e1, e2) => e1.title === e2.title)){
+
+    if ((props.saveApi || props.delApi) && columns && columns.length > 0) {
+      if (!contains(columns, actions, (e1, e2) => e1.title === e2.title)) {
         columns.push(actions)
-      } 
+      }
     }
 
 
@@ -147,8 +147,8 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
       loading={isLoading}
       columns={props.columns}
       formRef={formRef} // 赋值ref
-      dataSource={props.listTransform? props.listTransform(list): list}
-      rowKey={props.idKey || "_id"}
+      dataSource={props.listTransform ? props.listTransform(list) : list}
+      rowKey={props.rowKey || props.idKey || "_id"}
       pagination={props.pagination ? props.pagination : false}
       onReset={searchReset}
       onSubmit={search}
@@ -213,7 +213,7 @@ function EditorHub<T extends BaseRecord, Q extends BasePageQuery>(props: EditPro
   const navigate = useNavigate();
   if (!props.tableProps?.editForm) return null
 
- 
+
   const oldValue = props.isAdd ? props.tableProps.initialValues : props.record
 
   const transformBeforeEdit = props.tableProps.transformBeforeEdit
@@ -227,11 +227,11 @@ function EditorHub<T extends BaseRecord, Q extends BasePageQuery>(props: EditPro
         return <MySchemaFormEditor {...props} key="editOne" />
       } else {
         const { style, isAdd } = props
-        const state = {record: props.record, isAdd}
-        if (style === 'Button'){
+        const state = { record: props.record, isAdd }
+        if (style === 'Button') {
           //if(MyProConfig.EnableLog)console.log("prepare jump goto newOne")
-          return <Button type="primary" onClick={() => { navigate(path, { state:state }) }} key="editLink">{isAdd ? '新建' : '修改'}</Button>
-        }else {
+          return <Button type="primary" onClick={() => { navigate(path, { state: state }) }} key="editLink">{isAdd ? '新建' : '修改'}</Button>
+        } else {
           return <Link to={path} state={state} key="editLink">{isAdd ? '新建' : '修改'}</Link>
         }
       }
@@ -259,10 +259,10 @@ function MySchemaFormEditor<T extends BaseRecord, Q extends BasePageQuery>(props
     initialValues={props.record}
     columns={columns ? (columns as any) : undefined}
     onFinish={async (values) => {
-      return saveOne(values, 
-        props.isAdd ? props.tableProps.initialValues : props.record, 
-        props.tableProps.saveApi, 
-        props.tableProps.transformBeforeSave, 
+      return saveOne(values,
+        props.isAdd ? props.tableProps.initialValues : props.record,
+        props.tableProps.saveApi,
+        props.tableProps.transformBeforeSave,
         undefined,
         props.isAdd,
         props.tableProps.listApi,
@@ -289,59 +289,59 @@ function MySchemaFormEditor<T extends BaseRecord, Q extends BasePageQuery>(props
  * @returns 
  */
 export function saveOne<T extends BaseRecord>(
-  values: T,  
+  values: T,
   oldValues?: Partial<T>,
   saveApi?: string,
-  transformBeforeSave?: (data: T) => T, 
-  onSaveOK?: (data)=> void, //若提供了onSaveOK，可不提供后面的信息（用于更新缓存）
-  isAdd?: boolean, 
+  transformBeforeSave?: (data: T) => T,
+  onSaveOK?: (data) => void, //若提供了onSaveOK，可不提供后面的信息（用于更新缓存）
+  isAdd?: boolean,
   listApi?: string,
   cacheKey?: string,
   idKey?: string
-  ) {
-    if(!saveApi){
-      console.warn("no saveApi")
-      alert("no saveApi")
-      return false
-    }
+) {
+  if (!saveApi) {
+    console.warn("no saveApi")
+    alert("no saveApi")
+    return false
+  }
 
-  if(MyProConfig.EnableLog){
+  if (MyProConfig.EnableLog) {
     console.log("saveOne: oldValues=", oldValues)
     console.log("saveOne:  values=", values)
   }
   const newValues: T = { ...oldValues, ...values }
-  if(MyProConfig.EnableLog){
+  if (MyProConfig.EnableLog) {
     //此处输出的newValues值是后续已经transform的，因为输出延迟，拿到的值已经被transform
-    console.log("after values merge oldValues, new values=", newValues) 
+    console.log("after values merge oldValues, new values=", newValues)
   }
 
   const onOK = onSaveOK || ((data: T) => {
     message.success('保存成功');
- 
+
     if (cacheKey) {
       const myIdKey = idKey || UseCacheConfig.defaultIdentiyKey || "id"
-      if(isAdd === undefined){//未定状态，如Rule的新增也可能是更新
-        if(!Cache.onEditOne(cacheKey, data, myIdKey)){//未找到更新，则按新增处理
+      if (isAdd === undefined) {//未定状态，如Rule的新增也可能是更新
+        if (!Cache.onEditOne(cacheKey, data, myIdKey)) {//未找到更新，则按新增处理
           Cache.onAddOne(cacheKey, data)
         }
-      }else if (isAdd) {
+      } else if (isAdd) {
         Cache.onAddOne(cacheKey, data)
       } else {
         Cache.onEditOne(cacheKey, data, myIdKey)
       }
-      if(listApi) dispatch("refreshList-" + listApi)
+      if (listApi) dispatch("refreshList-" + listApi)
     }
   })
 
 
-  const transformedData =  transformBeforeSave ? transformBeforeSave(newValues) : newValues//提交数据前对数据进行变换
+  const transformedData = transformBeforeSave ? transformBeforeSave(newValues) : newValues//提交数据前对数据进行变换
   if (MyProConfig.EnableLog) {
     console.log("after transformed, values=", transformedData);
   }
 
   cachedFetchPromise<T>(saveApi, 'POST', transformedData)//undefined, StorageType.OnlySessionStorage, undefined,undefined,false
     .then((data) => {
-      if (data){
+      if (data) {
         onOK(data)
       }
       else { console.log("no data return after save") }
@@ -354,20 +354,31 @@ export function saveOne<T extends BaseRecord>(
   return true;
 }
 
-export function deleteOne<T extends BaseRecord, Q extends BasePageQuery>(
-  pageProps: MyProTableProps<T, Q>, 
-  item?: Record<string, any>, 
-  delApi?: string, 
-  onDelOk?: (count: number)=>void) {
-  if(!delApi && !pageProps.delApi)
-  {
-    alert("no del api")
-    console.warn("no del api")
-    return
+/**
+ * 
+ * @param item 待删除项
+ * @param delApi 删除api
+ * @param onDelOk 删除成功后的回调，用于更新缓存，可自定义, 若提供了onDelOk可不提供后面的缓存参数
+ * @param listApi 消息通知更新哪个列表
+ * @param cacheKey 删除项所对应缓存
+ * @param idKey 更新缓存比较时，以哪个键为准
+ * @returns 
+ */
+export function deleteOne(
+  item: Record<string, any>,
+  delApi?: string,
+  onDelOk?: (count: number) => void,
+  listApi?: string,
+  cacheKey?: string,
+  idKey?: string
+) {
+  if(!delApi){
+    alert("no delApi")
+    return 
   }
 
-  const id = item ? item[pageProps.idKey || UseCacheConfig.defaultIdentiyKey] : undefined
-  if (!id) {
+  const id = item ? item[idKey || UseCacheConfig.defaultIdentiyKey] : undefined
+  if (!onDelOk && !id) {
     alert("no id")
     console.warn("no id when del, please set pageProps.key or UseCacheConfig.defaultIdentiyKey")
     return
@@ -378,17 +389,17 @@ export function deleteOne<T extends BaseRecord, Q extends BasePageQuery>(
     content: '删除后不能恢复',
     onOk: () => {
       cachedFetch<number>({
-        url: delApi || (pageProps.delApi + "/" + id),
+        url: delApi,
         method: "GET",
         attachAuthHeader: true,
         isShowLoading: true,
         onOK: onDelOk || ((count) => {
           if (MyProConfig.EnableLog) console.log("successfully del:" + id)
-          if (pageProps.cacheKey) Cache.onDelOneById(pageProps.cacheKey, id, pageProps.idKey)
-          
+          if (cacheKey) Cache.onDelOneById(cacheKey, id, idKey)
+
           message.success(count + "条被删除")
 
-          dispatch("refreshList-" + pageProps.listApi) //删除完毕，发送refreshList，告知ListView去更新
+          dispatch("refreshList-" + listApi) //删除完毕，发送refreshList，告知ListView去更新
         })
       });
     }

@@ -1,3 +1,3 @@
 export const MyProConfig = {
-    EnableLog: true
+    EnableLog: false
 }

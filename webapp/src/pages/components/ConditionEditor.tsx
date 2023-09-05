@@ -69,7 +69,7 @@ export const ConditionEditor: React.FC<{
     }}
     submitTimeout={2000}
     onFinish={async (values) => {
-      console.log("ConditionEditor: ModalForm.onFinish: values=");
+      //console.log("ConditionEditor: ModalForm.onFinish: values=");
       //console.log(values); //{paramId: 2, opId: 1}
       const c = { exprId: newExprId, meta: newMeta }
       //console.log(c);

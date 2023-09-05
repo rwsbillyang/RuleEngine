@@ -33,6 +33,16 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
         },
     },
     {
+        title: '类型',
+        hideInSearch: true,
+        hideInForm: true,
+        renderText(text, record, index, action) {
+            if(record.rule) return "规则"
+            else if(record.ruleGroup)return "规则组"
+            else return "未知"
+        },
+    },
+    {
         title: '所属',
         key: "domainId",
         dataIndex: ['domain', 'label'],
@@ -43,6 +53,7 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
             convertFunc: (item) => { return { label: item.label, value: item.id } }
         })
     },
+    
     {
         title: '状态',
         valueType: "switch",
@@ -112,6 +123,7 @@ export const RuleName = "rule"
 export const initialValueRule: Partial<Rule> = { enable: true, priority: 50, threshhold: 100, level: 0 }
 export const rubleTableProps = {
     ...defaultProps(RuleName),
+    idKey: "typedId",
     editForm: (e) => '/rule/editRule',
     transformBeforeSave: (e) => { //props.editConfig.transform, transform(modify shape) before save
         e.tags = e.tagList?.join(",")
@@ -230,24 +242,31 @@ export const RuleTable: React.FC = () => {
                 <Dropdown key="addSub" menu={{
                     items: [
                         //有parent属性表示新增子项，不同类型parentRule、parentGroup只有一个非空
-                        { label: (<RuleEditModal isAdd={true} record={{ ...initialValueRule, domainId: record.domainId, level: (record.level || 0) + 1 }} parentRuleCommon={record.rule? record : undefined} parentGroupCommon={record.ruleGroup? record : undefined} tableProps={rubleTableProps} fromTable={RuleName} key="addSubRule" />), key: 'subRule' },
-                        { label: (<RuleGroupEditModal isAdd={true} record={{ ...initialValuesRuleGroup, domainId: record.domainId, level: (record.level || 0) + 1  }} parentRuleCommon={record.rule? record : undefined} parentGroupCommon={record.ruleGroup? record : undefined}  tableProps={rubleGroupTableProps} fromTable={RuleName} key="addSubRuleGroup" />), key: 'subRuleGroup' }
+                        { label: (<RuleEditModal isAdd={true} record={{ ...initialValueRule, domainId: record.domainId, level: (record.level || 0) + 1 }} currentRow={record} tableProps={rubleTableProps} fromTable={RuleName} key="addSubRule" />), key: 'subRule' },
+                        { label: (<RuleGroupEditModal isAdd={true} record={{ ...initialValuesRuleGroup, domainId: record.domainId, level: (record.level || 0) + 1  }} currentRow={record}  tableProps={rubleGroupTableProps} fromTable={RuleName} key="addSubRuleGroup" />), key: 'subRuleGroup' }
                     ]
                 }}>
                     <a onClick={(e) => e.preventDefault()}> 新增<DownOutlined /> </a>
                 </Dropdown>,
 
                 //Edit rule或ruleGroup，根据是哪种类型使用不同的编辑器，没有parent表示不是新增子项，isAdd为false表示编辑
-                record.rule ? <RuleEditModal isAdd={false} record={rubleTableProps.transformBeforeEdit ? rubleTableProps.transformBeforeEdit(record.rule) : record.rule} parentRuleCommon={record.rule? record : undefined} parentGroupCommon={record.ruleGroup? record : undefined} tableProps={rubleTableProps} fromTable={RuleName} key="editOne" /> : undefined,
-                record.ruleGroup ? <RuleGroupEditModal isAdd={false} record={rubleGroupTableProps.transformBeforeEdit ? rubleGroupTableProps.transformBeforeEdit(record.ruleGroup) : record.ruleGroup} parentRuleCommon={record.rule? record : undefined} parentGroupCommon={record.ruleGroup? record : undefined} tableProps={rubleGroupTableProps} fromTable={RuleName} key="editOne" /> : undefined,
+                record.rule ? <RuleEditModal isAdd={false} record={rubleTableProps.transformBeforeEdit ? rubleTableProps.transformBeforeEdit(record.rule) : record.rule} currentRow={record} tableProps={rubleTableProps} fromTable={RuleName} key="editOne" /> : undefined,
+                record.ruleGroup ? <RuleGroupEditModal isAdd={false} record={rubleGroupTableProps.transformBeforeEdit ? rubleGroupTableProps.transformBeforeEdit(record.ruleGroup) : record.ruleGroup} currentRow={record} tableProps={rubleGroupTableProps} fromTable={RuleName} key="editOne" /> : undefined,
 
                 <a onClick={() => deleteRuleOrGroup(RuleName, record)} key="delete">删除</a>
             ]
         }
     }
 
-    return <MyProTable<RuleCommon, RuleQueryParams> myTitle="规则" {...rubleTableProps} expandable={expandable} columns={ruleColumns} initialQuery={initialQuery} initialValues={initialValueRule}
-        toolBarRender={toolBarRender} actions={actions} //注释掉此行，将跳到新的页面RuleEdit，否则使用Modal对话框
+    return <MyProTable<RuleCommon, RuleQueryParams> 
+    {...rubleTableProps} 
+    myTitle="规则" 
+    expandable={expandable} 
+    columns={ruleColumns} 
+    initialQuery={initialQuery} 
+    initialValues={initialValueRule}
+    //rowKey={ (record) => record.typedId  }
+    toolBarRender={toolBarRender} actions={actions} //注释掉此行，将跳到新的页面RuleEdit，否则使用Modal对话框
     />
 }
 

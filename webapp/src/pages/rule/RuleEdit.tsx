@@ -1,7 +1,7 @@
 import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps"
 import ProForm, { ModalForm, ProFormDependency, ProFormDigit, ProFormSelect, ProFormSwitch, ProFormText, ProFormTextArea } from "@ant-design/pro-form"
 import React, { useState } from "react"
-import { RuleAction, AllDomainKey, Domain, DomainQueryParams, Rule, basicExpressionMeta2String, RuleActionQueryParams, RuleQueryParams, RuleGroup, RuleCommon } from "../DataType"
+import { RuleAction, AllDomainKey, Domain, DomainQueryParams, Rule, basicExpressionMeta2String, RuleActionQueryParams, RuleQueryParams, RuleCommon } from "../DataType"
 import { Host } from "@/Config"
 import { Condition, ConditionEditor } from "../components/ConditionEditor"
 import { useLocation, useNavigate } from "react-router-dom"
@@ -18,8 +18,7 @@ import { saveRuleOrGroup } from "./RuleCommon"
  * @param record 当前需要编辑的值，新增的话可以使用初始值 经transformBeoforeEdit转换的值
  * @param tableProps 表格属性，需要使用里面的title字段
  * @param fromTable 从哪个表格过来
- * @param parentRule 父rule，当在rule中新增子规则时非空
- * @param parentRuleGroup 父ruleGroup，当在group中新增子规则时非空
+ * @param currentRow 在哪个Rule上新增子项或编辑，若是新增顶级节点则为空
  * @returns 
  */
 export const RuleEditModal: React.FC<{
@@ -27,15 +26,14 @@ export const RuleEditModal: React.FC<{
     record?: Partial<Rule>,
     tableProps: MyProTableProps<Rule, RuleQueryParams>,
     fromTable: string,
-    parentRuleCommon?: RuleCommon, 
-    parentGroupCommon?: RuleCommon
-}> = ({ isAdd, record, tableProps, fromTable, parentRuleCommon, parentGroupCommon }) => {
+    currentRow?: RuleCommon
+}> = ({ isAdd, record, tableProps, fromTable, currentRow }) => {
 
         const [condition, setCondition] = useState<Condition>({ exprId: record?.exprId, meta: record?.metaStr ? JSON.parse(record.metaStr) : undefined })
 
         return <ModalForm<Rule> layout="horizontal" initialValues={record}
         title={tableProps.myTitle}
-        trigger={isAdd ? ((parentRuleCommon || parentGroupCommon)? <span>子规则</span> : <Button type="primary">新建</Button>) : <a key="editLink">编辑</a>}
+        trigger={isAdd ? (currentRow? <span>子规则</span> : <Button type="primary">新建</Button>) : <a key="editLink">编辑</a>}
             autoFocusFirstInput
             modalProps={{
                 destroyOnClose: false,
@@ -48,7 +46,7 @@ export const RuleEditModal: React.FC<{
                 //console.log("RuleEdit onFinish: values=");
                 //console.log("oldValues:", record);
 
-                saveRuleOrGroup(fromTable, RuleName, values, isAdd, record, parentRuleCommon, parentGroupCommon)
+                saveRuleOrGroup(fromTable, RuleName, values, isAdd, record, currentRow)
             
                 return true
             }}>

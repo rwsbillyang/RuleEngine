@@ -223,6 +223,8 @@ class BaseCrudController : KoinComponent {
 
     /**
      * @return 返回DataBox的json字符串
+     * 新增顶级节点、编辑修改时的保存，
+     * 在新增和鞭酒修改时无需构建children，因1是新增时没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
      * */
     suspend fun saveOne(name: String, call: ApplicationCall) = when (name) {
         Name_domain -> {
@@ -305,7 +307,8 @@ class BaseCrudController : KoinComponent {
             //val old = service.findOne(Meta.rule, { Meta.rule.id eq e.id }, "rule/${e.id}")
             MySerializeJson.encodeToString(
                 DataBox.ok(
-                    service.save(Meta.rule, e, e.id == null, "rule/${e.id}").toRuleCommon(service))
+                    //1是新增时没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
+                    service.save(Meta.rule, e, e.id == null, "rule/${e.id}").toRuleCommon(service,null,false))
             )
         }
 
@@ -315,7 +318,8 @@ class BaseCrudController : KoinComponent {
             //val old = service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq e.id }, "ruleGroup/${e.id}")
             MySerializeJson.encodeToString(
                 DataBox.ok(
-                    service.save(Meta.ruleGroup, e, e.id == null, "ruleGroup/${e.id}").toRuleCommon(service))
+                    //1是新增时没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
+                    service.save(Meta.ruleGroup, e, e.id == null, "ruleGroup/${e.id}").toRuleCommon(service,null, false))
             )
         }
 
@@ -633,7 +637,7 @@ class BaseCrudController : KoinComponent {
         val newOne = service.save(Meta.rule, rule, old == null, "rule/${rule.id}")
 
         val parent =
-            service.findOne(Meta.ruleGroup, { Meta.rule.id eq parentRuleGroupId }, "ruleGroup/$parentRuleGroupId")
+            service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq parentRuleGroupId }, "ruleGroup/$parentRuleGroupId")
         if (parent == null) {
             log.warn("no parentRuleGroup, parentRuleGroupId=$parentRuleGroupId when del")
         } else {

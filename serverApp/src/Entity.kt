@@ -196,11 +196,12 @@ data class Domain(
  * */
 @Serializable
 class RuleCommon(
-    val parentPath: List<Int?>, //此字段用于前端向上遍历找到父节点数据，根节点id在最前面，当前叶子节点id在最后
+    val parentPath: List<String>, //此字段用于前端向上遍历找到父节点数据，根节点id在最前面，当前叶子节点id在最后
     val rule: Rule?,//RuleCommon自身是rule，也就是数据来源Rule
     val ruleGroup: RuleGroup?,//RuleCommon自身是RuleGroup，数据来源RuleGroup
 
-    val id: Int?, //不再使用这种方式：md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
+    val id: Int?, // 不再使用这种方式：md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
+    val typedId: String,//添加前缀rule和group用于区分类型，parentPath查找时区分类型，因添加的subrule or subruleGroup的id可能相同，且在同一个children中
     val level: Int?,
     val label: String?,
     val priority: Int? ,
@@ -251,20 +252,20 @@ data class Rule(
     //@KomapperIgnore var ruleGroupChildren: List<RuleGroup>? = null,
     //@KomapperIgnore var children: MutableList<RuleCommon> ? = null //为前端构造tree型列表展示，不再使用List<Rule>和List<RuleGroup>，让前端子列表统一
 ){
-    fun toRuleCommon(service: BaseCrudService, path: MutableList<Int?>? = null): RuleCommon  {
-        val pair = getChildrenTree(service, path)
+    fun toRuleCommon(service: BaseCrudService, path: MutableList<String>? = null, setupChildrenAndPath: Boolean = true): RuleCommon  {
+        val pair = if(setupChildrenAndPath)getChildrenTree(service, path) else Pair(listOf(), null) //在新增和鞭酒修改时无需构建children，因1是没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
         return RuleCommon(
-            pair.first, this, null, id, level, label, priority, remark, enable, tags, domainId, domain, pair.second
+            pair.first, this, null, id, "rule$id", level, label, priority, remark, enable, tags, domainId, domain, pair.second
         )
     }
 
     //数据库中的字段转换成给前端展示需要的字段
-    fun getChildrenTree(service: BaseCrudService, path: MutableList<Int?>?): Pair<List<Int?>, List<RuleCommon>?>{
+    fun getChildrenTree(service: BaseCrudService, path: MutableList<String>?): Pair<List<String>, List<RuleCommon>?>{
         domain = domainId?.let{service.findOne(Meta.domain, {Meta.domain.id eq it})}
 
         //为前端构造tree型列表展示
         val myPath = path?: mutableListOf() //顶级节点负责创建path
-        myPath.add(id)//将当前节点id添加进path，子节点中递归调用时，都将当前id加入，形成parentPath
+        myPath.add("rule$id")//将当前节点id添加进path，子节点中递归调用时，都将当前id加入，形成parentPath
 
         val list = myPath.toList()//记录下parentPath，相当于copy
 
@@ -325,20 +326,22 @@ data class RuleGroup(
     //@KomapperIgnore var ruleChildren: List<Rule>? = null,
     //@KomapperIgnore var ruleGroupChildren: List<RuleGroup>? = null,
 ){
-    fun toRuleCommon(service: BaseCrudService, path: MutableList<Int?>? = null): RuleCommon  {
-        val pair = getChildrenTree(service, path)
+    fun toRuleCommon(service: BaseCrudService, path: MutableList<String>? = null, setupChildrenAndPath: Boolean = true): RuleCommon  {
+        val pair = if(setupChildrenAndPath)getChildrenTree(service, path) else Pair(listOf(), null) //在新增和鞭酒修改时无需构建children，因1是没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
         return RuleCommon(
-            pair.first, null, this, id, level, label, priority, remark, enable, tags, domainId, domain, pair.second
+            pair.first, null, this, id, "group$id", level, label, priority, remark, enable, tags, domainId, domain, pair.second
         )
     }
 
     //数据库中的字段转换成给前端展示需要的字段
-    fun getChildrenTree(service: BaseCrudService, path: MutableList<Int?>?): Pair<List<Int?>, List<RuleCommon>?>{
+    fun getChildrenTree(service: BaseCrudService, path: MutableList<String>?): Pair<List<String>, List<RuleCommon>?>{
         domain = domainId?.let{service.findOne(Meta.domain, {Meta.domain.id eq it})}
 
         //为前端构造tree型列表展示
         val myPath = path?: mutableListOf() //顶级节点负责创建path
-        myPath.add(id)//将当前节点id添加进path，并赋值给CommonRule, 然后构建children，重复此种动作添加节点id
+        myPath.add("group$id")//将当前节点id添加进path，子节点中递归调用时，都将当前id加入，形成parentPath
+
+        val list = myPath.toList()//记录下parentPath，相当于copy
 
         //为前端构造tree型列表展示
         if(!ruleChildrenIds.isNullOrEmpty() || !ruleGroupChildrenIds.isNullOrEmpty()){
@@ -353,10 +356,16 @@ data class RuleGroup(
             }?.forEach {
                 children.add(it)
             }
-            return Pair(myPath.toList() , children.toList())
+
+//            val log = LoggerFactory.getLogger("Rule")
+//            log.info("id=$id, myPath:${list.joinToString(",")}")
+
+            myPath.removeLast()//返回时出栈，从子节点中递归时删除当前，避免从子节点返回时，仍然在path中有子节点id
+            return Pair(list, children.toList())
         }
 
-        return Pair(myPath.toList(), null)
+        myPath.removeLast()//返回时出栈，从子节点中递归时删除当前，避免从子节点返回时，仍然在path中有子节点id
+        return Pair(list, null)
     }
 }
 

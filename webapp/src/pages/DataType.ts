@@ -294,11 +294,12 @@ export interface RuleQueryParams extends BasePageQuery{
 }
 
 export interface RuleCommon{
-    parentPath: number[], // parent: Rule.id or RuleGroup.id
+    parentPath: string[], // parent: Rule.id or RuleGroup.id
     rule?: Rule,//RuleCommon数据来源Rule
     ruleGroup?: RuleGroup,//RuleCommon数据来源RuleGroup
     
     id?: number, //不再使用这种方式：md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
+    typedId: string,//添加前缀rule和group用于区分类型，parentPath查找时区分类型
     level?: number,
     label?: string,
     priority?: number ,
