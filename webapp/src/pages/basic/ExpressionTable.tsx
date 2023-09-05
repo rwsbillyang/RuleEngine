@@ -12,6 +12,7 @@ import { Host } from "@/Config"
 
 import { BaiscExpressionRecordEditor } from "../components/BaiscExpressionRecordEditor"
 import { defaultProps } from "../moduleTableProps"
+import { UseCacheConfig } from "@rwsbillyang/usecache"
 
 
 
@@ -35,6 +36,7 @@ const columns: ProColumns[] = [
   {
     title: '类型',
     dataIndex: 'type',
+    hideInSearch: true,
     valueEnum: { "Basic": "基本", "Complex": "复合" }
   },
   {
@@ -77,7 +79,7 @@ export const BasicExpressionTable: React.FC = () => {
       //因BaiscExpressionEditor中paramId和opId值在form中，与上一级与domainId等平齐，但后端保存在meta中，
       //所以form编辑时，往上提一级
       //此函数在操作这一栏render "编辑" 按钮时，给BaiscExpressionEditor传初始值时执行
-      console.log("BasicExpressionTable: to transformBeforeEdit...")
+      //console.log("BasicExpressionTable: to transformBeforeEdit...")
       if (!e) return e
       e.meta = e.metaStr ? JSON.parse(e.metaStr) : undefined
       e.expr = e.exprStr ? JSON.parse(e.exprStr) : undefined
@@ -101,7 +103,7 @@ export const BasicExpressionTable: React.FC = () => {
     dataIndex: 'actions',
     render: (text, row) => [
       <BaiscExpressionRecordEditor isAdd={false} record={props.transformBeforeEdit? props.transformBeforeEdit(row) : row} tableProps={props} key="editOne" />,
-      <a onClick={() => deleteOne(props, row)} key="delete">删除</a>
+      <a onClick={() => deleteOne(row, props.delApi + "/" + row[(props.idKey || UseCacheConfig.defaultIdentiyKey || "id")], undefined, props.listApi, props.cacheKey, props.idKey)} key="delete">删除</a>
     ]
   }
 

@@ -1,4 +1,4 @@
-rootProject.name = "composer"
+rootProject.name = "RuleComposer"
 
 
 include ":core"

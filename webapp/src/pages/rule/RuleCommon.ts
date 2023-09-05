@@ -155,14 +155,14 @@ export function saveRuleOrGroup(
                 if (name === RuleName) {
                     if (debug) console.log("to update rule in ruleGroup table...")
                     saveOne(values as Rule, record, rubleTableProps.saveApi,
-                        rubleTableProps.transformBeforeSave, undefined
+                        rubleTableProps.transformBeforeSave, onSaveOK
                         //, isAdd,rubleGroupTableProps.listApi, rubleGroupTableProps.cacheKey, rubleGroupTableProps.idKey
                     )
                 }
                 else if (name === RuleGroupName) {
                     if (debug) console.log("to update ruleGroup in ruleGroup table...")
                     saveOne(values as RuleGroup, record, rubleGroupTableProps.saveApi,
-                        rubleGroupTableProps.transformBeforeSave, undefined
+                        rubleGroupTableProps.transformBeforeSave, onSaveOK
                         // , isAdd,rubleGroupTableProps.listApi, rubleGroupTableProps.cacheKey, rubleGroupTableProps.idKey
                     )
     

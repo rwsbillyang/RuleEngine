@@ -53,7 +53,8 @@ export const BaiscExpressionRecordEditor: React.FC<{
         console.log("BaiscExpressionRecordEditor: ModalForm.onFinish: values=", values);
         values.meta = meta
 
-        return saveOne<BasicExpressionRecord, ExpressionQueryParams>(values, tableProps, isAdd, record)
+        return saveOne(values, record, tableProps.saveApi, tableProps.transformBeforeSave, undefined,
+           isAdd, tableProps.listApi, tableProps.cacheKey, tableProps.idKey)
         // return true
       }}>
       <ProFormSelect

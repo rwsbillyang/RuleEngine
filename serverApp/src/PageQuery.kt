@@ -28,6 +28,7 @@ import org.komapper.core.dsl.expression.SortExpression
 import org.komapper.core.dsl.expression.WhereDeclaration
 import org.komapper.core.dsl.operator.asc
 import org.komapper.core.dsl.operator.desc
+import org.komapper.core.dsl.operator.or
 
 
 @Resource("/param")
@@ -140,7 +141,11 @@ class ValueConstantQueryParams(
             { meta.label like "%${label}%" }
         } else null
         val w2: WhereDeclaration? = typeIds?.let { { meta.typeId inList it.split(",").map { it.toInt() } } }
-        val w3: WhereDeclaration? = domainId?.let { { meta.domainId eq it } }
+        val w3: WhereDeclaration? = if(domainId == null) null else {
+            val self: WhereDeclaration = { meta.domainId eq domainId }
+            val defaultAll: WhereDeclaration =  { meta.domainId.isNull() } //若指定了domainId，也包括那些没指定的domainId的常量
+            self.or(defaultAll)
+        }
         val w4: WhereDeclaration? = isEnum?.let { { meta.isEnum eq it } }
         val w5: WhereDeclaration? = ids?.let { { meta.id inList it.split(",").map { it.toInt() } } }
         return SqlPagination(sort, pagination.pageSize, (pagination.current - 1) * pagination.pageSize)

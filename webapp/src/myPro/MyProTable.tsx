@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { PlusOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import ProTable, { ProColumns, ProTableProps } from '@ant-design/pro-table';
 import { Cache, BasePageQuery, StorageType, CacheStorage, useCacheList, BaseRecord, UseCacheConfig, cachedFetch, cachedFetchPromise, contains } from '@rwsbillyang/usecache';
@@ -211,23 +211,23 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
  */
 function EditorHub<T extends BaseRecord, Q extends BasePageQuery>(props: EditProps<T, Q>) {
   const navigate = useNavigate();
-  if (!props.tableProps?.editForm) return null
+  if (!props.tableProps?.saveApi) return null
 
 
   const oldValue = props.isAdd ? props.tableProps.initialValues : props.record
 
   const transformBeforeEdit = props.tableProps.transformBeforeEdit
-  props.record = transformBeforeEdit ? transformBeforeEdit(oldValue) : oldValue//edit之前进行转换
+  const record = transformBeforeEdit ? transformBeforeEdit(oldValue) : oldValue//edit之前进行转换
 
-  const editFormConfig = props.tableProps?.editForm
+  const editFormConfig = props.tableProps?.editForm || "ModalForm"
   if (typeof editFormConfig === "function") {
     const path = editFormConfig(oldValue)
     if (path) {
       if (path === 'ModalForm' || path === 'DrawerForm') {
-        return <MySchemaFormEditor {...props} key="editOne" />
+        return <MySchemaFormEditor {...props} record={record} key="editOne" />
       } else {
         const { style, isAdd } = props
-        const state = { record: props.record, isAdd }
+        const state = { record: record, isAdd }
         if (style === 'Button') {
           //if(MyProConfig.EnableLog)console.log("prepare jump goto newOne")
           return <Button type="primary" onClick={() => { navigate(path, { state: state }) }} key="editLink">{isAdd ? '新建' : '修改'}</Button>
@@ -238,7 +238,7 @@ function EditorHub<T extends BaseRecord, Q extends BasePageQuery>(props: EditPro
     }
     return null
   } else {
-    return <MySchemaFormEditor {...props} key="editOne" />
+    return <MySchemaFormEditor {...props} record={record} key="editOne" />
   }
 
 }
@@ -251,15 +251,15 @@ function MySchemaFormEditor<T extends BaseRecord, Q extends BasePageQuery>(props
   const layout = props.tableProps.layoutType || 'ModalForm'
   const columns = props.columns
 
-
   return <BetaSchemaForm<T>
     title={props.tableProps.myTitle}
     trigger={props.isAdd === true ? <Button type="primary"> <PlusOutlined />新增</Button> : <a>编辑</a>}
     layoutType={layout}
     initialValues={props.record}
+    omitNil={false} //ProForm 会自动清空 null 和 undefined 的数数据，如果你约定了 nil 代表某种数据，可以设置为 false 关闭此功能
     columns={columns ? (columns as any) : undefined}
-    onFinish={async (values) => {
-      return saveOne(values,
+    onFinish={async (v) => {
+      return saveOne(v,
         props.isAdd ? props.tableProps.initialValues : props.record,
         props.tableProps.saveApi,
         props.tableProps.transformBeforeSave,
@@ -309,7 +309,7 @@ export function saveOne<T extends BaseRecord>(
     console.log("saveOne: oldValues=", oldValues)
     console.log("saveOne:  values=", values)
   }
-  const newValues: T = { ...oldValues, ...values }
+  const newValues: T = Object.assign({...oldValues}, values) //{ ...oldValues, ...values } //bugfix如果修改时去掉了某字段值，则values中为undfined，而合并后依旧是旧值，没有去掉 通过ProForm的omitNil={false} 禁止自动清空 null 和 undefined 的数据解决
   if (MyProConfig.EnableLog) {
     //此处输出的newValues值是后续已经transform的，因为输出延迟，拿到的值已经被transform
     console.log("after values merge oldValues, new values=", newValues)
@@ -335,9 +335,9 @@ export function saveOne<T extends BaseRecord>(
 
 
   const transformedData = transformBeforeSave ? transformBeforeSave(newValues) : newValues//提交数据前对数据进行变换
-  if (MyProConfig.EnableLog) {
-    console.log("after transformed, values=", transformedData);
-  }
+  // if (MyProConfig.EnableLog) {
+  //   console.log("after transformed, values=", transformedData);
+  // }
 
   cachedFetchPromise<T>(saveApi, 'POST', transformedData)//undefined, StorageType.OnlySessionStorage, undefined,undefined,false
     .then((data) => {

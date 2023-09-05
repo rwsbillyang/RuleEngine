@@ -24,15 +24,14 @@ import { saveRuleOrGroup } from "./RuleCommon"
 export const RuleEditModal: React.FC<{
     isAdd: boolean,
     record?: Partial<Rule>,
-    tableProps: MyProTableProps<Rule, RuleQueryParams>,
     fromTable: string,
     currentRow?: RuleCommon
-}> = ({ isAdd, record, tableProps, fromTable, currentRow }) => {
+}> = ({ isAdd, record, fromTable, currentRow }) => {
 
         const [condition, setCondition] = useState<Condition>({ exprId: record?.exprId, meta: record?.metaStr ? JSON.parse(record.metaStr) : undefined })
 
         return <ModalForm<Rule> layout="horizontal" initialValues={record}
-        title={tableProps.myTitle}
+        title="规则编辑器"
         trigger={isAdd ? (currentRow? <span>子规则</span> : <Button type="primary">新建</Button>) : <a key="editLink">编辑</a>}
             autoFocusFirstInput
             modalProps={{

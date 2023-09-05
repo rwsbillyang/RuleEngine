@@ -11,6 +11,7 @@ import { Host } from "@/Config"
 import { AllDomainKey, AllParamTypeKey, Constant, ConstantQueryParams, Domain, DomainQueryParams, ParamType, ParamTypeQueryParams } from "../DataType"
 import { DatePicker, Input, InputNumber, Select, Switch } from "antd"
 import {  defaultProps } from "../moduleTableProps"
+import { JsonValueEditor } from "../components/JsonValueEditor"
 
 
 
@@ -35,14 +36,7 @@ export const ConstantTable: React.FC = () => {
         ],
       },
     },
-    {
-      title: '枚举类型',
-      tooltip: "若是枚举，则是固定个数的值",
-      dataIndex: 'isEnum',
-      hideInTable:true,
-      valueType: "switch", //必须使用switch，否则select得到的值是"true"字符串，与后端类型不匹配
-      valueEnum:{true: "是" , false: "否"}
-    },
+    
     {
       title: '值类型',
       hideInSearch: true,
@@ -70,35 +64,31 @@ export const ConstantTable: React.FC = () => {
       }, params)
     },
     {
+      title: '枚举类型',
+      tooltip: "若是枚举，则是固定个数的值",
+      dataIndex: 'isEnum',
+      hideInTable: true,
+      valueType: "switch", //必须使用switch，否则select得到的值是"true"字符串，与后端类型不匹配
+      valueEnum:{true: "是" , false: "否"},
+      //dependencies: ['typeInfo'], //TODO：若选择Set类型，则清除已有值，并且不可选
+      //disable: 
+    },
+    {
       title: "值", //需要构建一个JsonValue，并且根据枚举以及type选择不同的控件
-      dataIndex: ["jsonValue", "value"], //从后端提供的jsonValue中取值
+      dataIndex: "jsonValue", //从后端提供的jsonValue中取值
       dependencies: ['isEnum', 'typeInfo'],
+      renderText:(text, record) => record.jsonValue?.value,
       renderFormItem: (schema, config, form) => {
         //console.log("schema=" + JSON.stringify(schema))
         //console.log("config=" + JSON.stringify(config))
-
+        
         const isEnum = form.getFieldValue('isEnum')
         const typeInfo = form.getFieldValue('typeInfo')
         const jsonValue = form.getFieldValue('jsonValue')
-        console.log("form.isEnum=" + isEnum + ", form.getFieldValue('typeInfo')=" + JSON.stringify(typeInfo))
-        if (typeInfo) {
-          const type = typeInfo.label
-          
-          if (isEnum || type.indexOf("Set") > 0) {
-            return <Select mode="tags" style={{ width: '100%' }} tokenSeparators={[',']} />
-          } else {
-            
-            if (type === 'Bool')
-              return <Switch checked={jsonValue.value}/>
-            if (type === 'Datetime')
-              return <DatePicker showTime  style={{ width: '100%' }} /> 
-            if (type === 'Int' || type === 'Long' || type === 'Double')
-              return <InputNumber style={{ width: '100%' }}/>
-            else return <Input style={{ width: '100%' }}/>
-          }
-        } else {
-          return <Input style={{ width: '100%' }}/>
-        }
+        
+       // console.log("form.isEnum=" + isEnum + ", jsonValue=" + JSON.stringify(jsonValue) +  ", form.getFieldValue('typeInfo')=" + JSON.stringify(typeInfo))
+
+        return <JsonValueEditor type={typeInfo?.label} width="100%" multiple={isEnum || typeInfo?.label?.indexOf("Set") > 0} value={jsonValue}/>
       },
       formItemProps: {
         rules: [
@@ -134,13 +124,18 @@ export const ConstantTable: React.FC = () => {
 
   //提交保存前数据转换
   const transformBeforeSave = (e: Constant) => {
+    //console.log("transformBeforeSave Constant=",e)
     if (e.typeInfo){
        e.jsonValue = { _class: e.typeInfo.label + (e.isEnum? "Set": ""), value: e.jsonValue?.value }//若选择枚举，则存储类型为容器。故_class加上Set
        e.typeId = +e.typeInfo.value
        delete e.typeInfo
        
+       
        e.value = JSON.stringify(e.jsonValue)
     }
+    delete e.paramType
+    delete e.domain
+
     return e
   }
 
