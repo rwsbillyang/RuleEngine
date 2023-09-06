@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { PlusOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import ProTable, { ProColumns, ProTableProps } from '@ant-design/pro-table';
 import { Cache, BasePageQuery, StorageType, CacheStorage, useCacheList, BaseRecord, UseCacheConfig, cachedFetch, cachedFetchPromise, contains } from '@rwsbillyang/usecache';
@@ -397,7 +397,7 @@ export function deleteOne(
           if (MyProConfig.EnableLog) console.log("successfully del:" + id)
           if (cacheKey) Cache.onDelOneById(cacheKey, id, idKey)
 
-          message.success(count + "条被删除")
+          message.success(count + "条记录被删除")
 
           dispatch("refreshList-" + listApi) //删除完毕，发送refreshList，告知ListView去更新
         })

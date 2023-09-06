@@ -20,6 +20,7 @@ export interface DomainQueryParams extends BasePageQuery {
  * @param types 适用变量类型
  */
 export interface Operator extends LabeldBean {
+    id: number,
     code: string,
     isSys: boolean
     remark?: string
@@ -27,6 +28,7 @@ export interface Operator extends LabeldBean {
 export interface OperatorQueryParams extends BasePageQuery {
     label?: string
     isSys?: boolean
+    type?: 'Basic'| "Collection" | 'Logical' // OpType
     ids?: string //,分隔的id ， 即根据operator.id列表查询
 }
 
@@ -148,16 +150,20 @@ export interface ComplexExpressionRecord extends Expression {
     meta?: ComplexExpressionMeta
 }
 
+interface ExpressionMeta{
+    _class: string, //'Bool' | 'Int' | 'Double' | 'Long' | 'String' ....
+    key?: string //临时构建的id值，ComplexExpressionEditor中的Transfer使用它作为id键
+    
+    opId?: number,
+    op?: Operator,
+}
 
-export interface BasicExpressionMeta {
+export interface BasicExpressionMeta extends ExpressionMeta{
     _class: string, //'Bool' | 'Int' | 'Double' | 'Long' | 'String' ....
     //domainId?: number,
 
     paramId?: number,
     param?: Param,
-
-    opId?: number,
-    op?: Operator,
 
     other?: ValueMeta
     start?: ValueMeta//key所在变量范围比较
@@ -168,20 +174,9 @@ export interface BasicExpressionMeta {
     //valueMap: Map<'other'| 'start' | 'end' | 'set' | 'e' | 'num', ValueMeta>  //  [key: string]: Constant
 }
 
-export const basicExpressionMeta2String = (meta?: BasicExpressionMeta)=>{
-    if(!meta) return "暂无"
-    const oprand = [meta.other, meta.start, meta.end, meta.set, meta.e, meta.num]
-    .filter(e=>!!e)
-    .map((e)=> valueMeta2String(e))
-    .join(", ")
-
-    return meta.param?.label + " " + meta.op?.label +": " + oprand
-}
-
-export interface ComplexExpressionMeta {
+export interface ComplexExpressionMeta  extends ExpressionMeta{
     _class: "Complex",
-    op: Operator,
-    metaList: BasicExpressionMeta[]
+    metaList: (BasicExpressionMeta | ComplexExpressionMeta)[]
 }
 
 //若constantId、constant存在则使用constant值，否则使用value
@@ -202,42 +197,15 @@ export interface ValueMeta {
     //constants?: Constant[]
     jsonValue?: JsonValue
 }
-export const valueMeta2String = (valueMeta?: ValueMeta) => {
-    if(!valueMeta) return ""
-    if(valueMeta.valueType  === 'Param'){
-        return "变量"+ valueMeta.param?.label + "("+ valueMeta.param?.mapKey+")"
-    }else if(valueMeta.valueType  === 'Constant'){
-        return "常量" + "("+ valueMeta.jsonValue?.value+")"       
-    }else if(valueMeta.valueType  === 'JsonValue'){
-        return "值" + "("+ valueMeta.jsonValue?.value+")"    
-    }else{
-        console.warn("should not come here, wrong valueMeta.valueType =" + valueMeta.valueType )
-        return "wrong valueMeta.valueType!!!"
-    }
-}
+
 
 export interface OpValue {
     valueType?: "Param" | "Constant" | "JsonValue" | undefined
     key?: string // for Param type
     value?: boolean | string | number | (string | number)[]
 }
-const valueMeta2OpValue = (valueMeta?: ValueMeta) => {
-    if (!valueMeta) return undefined
-    return {
-        valueType: valueMeta.valueType,
-        key: valueMeta.param?.mapKey,
-        value: valueMeta.jsonValue?.value
-    }
-}
 
-/***
- * 有效信息，用于生成md5作为id
- */
-export const opValue2Md5Msg = (name:string, opValue?: OpValue)=>{
-    if(!opValue) return ""
-    if(opValue.valueType === "Param") return `&${name}.OpValueKey=${opValue.key}`
-    else return `&${name}.OpValueValue=${opValue.value}`
-}
+
 
 
 export interface Expr {
@@ -260,27 +228,6 @@ export interface ComplexExpression extends Expr {
     exprs: (BasicExpression|ComplexExpression)[]
 }
 
-
-
-export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
-    if (!meta) return undefined
-    if (!meta.param || !meta.op) {
-        console.log("should not come here: no param or op")
-        return undefined
-    }
-    const expr: BasicExpression = {
-        _class: meta.param.paramType.code,
-        key: meta.param.mapKey,
-        op: meta.op.code,
-        other: valueMeta2OpValue(meta.other),
-        start: valueMeta2OpValue(meta.start),
-        end: valueMeta2OpValue(meta.end),
-        set: valueMeta2OpValue(meta.set),
-        e: valueMeta2OpValue(meta.e),
-        num: valueMeta2OpValue(meta.num)
-    }
-    return expr
-}
 
 
  

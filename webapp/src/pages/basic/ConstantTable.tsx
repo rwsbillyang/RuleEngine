@@ -77,7 +77,7 @@ export const ConstantTable: React.FC = () => {
       title: "值", //需要构建一个JsonValue，并且根据枚举以及type选择不同的控件
       dataIndex: "jsonValue", //从后端提供的jsonValue中取值
       dependencies: ['isEnum', 'typeInfo'],
-      renderText:(text, record) => record.jsonValue?.value,
+      renderText:(text, record) => record.jsonValue?.value + "",
       renderFormItem: (schema, config, form) => {
         //console.log("schema=" + JSON.stringify(schema))
         //console.log("config=" + JSON.stringify(config))

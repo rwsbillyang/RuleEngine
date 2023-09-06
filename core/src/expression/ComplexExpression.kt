@@ -38,7 +38,7 @@ class ComplexExpression(
         return when(EnumLogicalOp.valueOf(op)){
             EnumLogicalOp.and -> exprs.all { it.eval(dataPicker) }
             EnumLogicalOp.or -> exprs.any { it.eval(dataPicker) }
-            EnumLogicalOp.nor -> !(exprs.any { it.eval(dataPicker) })
+            EnumLogicalOp.none -> !(exprs.any { it.eval(dataPicker) })
         }
     }
 }

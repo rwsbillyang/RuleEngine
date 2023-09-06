@@ -1,8 +1,8 @@
 
 import React from "react"
 
-import { AllDomainKey, BasicExpressionRecord, ComplexExpressionRecord, Domain, DomainQueryParams, ExpressionQueryParams, basicMeta2Expr } from "../DataType"
-import { useLocation, useSearchParams } from "react-router-dom"
+import { AllDomainKey, BasicExpressionRecord, ComplexExpressionRecord, Domain, DomainQueryParams, ExpressionQueryParams } from "../DataType"
+import { useSearchParams } from "react-router-dom"
 
 
 import { MyProTable, deleteOne } from "@/myPro/MyProTable"
@@ -13,6 +13,8 @@ import { Host } from "@/Config"
 import { BaiscExpressionRecordEditor } from "../components/BaiscExpressionRecordEditor"
 import { defaultProps } from "../moduleTableProps"
 import { UseCacheConfig } from "@rwsbillyang/usecache"
+import { ComplexExpressionRecordEditor } from "../components/ComplexExpressionRecordEditor"
+import { basicMeta2Expr, complexMeta2Expr } from "../utils"
 
 
 
@@ -63,7 +65,7 @@ export const BasicExpressionTable: React.FC = () => {
       //因BaiscExpressionEditor中paramId和opId值在form中，与上一级与domainId等平齐，但后端保存在meta中，
       //所以保存时放到meta中，同时给meta中的other start等赋值
       //此转换函数再saveOne中执行
-      console.log("BasicExpressionTable: to transform...")
+      //console.log("BasicExpressionTable: to transform...")
       e.metaStr = JSON.stringify(e.meta)
       e.exprStr = JSON.stringify(basicMeta2Expr(e.meta))
 
@@ -102,7 +104,7 @@ export const BasicExpressionTable: React.FC = () => {
     valueType: 'option',
     dataIndex: 'actions',
     render: (text, row) => [
-      <BaiscExpressionRecordEditor isAdd={false} record={props.transformBeforeEdit? props.transformBeforeEdit(row) : row} tableProps={props} key="editOne" />,
+      <BaiscExpressionRecordEditor isAdd={false} record={props.transformBeforeEdit ? props.transformBeforeEdit(row) : row} tableProps={props} key="editOne" />,
       <a onClick={() => deleteOne(row, props.delApi + "/" + row[(props.idKey || UseCacheConfig.defaultIdentiyKey || "id")], undefined, props.listApi, props.cacheKey, props.idKey)} key="delete">删除</a>
     ]
   }
@@ -122,24 +124,63 @@ export const ComplexExpressionTable: React.FC = () => {
   const [searchParams] = useSearchParams();
   const initialQuery: ExpressionQueryParams = { domainId: searchParams["domainId"], type: 'Complex' }
 
+  // const props = {
+  //   ...defaultProps(name),
+  //   cacheKey: "complexExpression",
+  //   editForm: (e) => "/basic/expression/editComplex"
+  // }
 
-  const props = {
+  const props: MyProTableProps<ComplexExpressionRecord, ExpressionQueryParams> = {
     ...defaultProps(name),
     cacheKey: "complexExpression",
-    editForm: (e) => "/basic/expression/editComplex"
+    transformBeforeSave: (e) => { //props.editConfig.transform, transform(modify shape) before save 
+      //因BaiscExpressionEditor中paramId和opId值在form中，与上一级与domainId等平齐，但后端保存在meta中，
+      //所以保存时放到meta中，同时给meta中的other start等赋值
+      //此转换函数再saveOne中执行
+      console.log("ComplexExpressionTable: to transformBeforeSave...")
+      e.metaStr = JSON.stringify(e.meta)
+      e.exprStr = JSON.stringify(complexMeta2Expr(e.meta))
+
+      delete e["domain"]
+      delete e["meta"]
+      delete e["expr"]
+
+      return e
+    },
+    transformBeforeEdit: (e) => { //props.editConfig.convertValue
+      //此函数在操作这一栏render "编辑" 按钮时，给BaiscExpressionEditor传初始值时执行
+      //console.log("ComplexExpressionTable: to transformBeforeEdit...")
+      if (!e) return e
+      e.meta = e.metaStr ? JSON.parse(e.metaStr) : undefined
+      e.expr = e.exprStr ? JSON.parse(e.exprStr) : undefined
+
+      return e
+    }
   }
 
 
-  return <MyProTable<ComplexExpressionRecord, ExpressionQueryParams> myTitle="复杂逻辑表达式" {...props} columns={columns} initialQuery={initialQuery} />
+  //新增和编辑将全部转移到自定义的BaiscExpressionEditor
+  const toolBarRender = () => [
+    <ComplexExpressionRecordEditor isAdd={true} record={{ type: "Complex" }} tableProps={props} key="addOne" />
+  ]
+
+  //自定义编辑
+  const actions: ProColumns<ComplexExpressionRecord> = {
+    title: '操作',
+    valueType: 'option',
+    dataIndex: 'actions',
+    render: (text, row) => [
+      <ComplexExpressionRecordEditor isAdd={false} record={props.transformBeforeEdit ? props.transformBeforeEdit(row) : row} tableProps={props} key="editOne" />,
+      <a onClick={() => deleteOne(row, props.delApi + "/" + row[(props.idKey || UseCacheConfig.defaultIdentiyKey || "id")], undefined, props.listApi, props.cacheKey, props.idKey)} key="delete">删除</a>
+    ]
+  }
+
+
+
+
+  return <MyProTable<ComplexExpressionRecord, ExpressionQueryParams> myTitle="复杂逻辑表达式" {...props} columns={columns} initialQuery={initialQuery}
+    toolBarRender={toolBarRender} actions={actions} />
 }
-
-
-//TODO
-export const ComplexExpressionEditor = () => {
-  let { state } = useLocation();
-  return <div>TODO： edit {JSON.stringify(state)}</div>
-}
-
 
 
 

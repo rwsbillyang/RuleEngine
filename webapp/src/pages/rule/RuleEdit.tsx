@@ -1,7 +1,7 @@
-import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps"
+import {  asyncSelectProps2Request } from "@/myPro/MyProTableProps"
 import ProForm, { ModalForm, ProFormDependency, ProFormDigit, ProFormSelect, ProFormSwitch, ProFormText, ProFormTextArea } from "@ant-design/pro-form"
 import React, { useState } from "react"
-import { RuleAction, AllDomainKey, Domain, DomainQueryParams, Rule, basicExpressionMeta2String, RuleActionQueryParams, RuleQueryParams, RuleCommon } from "../DataType"
+import { RuleAction, AllDomainKey, Domain, DomainQueryParams, Rule, RuleActionQueryParams, RuleCommon } from "../DataType"
 import { Host } from "@/Config"
 import { Condition, ConditionEditor } from "../components/ConditionEditor"
 import { useLocation, useNavigate } from "react-router-dom"
@@ -10,6 +10,7 @@ import { Button, Form } from "antd"
 import { RuleName } from "./RuleTable"
 
 import { saveRuleOrGroup } from "./RuleCommon"
+import { basicExpressionMeta2String } from "../utils"
 
 
 /**

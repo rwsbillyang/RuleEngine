@@ -19,6 +19,12 @@
 package com.github.rwsbillyang.ruleEngine.core.expression
 
 /**
+ * 操作符类型
+ * */
+enum class OpType{
+    Basic, Collection, Logical
+}
+/**
  * 基本操作符
  * */
 enum class EnumOp(val label: String, val remark: String? = null) {
@@ -59,5 +65,5 @@ enum class EnumCollectionOp (val label: String, val remark: String? = null){
 enum class EnumLogicalOp(val label: String, val remark: String? = null){
     or("或者", "逻辑或(OR)"),
     and("并且", "逻辑且(AND)"),
-    nor("均非", "逻辑都不是(All NOT)"),
+    none("均非", "逻辑都不是(All NOT)"),
 }

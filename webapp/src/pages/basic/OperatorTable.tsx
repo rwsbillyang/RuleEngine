@@ -31,7 +31,12 @@ export const OperatorTable: React.FC = () => {
       title: '名称',
       dataIndex: 'label',
     },
-
+    {
+      title: '类型',
+      dataIndex: 'type',
+      valueType: "select",
+      valueEnum:{"Basic": "基本", "Collection":"容器", "Logical":"逻辑运算"}
+    },
     {
       title: '备注',
       dataIndex: 'remark',

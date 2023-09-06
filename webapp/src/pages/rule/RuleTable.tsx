@@ -1,7 +1,7 @@
 
 import React from "react"
 
-import { AllDomainKey, Domain, DomainQueryParams, Rule, RuleCommon, RuleQueryParams, basicMeta2Expr } from "../DataType"
+import { AllDomainKey, Domain, DomainQueryParams, Rule, RuleCommon, RuleQueryParams } from "../DataType"
 import { useSearchParams } from "react-router-dom"
 import { DownOutlined } from '@ant-design/icons'
 
@@ -13,11 +13,12 @@ import { Host } from "@/Config"
 
 import { defaultProps } from "../moduleTableProps"
 
-//import md5 from "md5"
+
 import { RuleEditModal } from "./RuleEdit"
 import { Dropdown } from "antd"
 import { RuleGroupEditModal, initialValuesRuleGroup, rubleGroupTableProps } from "./RuleGroupTable"
 import { deleteRuleOrGroup } from "./RuleCommon"
+import { basicMeta2Expr } from "../utils"
 
 const ruleColumns: ProColumns<RuleCommon>[] = [
     {

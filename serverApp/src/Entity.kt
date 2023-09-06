@@ -21,6 +21,7 @@ package com.github.rwsbillyang.rule.composer
 
 
 import com.github.rwsbillyang.ruleEngine.core.expression.LogicalExpr
+import com.github.rwsbillyang.ruleEngine.core.expression.OpType
 import kotlinx.serialization.*
 import org.komapper.annotation.*
 import org.komapper.core.dsl.Meta
@@ -62,6 +63,7 @@ data class Operator(
     val label: String,
     val code: String,
     val remark: String? = null, //备注
+    val type: OpType,
     val isSys: Boolean = true,
     @KomapperId @KomapperAutoIncrement
     val id: Int? = null

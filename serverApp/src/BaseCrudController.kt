@@ -429,17 +429,17 @@ class BaseCrudController : KoinComponent {
         val map = mutableMapOf<String, Operator>()
         //将系统内置支持的操作符写入数据库，并构建map
         EnumOp.values()
-            .map { Operator(it.label, it.name, it.remark) }
+            .map { Operator(it.label, it.name, it.remark, OpType.Basic) }
             .let { service.batchSave(Meta.operator, it, true) }
             .forEach { map[it.code] = it }
 
         EnumCollectionOp.values()
-            .map { Operator(it.label, it.name, it.remark) }
+            .map { Operator(it.label, it.name, it.remark, OpType.Collection) }
             .let { service.batchSave(Meta.operator, it, true) }
             .forEach { map[it.code] = it }
 
         EnumLogicalOp.values()
-            .map { Operator(it.label, it.name, it.remark) }
+            .map { Operator(it.label, it.name, it.remark, OpType.Logical) }
             .let { service.batchSave(Meta.operator, it, true) }
             .forEach { map[it.code] = it }
 

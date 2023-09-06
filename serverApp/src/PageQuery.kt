@@ -21,6 +21,7 @@ package com.github.rwsbillyang.rule.composer
 import com.github.rwsbillyang.ktorKit.apiBox.IUmiPaginationParams
 import com.github.rwsbillyang.ktorKit.apiBox.Sort
 import com.github.rwsbillyang.ktorKit.db.SqlPagination
+import com.github.rwsbillyang.ruleEngine.core.expression.OpType
 import io.ktor.resources.*
 import kotlinx.serialization.Serializable
 import org.komapper.core.dsl.Meta
@@ -160,6 +161,7 @@ class OperatorQueryParams(
     override val umi: String? = null,
     val label: String? = null,
     val isSys: Boolean? = null,
+    val type: OpType? = null,
     val ids: String? = null //,分隔的id， 即根据operator.id列表查询
 ) : IUmiPaginationParams {
     override fun toSqlPagination(): SqlPagination {
@@ -185,10 +187,10 @@ class OperatorQueryParams(
         } else null
         val w2: WhereDeclaration? = isSys?.let { { meta.isSys eq it } }
         val w3: WhereDeclaration? = ids?.let { { meta.id inList it.split(",").map { it.toInt() } } }
-
+        val w4: WhereDeclaration? = type?.let{ { meta.type eq it}}
         //pageSize为-1时表示该查询条件下的全部数据
         return SqlPagination(sort, pagination.pageSize, (pagination.current - 1) * pagination.pageSize)
-            .addWhere(w3, w1, w2, lastW)
+            .addWhere(w3, w1, w2, w4, lastW)
     }
 }
 
@@ -198,7 +200,7 @@ class OperatorQueryParams(
 class ExpressionQueryParams(
     override val umi: String? = null,
     val label: String? = null,
-    val type: String? = "basic", //basic or complex
+    val type: String? = null, //basic or complex
     val domainId: Int? = null
 ) : IUmiPaginationParams {
     override fun toSqlPagination(): SqlPagination {

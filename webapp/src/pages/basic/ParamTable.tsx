@@ -9,7 +9,7 @@ import { MyProTable } from "@/myPro/MyProTable"
 import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps"
 import { ProColumns } from "@ant-design/pro-table"
 import { Host } from "@/Config"
-import { getBasicTypeId } from "./utils"
+import { getBasicTypeId } from "../utils"
 
 import { defaultProps } from "../moduleTableProps"
 

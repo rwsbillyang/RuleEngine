@@ -11,7 +11,7 @@ import { ParamTypeTable } from './pages/basic/ParamTypeTable'
 import { OperatorTable } from './pages/basic/OperatorTable'
 import { ConstantTable } from './pages/basic/ConstantTable'
 import { DomainTable } from './pages/basic/DomainTable'
-import { BasicExpressionTable, ComplexExpressionTable, ComplexExpressionEditor} from './pages/basic/ExpressionTable'
+import { BasicExpressionTable, ComplexExpressionTable} from './pages/basic/ExpressionTable'
 import { RuleTable } from './pages/rule/RuleTable'
 import { RuleEdit } from './pages/rule/RuleEdit'
 import { ActionTable } from './pages/rule/ActionTable'
@@ -70,12 +70,12 @@ const menuRoutes: MyRouteObject[] = [
         id: '复合逻辑表达式',
         element: lazyLoad(<ComplexExpressionTable />)
       },
-      {
-        path: '/basic/expression/editComplex',
-        id: '编辑复合表达式',
-        hideInMenu: true,
-        element: lazyLoad(<ComplexExpressionEditor />)
-      },
+      // {
+      //   path: '/basic/expression/editComplex',
+      //   id: '编辑复合表达式',
+      //   hideInMenu: true,
+      //   element: lazyLoad(<ComplexExpressionEditor />)
+      // },
       {
         path: '/basic/domain',
         id: '领域',

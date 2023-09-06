@@ -17,16 +17,23 @@ export interface Condition {
 
 /***
  * 编辑基本表达式BasicExpressionMeta，确定键值、比较符和操作数
+ * @param title 展示的名称，ComplexExpressionEditor中需自定义
+ * @param triggerName trigger中名称，一般默认，ComplexExpressionEditor中需自定义
  * @param domainId
- * @param name 数据结果放在表各项中哪个顶级字段中
+ * @param onDone 完成后执行的回调
+ * @param exprId 初始值，来自于哪个expression id
  * @param meta 初始值
+ * @param onlyCreatNew 若为true则不能选择现有的表达式，只能新建一个BasicExpressionMeta，适用于ComplexExpressionEditor新增一个基本表达式
  */
 export const ConditionEditor: React.FC<{
+  title?: string,
+  triggerName?: string,
   domainId?: number,
   onDone: (Condition) => void,
   exprId?: number,
   meta?: BasicExpressionMeta
-}> = ({ domainId, onDone, exprId, meta }) => {
+  onlyCreatNew?: boolean
+}> = ({ title, triggerName, domainId, onDone, exprId, meta, onlyCreatNew }) => {
   const initialMeta: BasicExpressionMeta = { _class: "basic" }
   const [newExprId, setNewExprId] = useState(exprId)
   const [newMeta, setNewMeta] = useState(meta || initialMeta)
@@ -56,8 +63,8 @@ export const ConditionEditor: React.FC<{
   return <ModalForm
     formRef={formRef}
     layout="horizontal"
-    title="编辑规则条件"
-    trigger={<a >编辑</a>}
+    title={title || "编辑规则条件"}
+    trigger={<a >{triggerName || "编辑"}</a>}
     autoFocusFirstInput
     modalProps={{
       destroyOnClose: false,
@@ -81,8 +88,9 @@ export const ConditionEditor: React.FC<{
     <ProFormSelect
       name="exprId"
       label="逻辑表达式"
+      disabled={onlyCreatNew}
       tooltip="使用现有表达式或使用下面的创建一个条件"
-      request={() => asyncSelectProps2Request<Param, ParamQueryParams>({
+      request={onlyCreatNew? undefined : () => asyncSelectProps2Request<Param, ParamQueryParams>({
         key: "expression/domain/" + domainId, //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
         url: `${Host}/api/rule/composer/list/expression`,
         query: { domainId: domainId, pagination: { pageSize: -1, sKey: "id", sort: 1 } }, //pageSize: -1为全部加载

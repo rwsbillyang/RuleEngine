@@ -8,7 +8,7 @@ import { ValueMetaEditor } from "./ValueMetaEditor";
 import { Button } from "antd";
 
 import { saveOne } from "@/myPro/MyProTable";
-import { getBasicTypeId, typeCode2Id } from "../basic/utils";
+import { getBasicTypeId, typeCode2Id } from "../utils";
 
 
 /***
