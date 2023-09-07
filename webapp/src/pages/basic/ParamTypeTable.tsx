@@ -51,7 +51,7 @@ export const ParamTypeTable: React.FC = () => {
 
 
     const props = {
-      ...defaultProps(name, false),
+      ...defaultProps(name, false, false),
       needLoadMore: false,
       editForm: (e) => e?.isSys === false ? 'ModalForm' : undefined
     }

@@ -1,16 +1,17 @@
-import {  asyncSelectProps2Request } from "@/myPro/MyProTableProps"
+import { asyncSelectProps2Request } from "@/myPro/MyProTableProps"
 import ProForm, { ModalForm, ProFormDependency, ProFormDigit, ProFormSelect, ProFormSwitch, ProFormText, ProFormTextArea } from "@ant-design/pro-form"
 import React, { useState } from "react"
 import { RuleAction, AllDomainKey, Domain, DomainQueryParams, Rule, RuleActionQueryParams, RuleCommon } from "../DataType"
 import { Host } from "@/Config"
-import { Condition, ConditionEditor } from "../components/ConditionEditor"
 import { useLocation, useNavigate } from "react-router-dom"
-import { Button, Form } from "antd"
+import { Button, Form, message } from "antd"
 
 import { RuleName } from "./RuleTable"
 
 import { saveRuleOrGroup } from "./RuleCommon"
-import { basicExpressionMeta2String } from "../utils"
+import { basicExpressionMeta2String, complexExpressionMeta2String } from "../utils"
+import { BasicExprMetaEditModal } from "../components/BasicExprMetaEditModal"
+import { ComplexExprMetaEditModal } from "../components/ComplexExprMetaEditModal"
 
 
 /**
@@ -29,75 +30,85 @@ export const RuleEditModal: React.FC<{
     currentRow?: RuleCommon
 }> = ({ isAdd, record, fromTable, currentRow }) => {
 
-        const [condition, setCondition] = useState<Condition>({ exprId: record?.exprId, meta: record?.metaStr ? JSON.parse(record.metaStr) : undefined })
+    const [condition, setCondition] = useState<{ exprId, meta }>({ exprId: record?.exprId, meta: record?.meta })
 
-        return <ModalForm<Rule> layout="horizontal" initialValues={record}
-        title="规则编辑器"
-        trigger={isAdd ? (currentRow? <span>子规则</span> : <Button type="primary">新建</Button>) : <a key="editLink">编辑</a>}
-            autoFocusFirstInput
-            modalProps={{
-                destroyOnClose: false,
-                //onCancel: () => console.log('run'),
-            }}
-            submitTimeout={2000}
-            onFinish={async (values) => {
+    return <ModalForm<Rule> layout="horizontal" initialValues={record}
+        title="编辑规则"
+        trigger={isAdd ? (currentRow ? <span>子规则</span> : <Button type="primary">新建</Button>) : <a key="editLink">编辑</a>}
+        autoFocusFirstInput
+        modalProps={{
+            destroyOnClose: false,
+            //onCancel: () => console.log('run'),
+        }}
+        submitTimeout={2000}
+        onFinish={async (values) => {
+            //console.log("RuleEdit onFinish: values=",values);
+            //console.log("oldValues:", record);
+            if (!condition.meta) {
+                message.warning("基本条件和复合条件二选一")
+                return false
+            } else {
                 values.exprId = condition.exprId
                 values.meta = condition.meta
-                //console.log("RuleEdit onFinish: values=");
-                //console.log("oldValues:", record);
 
                 saveRuleOrGroup(fromTable, RuleName, values, isAdd, record, currentRow)
-            
+
                 return true
-            }}>
+            }
+        }}>
 
-            <ProForm.Group>
-                <ProFormSelect width="md" name={"domainId"} label="所属" request={() => asyncSelectProps2Request<Domain, DomainQueryParams>({
-                    key: AllDomainKey, //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
-                    url: `${Host}/api/rule/composer/list/domain`,
-                    query: { pagination: { pageSize: -1, sKey: "id", sort: 1 } },
-                    convertFunc: (item) => { return { label: item.label, value: item.id } }
-                })} />
-                <ProFormText width="md" name={"label"} label="名称" required />
+        <ProForm.Group>
+            <ProFormSelect width="md" name={"domainId"} label="所属" request={() => asyncSelectProps2Request<Domain, DomainQueryParams>({
+                key: AllDomainKey, //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
+                url: `${Host}/api/rule/composer/list/domain`,
+                query: { pagination: { pageSize: -1, sKey: "id", sort: 1 } },
+                convertFunc: (item) => { return { label: item.label, value: item.id } }
+            })} />
+            <ProFormText width="md" name={"label"} label="名称" required />
 
-            </ProForm.Group>
+        </ProForm.Group>
 
-            <ProForm.Group>
-                <ProFormSwitch width="xs" name={"enable"} label="状态" />
-                <ProFormDigit width="xs" name={"priority"} label="优先级" />
-                <ProFormDigit width="xs" name={"threshhold"} label="可信度" />
-            </ProForm.Group>
+        <ProForm.Group>
+            <ProFormSwitch width="xs" name={"enable"} label="状态" />
+            <ProFormDigit width="xs" name={"priority"} label="优先级" />
+            <ProFormDigit width="xs" name={"threshhold"} label="可信度" />
+        </ProForm.Group>
 
 
-
-            <ProFormDependency name={["domainId"]}>
-                {({ domainId }) => {
-                    return <Form.Item label="条件" required>
-                        {basicExpressionMeta2String(condition.meta)} <ConditionEditor onDone={setCondition}
+        <ProFormDependency name={["domainId"]}>
+            {({ domainId }) => {
+                return <>
+                    <Form.Item label="基本条件" tooltip="基本条件和复合条件二选一">
+                        {basicExpressionMeta2String(condition.meta)} <BasicExprMetaEditModal onDone={(meta, exprId) => setCondition({ meta, exprId })}
                             domainId={domainId} exprId={condition.exprId} meta={condition.meta} />
                     </Form.Item>
-                }}
-            </ProFormDependency>
+                    <Form.Item label="复合条件" tooltip="基本条件和复合条件二选一">
+                        {complexExpressionMeta2String(condition.meta)} <ComplexExprMetaEditModal onDone={(meta, exprId) => setCondition({ meta, exprId })}
+                            domainId={domainId} exprId={condition.exprId} meta={condition.meta} />
+                    </Form.Item>
+                </>
+            }}
+        </ProFormDependency>
 
-            <ProForm.Group>
-                <ProFormSelect width="md" name={"thenAction"} label="Then动作" tooltip="条件为true时执行"
-                    required
-                    request={() => asyncSelectProps2Request<RuleAction, RuleActionQueryParams>({
-                        key: "allActions", //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
-                        url: `${Host}/api/rule/composer/list/action`,
-                        convertFunc: (item) => { return { label: item.label || item.actionKey, value: item.actionKey } }
-                    })} />
-                <ProFormSelect width="md" name={"elseAction"} label="Else动作" tooltip="条件为false时执行"
-                    request={() => asyncSelectProps2Request<RuleAction, RuleActionQueryParams>({
-                        key: "allActions", //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
-                        url: `${Host}/api/rule/composer/list/action`,
-                        convertFunc: (item) => { return { label: item.label || item.actionKey, value: item.actionKey } }
-                    })} />
-            </ProForm.Group>
-            <ProFormSelect name={"tagList"} label="标签" fieldProps={{ mode: "tags" }} />
-            <ProFormTextArea name={"remark"} label="备注" />
-        </ModalForm>
-    }
+        <ProForm.Group>
+            <ProFormSelect width="md" name={"thenAction"} label="Then动作" tooltip="条件为true时执行"
+                required
+                request={() => asyncSelectProps2Request<RuleAction, RuleActionQueryParams>({
+                    key: "allActions", //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
+                    url: `${Host}/api/rule/composer/list/action`,
+                    convertFunc: (item) => { return { label: item.label || item.actionKey, value: item.actionKey } }
+                })} />
+            <ProFormSelect width="md" name={"elseAction"} label="Else动作" tooltip="条件为false时执行"
+                request={() => asyncSelectProps2Request<RuleAction, RuleActionQueryParams>({
+                    key: "allActions", //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
+                    url: `${Host}/api/rule/composer/list/action`,
+                    convertFunc: (item) => { return { label: item.label || item.actionKey, value: item.actionKey } }
+                })} />
+        </ProForm.Group>
+        <ProFormSelect name={"tagList"} label="标签" fieldProps={{ mode: "tags" }} />
+        <ProFormTextArea name={"remark"} label="备注" />
+    </ModalForm>
+}
 
 
 
@@ -116,7 +127,7 @@ export const RuleEdit = () => {
         isAdd = state.isAdd
     }
 
-    const [condition, setCondition] = useState<Condition>({ exprId: record?.exprId, meta: record?.metaStr ? JSON.parse(record.metaStr) : undefined })
+    const [condition, setCondition] = useState<{ exprId, meta }>({ exprId: record?.exprId, meta: record?.meta })
 
     return <ProForm<Rule> layout="horizontal" initialValues={record}
         submitter={{
@@ -155,13 +166,18 @@ export const RuleEdit = () => {
         </ProForm.Group>
 
 
-
         <ProFormDependency name={["domainId"]}>
             {({ domainId }) => {
-                return <Form.Item label="条件" required>
-                    {basicExpressionMeta2String(condition.meta)} <ConditionEditor onDone={setCondition}
-                        domainId={domainId} exprId={condition.exprId} meta={condition.meta} />
-                </Form.Item>
+                return <>
+                    <Form.Item label="基本条件" tooltip="基本条件和复合条件二选一">
+                        {basicExpressionMeta2String(condition.meta)} <BasicExprMetaEditModal onDone={(meta, exprId) => setCondition({ meta, exprId })}
+                            domainId={domainId} exprId={condition.exprId} meta={condition.meta} />
+                    </Form.Item>
+                    <Form.Item label="复合条件" tooltip="基本条件和复合条件二选一">
+                        {complexExpressionMeta2String(condition.meta)} <ComplexExprMetaEditModal onDone={(meta, exprId) => setCondition({ meta, exprId })}
+                            domainId={domainId} exprId={condition.exprId} meta={condition.meta} />
+                    </Form.Item>
+                </>
             }}
         </ProFormDependency>
 

@@ -18,7 +18,7 @@ export interface ModuleProps<T extends BaseRecord, Q extends BasePageQuery> exte
  * 
  * @returns 返回 MyProTableProps的部分属性
  */
-export function defaultProps(name: string, supportDel: boolean = true) {
+export function defaultProps(name: string, supportDel: boolean = true, supportAdd: boolean = true) {
     const host =  Host
 
     return {
@@ -26,6 +26,6 @@ export function defaultProps(name: string, supportDel: boolean = true) {
       cacheKey: name,
       listApi: `${host}/api/rule/composer/list/${name}`,
       delApi: supportDel?  `${host}/api/rule/composer/del/${name}` : undefined, 
-      saveApi: `${host}/api/rule/composer/save/${name}`, 
+      saveApi: supportAdd? `${host}/api/rule/composer/save/${name}` : undefined, 
     }
   }

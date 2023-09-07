@@ -1,5 +1,5 @@
 import { Cache } from '@rwsbillyang/usecache'
-import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, ComplexExpression, ComplexExpressionMeta, OpValue, ParamType, ValueMeta } from "./DataType"
+import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpression, ComplexExpressionMeta, ComplexExpressionRecord, OpValue, ParamType, ValueMeta } from "./DataType"
 
 
 /**
@@ -39,7 +39,14 @@ export const typeCode2Id = (parmTypeCode: string) => {
 }
 
 
-
+export const basicExprRecord2String = (expr?: BasicExpressionRecord)=>{
+    if(!expr) return "暂无"
+    return "[" + expr.label + "]: " + basicExpressionMeta2String(expr.meta)
+}
+export const complexExprRecord2String = (expr?: ComplexExpressionRecord)=>{
+    if(!expr) return "暂无"
+    return "[" + expr.label + "]: " + complexExpressionMeta2String(expr.meta)
+}
 
 /**
  * 将BasicExpressionMeta转换为human-reading字符串
@@ -47,7 +54,7 @@ export const typeCode2Id = (parmTypeCode: string) => {
  * @returns 
  */
 export const basicExpressionMeta2String = (meta?: BasicExpressionMeta)=>{
-    if(!meta) return "暂无"
+    if(!meta || meta._class === "Complex") return "暂无"
     const oprand = [meta.other, meta.start, meta.end, meta.set, meta.e, meta.num]
     .filter(e=>!!e)
     .map((e)=> valueMeta2String(e))
@@ -64,7 +71,7 @@ export const basicExpressionMeta2String = (meta?: BasicExpressionMeta)=>{
  * @returns 
  */
 export const complexExpressionMeta2String = (meta?: ComplexExpressionMeta)=>{
-    if(!meta) return "暂无"
+    if(!meta || meta._class !== "Complex") return "暂无"
     const list = meta.metaList?.map((e)=>{
         if(e._class === "Complex"){
             return complexExpressionMeta2String(e as ComplexExpressionMeta)
@@ -73,8 +80,9 @@ export const complexExpressionMeta2String = (meta?: ComplexExpressionMeta)=>{
         }
     }).join(", ")
 
-    return  meta.op?.label + "("+ list +")"
+    return  meta.op?.code + "("+ list +")"
 }
+
 /**
  * 将ValueMeta转换为human-reading字符串
  * @param valueMeta 

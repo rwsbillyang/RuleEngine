@@ -9,7 +9,6 @@ import { MyProTable } from "@/myPro/MyProTable"
 import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps"
 import { Host } from "@/Config"
 import { AllDomainKey, AllParamTypeKey, Constant, ConstantQueryParams, Domain, DomainQueryParams, ParamType, ParamTypeQueryParams } from "../DataType"
-import { DatePicker, Input, InputNumber, Select, Switch } from "antd"
 import {  defaultProps } from "../moduleTableProps"
 import { JsonValueEditor } from "../components/JsonValueEditor"
 

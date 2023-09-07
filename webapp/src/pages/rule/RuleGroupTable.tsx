@@ -182,7 +182,7 @@ export const RuleGroupEditModal: React.FC<{
 
 
     return <BetaSchemaForm<RuleGroup>
-        title="规则组编辑器"
+        title="编辑规则组"
         trigger={isAdd ? (currentRow ? <span>子规则组</span> : <Button type="primary">新建</Button>) : <a key="editLink">编辑</a>}
         layoutType="ModalForm"
         initialValues={record}

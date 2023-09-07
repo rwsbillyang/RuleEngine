@@ -18,7 +18,7 @@ import { RuleEditModal } from "./RuleEdit"
 import { Dropdown } from "antd"
 import { RuleGroupEditModal, initialValuesRuleGroup, rubleGroupTableProps } from "./RuleGroupTable"
 import { deleteRuleOrGroup } from "./RuleCommon"
-import { basicMeta2Expr } from "../utils"
+import { basicMeta2Expr, complexMeta2Expr } from "../utils"
 
 const ruleColumns: ProColumns<RuleCommon>[] = [
     {
@@ -131,64 +131,20 @@ export const rubleTableProps = {
     transformBeforeSave: (e) => { //props.editConfig.transform, transform(modify shape) before save
         e.tags = e.tagList?.join(",")
 
-        // if(e.ruleChildren && e.ruleChildren.length > 0)
-        //     e.ruleChildrenIds = e.ruleChildren.map((e)=>e.id).join(",")
-        // if(e.ruleGroupChildren && e.ruleGroupChildren.length > 0)
-        //     e.ruleGroupChildrenIds = e.ruleGroupChildren.map((e)=>e.id).join(",")
-
-        // if(e.ruleParentIdList && e.ruleParentIdList.length > 0){
-        //     e.ruleParentIds = e.ruleParentIdList.join(",")
-        // }
-        // if(e.ruleGroupParentIdList && e.ruleGroupParentIdList.length > 0){
-        //     e.ruleGroupParentIds = e.ruleGroupParentIdList.join(",")
-        // }
-
         if (e.meta) {
             e.metaStr = JSON.stringify(e.meta)
             if (e.meta["metaList"]) {
-                //TODO: e.expr = complexMeta2Expr(e.meta)
-                console.warn("TODO: generate exprStr when ComplexExpressionMeta")
+                e.expr = complexMeta2Expr(e.meta)
             } else {
                 e.expr = basicMeta2Expr(e.meta)
             }
             e.exprStr = JSON.stringify(e.expr)
         }
 
-
-        //生成id，同样的条件将是更新
-        // if (!e.id) {
-        //     if (e.expr) {
-        //         if (e.expr["exprs"]) {
-        //             //TODO: ComplexExpression
-        //             console.warn("TODO: generate id when ComplexExpression")
-        //         } else {
-        //             //BasicExpression
-        //             const expr: BasicExpression = e.expr as BasicExpression
-        //             let msg = `domainId=${e.domainId}`
-        //             msg += `&key=${expr.op}`
-        //             msg += opValue2Md5Msg("other", expr.other)
-        //             msg += opValue2Md5Msg("start", expr.start)
-        //             msg += opValue2Md5Msg("end", expr.end)
-        //             msg += opValue2Md5Msg("set", expr.set)
-        //             msg += opValue2Md5Msg("e", expr.e)
-        //             msg += opValue2Md5Msg("num", expr.num)
-
-        //             e.id = md5(msg) //md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
-        //         }
-        //     } else {
-        //         console.warn("no expr to generate id")
-        //     }
-        // }
-
         //保存它们对应的string信息
         delete e.meta
         delete e.tagList
         delete e.expr
-    
-        //delete e.ruleChildren
-        //delete e.ruleGroupChildren
-        //delete e.ruleParentIdList
-        //delete e.ruleGroupParentIdList
 
         return e
     },
@@ -197,9 +153,6 @@ export const rubleTableProps = {
         if (!e) return e
 
         e.tagList = e.tags?.split(",")
-
-        // e.ruleParentIdList = e.ruleParentIds?.split(",")
-        //e.ruleGroupParentIdList = e.ruleGroupParentIds?.split(",")
 
         if (e.metaStr) {
             e.meta = JSON.parse(e.metaStr)

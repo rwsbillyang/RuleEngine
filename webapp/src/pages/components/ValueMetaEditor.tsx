@@ -109,7 +109,7 @@ export const ValueMetaEditor: React.FC<{
                 value={value?.valueType || null}
                 //defaultValue={value?.valueType}
                 onChange={(v) => {
-                    onChange({ ...value, valueType: v })
+                    onChange({ valueType: v }) //清空原所有的值
                 }}
                 options={[
                     { label: "使用变量", value: 'Param' },

@@ -132,6 +132,8 @@ export interface ExpressionQueryParams extends BasePageQuery {
  * @param valueType 参数变量类型
  */
 export interface Expression extends LabeldBean {
+    key?: string //临时构建的id值，ComplexExpressionEditor中的Transfer使用它作为id键
+    
     type: 'Basic' | 'Complex'
     remark?: string//备注
 
@@ -152,7 +154,6 @@ export interface ComplexExpressionRecord extends Expression {
 
 interface ExpressionMeta{
     _class: string, //'Bool' | 'Int' | 'Double' | 'Long' | 'String' ....
-    key?: string //临时构建的id值，ComplexExpressionEditor中的Transfer使用它作为id键
     
     opId?: number,
     op?: Operator,
