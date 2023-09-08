@@ -1,5 +1,5 @@
 import { Cache } from '@rwsbillyang/usecache'
-import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpression, ComplexExpressionMeta, ComplexExpressionRecord, OpValue, ParamType, ValueMeta } from "./DataType"
+import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpression, ComplexExpressionMeta, ComplexExpressionRecord, Expression, OpValue, ParamType, ValueMeta } from "./DataType"
 
 
 /**
@@ -37,6 +37,10 @@ export const typeCode2Id = (parmTypeCode: string) => {
     const paramType: ParamType = Cache.findOne(AllParamTypeKey, parmTypeCode, "code")
     return paramType?.id
 }
+
+export const exprRecord2String = (expr: Expression) => expr.type === "Complex" ? 
+complexExpressionMeta2String((expr as ComplexExpressionRecord).meta) 
+: basicExpressionMeta2String((expr as BasicExpressionRecord).meta)
 
 
 export const basicExprRecord2String = (expr?: BasicExpressionRecord)=>{

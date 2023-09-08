@@ -35,12 +35,22 @@ const columns: ProColumns[] = [
       convertFunc: (item) => { return { label: item.label, value: item.id } }
     })
   },
-  {
-    title: '类型',
-    dataIndex: 'type',
-    hideInSearch: true,
-    valueEnum: { "Basic": "基本", "Complex": "复合" }
-  },
+  // {
+  //   title: '表达式',
+  //   dataIndex: 'expr',
+  //   renderText(text, record) {
+  //     return exprRecord2String(record)
+  //   },
+  //   ellipsis: true,
+  //   hideInSearch: true
+  // },
+  // {
+  //   title: '类型',
+  //   dataIndex: 'type',
+  //   hideInSearch: true,
+  //   hideInTable: true,
+  //   valueEnum: { "Basic": "基本", "Complex": "复合" }
+  // },
   {
     title: '备注',
     dataIndex: 'remark',
@@ -81,7 +91,7 @@ export const BasicExpressionTable: React.FC = () => {
       //因BaiscExpressionEditor中paramId和opId值在form中，与上一级与domainId等平齐，但后端保存在meta中，
       //所以form编辑时，往上提一级
       //此函数在操作这一栏render "编辑" 按钮时，给BaiscExpressionEditor传初始值时执行
-      console.log("BasicExpressionTable: to transformBeforeEdit...")
+      //console.log("BasicExpressionTable: to transformBeforeEdit...")
       if (!e) return e
       e.meta = e.metaStr ? JSON.parse(e.metaStr) : undefined
       e.expr = e.exprStr ? JSON.parse(e.exprStr) : undefined
@@ -110,8 +120,12 @@ export const BasicExpressionTable: React.FC = () => {
   }
 
 
-
-  return <MyProTable<BasicExpressionRecord, ExpressionQueryParams> myTitle="基本逻辑表达式" {...props} columns={columns} initialQuery={initialQuery}
+//因为共用columns，故先解构，避免相互干扰
+  return <MyProTable<BasicExpressionRecord, ExpressionQueryParams>
+    myTitle="基本逻辑表达式"
+    {...props}
+    columns={[...columns]}
+    initialQuery={initialQuery}
     toolBarRender={toolBarRender} actions={actions}
   />
 }
@@ -137,7 +151,7 @@ export const ComplexExpressionTable: React.FC = () => {
       //因BaiscExpressionEditor中paramId和opId值在form中，与上一级与domainId等平齐，但后端保存在meta中，
       //所以保存时放到meta中，同时给meta中的other start等赋值
       //此转换函数再saveOne中执行
-      console.log("ComplexExpressionTable: to transformBeforeSave...")
+      // console.log("ComplexExpressionTable: to transformBeforeSave...")
       e.metaStr = JSON.stringify(e.meta)
       e.exprStr = JSON.stringify(complexMeta2Expr(e.meta))
 
@@ -177,8 +191,12 @@ export const ComplexExpressionTable: React.FC = () => {
 
 
 
-
-  return <MyProTable<ComplexExpressionRecord, ExpressionQueryParams> myTitle="复杂逻辑表达式" {...props} columns={columns} initialQuery={initialQuery}
+  //因为共用columns，故先解构，避免相互干扰
+  return <MyProTable<ComplexExpressionRecord, ExpressionQueryParams>
+    myTitle="复杂逻辑表达式"
+    {...props}
+    columns={[...columns]}
+    initialQuery={initialQuery}
     toolBarRender={toolBarRender} actions={actions} />
 }
 

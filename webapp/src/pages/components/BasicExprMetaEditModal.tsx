@@ -57,9 +57,7 @@ export const BasicExprMetaEditModal: React.FC<{
 
       formRef?.current?.setFieldValue("paramId", meta?.paramId)
       formRef?.current?.setFieldValue("opId", meta?.opId)
-    } else {//清空了exprId
-      console.log("no exprId...")
-    }
+    } 
 
   }, [newExprId])
 

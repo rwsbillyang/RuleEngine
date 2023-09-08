@@ -7,7 +7,7 @@ import { BasicExpressionMeta, BasicExpressionRecord, ComplexExpressionMeta, Comp
 import { Host } from '@/Config';
 import { ModalForm, ProFormInstance, ProFormSelect, ProFormText } from '@ant-design/pro-form';
 import { asyncSelectProps2Request } from '@/myPro/MyProTableProps';
-import { basicExprRecord2String, basicMeta2Expr, complexExprRecord2String, complexMeta2Expr, meta2Expr, sortedConcat } from '../utils';
+import { basicExpressionMeta2String, basicMeta2Expr, complexExpressionMeta2String, complexMeta2Expr, meta2Expr, sortedConcat } from '../utils';
 import md5 from "md5"
 import { BasicExprMetaEditModal } from './BasicExprMetaEditModal';
 
@@ -46,40 +46,66 @@ export const ComplexExprMetaEditModal: React.FC<{
 }> = ({ title, triggerName, domainId, onDone, exprId, meta, cannotChooseOne }) => {
     const [newMeta, setNewMeta] = useState(meta)
     const [newExprId, setNewExprId] = useState(exprId)
+    const { current } = useRef<{ allExpr: Expression[] }>({ allExpr: [] }) //用于从现有记录中查询名称
 
     //transfer left list
-    const [exprList, setExprList] = useState<(BasicExpressionRecord | ComplexExpressionRecord)[]>(destructComplexMetaList(meta?.metaList));
+    //先getAllExpr加载所有expression记录，在编辑状态下，然后试图从meta中解构出来一些
+    const [exprList, setExprList] = useState<(BasicExpressionRecord | ComplexExpressionRecord)[]>([])
 
     //transfer right list
-    const [targetKeys, setTargetKeys] = useState<string[]>(getTargetKeysByMeta(meta));
-
+    const [targetKeys, setTargetKeys] = useState<string[]>([]);
 
 
     const formRef = useRef<ProFormInstance>()
 
-    const getAllExpr = () => {
+    //加载全部expression记录
+    const getAllExpr = (onGetData?: () => void) => {
         cachedGet<(BasicExpressionRecord | ComplexExpressionRecord)[]>(`${Host}/api/rule/composer/list/expression`, (data) => {
-            
+            current.allExpr = data
+
             let flag = false
             data.forEach((e) => {
-                if(e.exprStr){
-                     e.expr = JSON.parse(e.exprStr)
-                     e.key = md5(sortedConcat(e.expr))
-                     flag ||= pushIfNotPresent(exprList, e, "key") //metaList.push(meta)
-                     console.log("express, label=" + e.label + ", e.key=" + e.key)
+                if (e.metaStr) e.meta = JSON.parse(e.metaStr)
+                if (e.exprStr) {
+                    e.expr = JSON.parse(e.exprStr)
+                    e.key = md5(sortedConcat(e.expr))
+                    const f = pushIfNotPresent(exprList, e, "key") //metaList.push(meta)
+                    flag ||= f
+                    // console.log("express, label=" + e.label + ", e.key=" + e.key + ", f="+f)
                 }
             })
             if (flag) setExprList([...exprList])
-            console.log("exprList=",exprList)
+            //console.log("exprList=",exprList)
+            if (onGetData) onGetData()
         },
-            { domainId: domainId, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载)
-            "expression/domain/" + domainId)
+            { domainId: domainId, pagination: { pageSize: -1, sKey: "id", sort: 1 } }//pageSize: -1为全部加载)
+            //,"expression/domain/" + domainId
+        )
     }
 
 
     //加载domainId下所有表达式， 用于放置在transfer的左侧
     useEffect(() => {
-        getAllExpr()
+        getAllExpr(() => {
+            if (meta) {
+                //编辑状态下，首次加载使用待编辑的meta?.metaList
+                const list = destructComplexMetaList(current.allExpr, meta?.metaList)
+
+                if (list.length > 0) {
+                    let flag = false
+                    list.forEach((e) => {
+                        flag ||= pushIfNotPresent(exprList, e)
+                    })
+                    if (flag) setExprList([...exprList])
+                }
+
+                const list2 = getTargetKeysByMeta(meta)
+                if (list2.length > 0) setTargetKeys(list2)
+
+                //console.log("add " + list.length + " expr into left list, and target keys=", list2)
+            }
+
+        })
     }, [])
 
 
@@ -91,15 +117,25 @@ export const ComplexExprMetaEditModal: React.FC<{
 
             if (meta) {
                 setNewMeta(meta)
-                setExprList(destructComplexExpression(expression))
-                setTargetKeys(getTargetKeysByExpr(expression))
+                if (expression) {
+                    console.log("switch to new expression, try add left list and target keys...")
+                    //切换exrepssion时，使用expression的meta?.metaList
+                    const list = destructComplexExpression(current.allExpr, expression)
+                    if (list.length > 0) {
+                        let flag = false
+                        list.forEach((e) => {
+                            flag ||= pushIfNotPresent(exprList, e)
+                        })
+                        if (flag) setExprList([...exprList])
+                    }
+                    const list2 = getTargetKeysByExpr(expression)
+                    if (list2.length > 0) setTargetKeys(list2)
+                }
 
                 formRef?.current?.setFieldValue("opId", meta?.opId)
             } else {
                 console.log("shold not come here: changed exprId=" + newExprId + ", but no expression or expression.metaStr")
             }
-        } else {//清空了exprId
-            console.log("no exprId, to reset")
         }
 
     }, [newExprId])
@@ -112,18 +148,22 @@ export const ComplexExprMetaEditModal: React.FC<{
     }) => {
         if (!info || info?.direction === 'left') {
             return (
-                <BasicExprMetaEditModal cannotChooseOne={true} triggerName="新增基本表达式" domainId={domainId} onDone={(v) => {
-                    const mockExpr: BasicExpressionRecord = {key:md5(sortedConcat(meta2Expr(v))), meta: v, type: "Basic", label:"临时新增" } 
-                    if (pushIfNotPresent(exprList, mockExpr, "key")) //metaList.push(v)
-                        setExprList([...exprList])
-                }} />
+                <BasicExprMetaEditModal cannotChooseOne={true} triggerName="添加基本表达式" domainId={domainId}
+                    onDone={(v) => {
+                        const mockExpr: BasicExpressionRecord = { key: md5(sortedConcat(meta2Expr(v))), meta: v, type: "Basic", label: "临时" }
+                        if (pushIfNotPresent(exprList, mockExpr, "key")) //metaList.push(v)
+                            setExprList([...exprList])
+                        else {
+                            message.info("已存在相同表达式")
+                        }
+                    }} />
             );
         } else
             return (
                 <LogicalExprDropDwon disabled={targetKeys.length < 2} title="添加到左侧" onClick={(op) => {
                     const list = getByIds(exprList, targetKeys, "key")
                     if (list?.length === targetKeys.length) {
-                        const metaList = list.map((e)=>e.meta).filter((e)=>!!e) as (BasicExpressionMeta | ComplexExpressionMeta)[]
+                        const metaList = list.map((e) => e.meta).filter((e) => !!e) as (BasicExpressionMeta | ComplexExpressionMeta)[]
                         const meta: ComplexExpressionMeta = {
                             _class: "Complex",
                             op: op,
@@ -131,13 +171,13 @@ export const ComplexExprMetaEditModal: React.FC<{
                             metaList: metaList
                         }
                         const mockExpr: ComplexExpressionRecord = {
-                            label: "临时新增",
+                            label: "临时",
                             type: "Complex",
                             meta: meta,
                             key: md5(sortedConcat(meta2Expr(meta)))
                         }
-                        
-                       
+
+
                         if (pushIfNotPresent(exprList, mockExpr, "key")) //metaList.push(meta)
                         {
                             setExprList([...exprList])
@@ -145,6 +185,7 @@ export const ComplexExprMetaEditModal: React.FC<{
                             console.log("successful to add one complexExpressionMeta to left")
                         } else {
                             console.log("left already exsit")
+                            message.info("左侧已存在相同条件")
                         }
 
                     } else {
@@ -171,8 +212,8 @@ export const ComplexExprMetaEditModal: React.FC<{
             // console.log("onValuesChange:" + JSON.stringify(v))
             //现有表达式选择变化 -> 此处执行 -> newExprId变化 -> useEffect中切换 metaList和targetKeys、opId操作符变化 -> UI中transfer变化
             //若是清空，导致transfer左侧使用所有表达式，右侧为空 
-             //exprId清空(先不为空，后为空)才执行
-            if(newExprId && !v?.exprId){ // 其它字段修改，该条件也成立
+            //exprId清空(先不为空，后为空)才执行
+            if (newExprId && !v?.exprId) { // 其它字段修改，该条件也成立
                 setNewMeta(undefined)
                 getAllExpr()
                 setTargetKeys([])
@@ -189,7 +230,7 @@ export const ComplexExprMetaEditModal: React.FC<{
                 message.warning("已选表达式至少2个以上，才可进行逻辑运算")
                 return false
             } else {
-                values.metaList = list.map((e)=>e.meta)
+                values.metaList = list.map((e) => e.meta)
                 values.op = Cache.findOne(LogicalOpKey, values.opId, "id") //opId是form中的一个字段，已在values之中
 
                 onDone(values, newExprId)
@@ -220,7 +261,7 @@ export const ComplexExprMetaEditModal: React.FC<{
                 dataSource={exprList}
                 titles={['候选表达式', '已选表达式']}
                 listStyle={{
-                    width: "100%",
+                    width: 300,
                     height: 300,
                 }}
                 targetKeys={targetKeys}
@@ -228,12 +269,24 @@ export const ComplexExprMetaEditModal: React.FC<{
                     setTargetKeys(newTargetKeys);
                 }}
                 render={(item) => {
+                    let str
                     if (item.type === "Complex") {
-                        return complexExprRecord2String(item as ComplexExpressionRecord)
+                        str = complexExpressionMeta2String((item as ComplexExpressionRecord).meta)
                     } else {
-                        return basicExprRecord2String(item as BasicExpressionRecord)
+                        str = basicExpressionMeta2String((item as BasicExpressionRecord).meta)
                     }
-                }}
+                    const customLabel = (
+                        <span style={{ width: '100' }}>
+                            [{item.label || "临时"}] - {str}
+                        </span>
+                    );
+
+                    return {
+                        label: customLabel, // for displayed item
+                        value: item.label || "临时", // for title and filter matching
+                    };
+                }
+                }
                 footer={renderFooter}
             />
         </Form.Item>
@@ -286,7 +339,7 @@ function getByIds<T>(array: T[], ids?: string[] | number[], idKey: string = "id"
  * @param idKey 
  * @returns 添加成功则返回true
  */
-function pushIfNotPresent<T>(array: T[], e: T, idKey: string = "id") {
+function pushIfNotPresent<T>(array: T[], e: T, idKey: string = "key") {
     for (let i = 0; i < array.length; i++) {
         if (array[i][idKey] === e[idKey]) {
             return false
@@ -296,39 +349,48 @@ function pushIfNotPresent<T>(array: T[], e: T, idKey: string = "id") {
     return true
 }
 /**
- * 给表达式记录项添加md5 key，添加到exprList中；容易是复合表达式记录项，拆解出各基本表达式，构造临时模拟记录，并给它们添加上key
- * @param meta 
+ * 解构表达式记录中的meta，构建transfer左侧列表
+ * 给表达式记录项添加md5 key，用于添加到exprList中；
+ * 若是复合表达式记录项，拆解出各基本表达式，构造临时模拟记录，并给它们添加上key
+ * @param allExpr 现有所有表达式记录，根据key从中获取label
+ * @param e 待拆解meta的表达式
+ * @param result 盛放结果  
  */
-function destructComplexExpression(e?: (BasicExpressionRecord | ComplexExpressionRecord), result?: (BasicExpressionRecord | ComplexExpressionRecord)[]) {
+function destructComplexExpression(allExpr?: Expression[], e?: (BasicExpressionRecord | ComplexExpressionRecord), result?: (BasicExpressionRecord | ComplexExpressionRecord)[]) {
     const list = result || []
     if (!e) return list
 
-    if(!e.expr && e.exprStr) e.expr = JSON.parse(e.exprStr)
-    if(!e.meta && e.metaStr) e.meta = JSON.parse(e.metaStr)
+    if (e.type === "Complex") {
+        if (!e.expr && e.exprStr) e.expr = JSON.parse(e.exprStr)
+        if (!e.meta && e.metaStr) e.meta = JSON.parse(e.metaStr)
 
-    e.key = md5(sortedConcat(e.expr))
-    list.push(e)
+        e.key = md5(sortedConcat(e.expr))
+        list.push(e)
 
-    if(e.type === "Complex"){
         const expr = e as ComplexExpressionRecord
-        destructComplexMetaList(expr.meta?.metaList, expr, list)
+        destructComplexMetaList(allExpr, expr.meta?.metaList, expr, list)
     }
 
     return list
 }
-function destructComplexMetaList(metaList?:  (BasicExpressionMeta | ComplexExpressionMeta)[], expr?: ComplexExpressionRecord, result?: (BasicExpressionRecord | ComplexExpressionRecord)[]) {
+function destructComplexMetaList(allExpr?: Expression[], metaList?: (BasicExpressionMeta | ComplexExpressionMeta)[], expr?: ComplexExpressionRecord, result?: (BasicExpressionRecord | ComplexExpressionRecord)[]) {
     const list = result || []
     if (!metaList) return list
 
-    metaList.forEach((e)=>{
-        if(e._class === "Complex"){
+    metaList.forEach((e) => {
+        if (e._class === "Complex") {
             const meta = e as ComplexExpressionMeta
-            destructComplexMetaList(meta.metaList,expr, result)
-            const mockExpr:  ComplexExpressionRecord = {label: (expr?.label || "未命名"), meta, key: md5(sortedConcat(complexMeta2Expr(meta))),type: "Complex"}
+            const key = md5(sortedConcat(complexMeta2Expr(meta)))
+            const label = expr?.label || (allExpr ? Cache.findOneInArray(allExpr, key, "key")?.label : undefined)
+            const mockExpr: ComplexExpressionRecord = { label: label? label + "-" + list.length : "临时", meta, key, type: "Complex" }
             list.push(mockExpr)
-        }else{
+
+            destructComplexMetaList(allExpr, meta.metaList, expr, result)
+        } else {
             const meta = e as BasicExpressionMeta
-            const mockExpr:  BasicExpressionRecord = {label: (expr?.label || "未命名"), meta, key: md5(sortedConcat(basicMeta2Expr(meta))),type: "Basic"}
+            const key = md5(sortedConcat(basicMeta2Expr(meta)))
+            const label = expr?.label || (allExpr ? Cache.findOneInArray(allExpr, key, "key")?.label : undefined)
+            const mockExpr: BasicExpressionRecord = { label: label? label + "-" + list.length : "临时", meta, key, type: "Basic" }
             list.push(mockExpr)
         }
     });
@@ -337,20 +399,20 @@ function destructComplexMetaList(metaList?:  (BasicExpressionMeta | ComplexExpre
 
 function getTargetKeysByExpr(expr?: (BasicExpressionRecord | ComplexExpressionRecord)) {
     const list: string[] = []
-    if (!expr || expr.type !== "Complex" ) return list
+    if (!expr || expr.type !== "Complex") return list
     const expr2 = expr as ComplexExpressionRecord
     expr2.meta?.metaList?.forEach((e, i) => {
-        list.push(md5(sortedConcat(meta2Expr(e)))) 
+        list.push(md5(sortedConcat(meta2Expr(e))))
     })
 
     return list
 }
 function getTargetKeysByMeta(meta?: ComplexExpressionMeta) {
     const list: string[] = []
-    if (!meta || meta._class !== "Complex" ) return list
+    if (!meta || meta._class !== "Complex") return list
 
     meta.metaList?.forEach((e, i) => {
-        list.push(md5(sortedConcat(meta2Expr(e)))) 
+        list.push(md5(sortedConcat(meta2Expr(e))))
     })
 
     return list
