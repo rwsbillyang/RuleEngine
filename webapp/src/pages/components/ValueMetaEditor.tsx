@@ -1,11 +1,11 @@
 import { Cascader, Form, Select, Space } from "antd"
-import {  Constant, ConstantQueryParams, Param, ParamQueryParams, ValueMeta } from "../DataType"
+import { Constant, ConstantQueryParams, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ValueMeta } from "../DataType"
 import { JsonValueEditor } from "./JsonValueEditor"
 import React, { useEffect, useState } from "react"
 import { MyAsyncSelectProps } from "@/myPro/MyProTableProps"
 import { cachedFetch, Cache } from "@rwsbillyang/usecache"
 import { DefaultOptionType } from "antd/es/select"
-import { Host } from "@/Config"
+import { EnableParamCategory, Host } from "@/Config"
 
 
 interface CascaderOption {
@@ -38,7 +38,12 @@ export const ValueMetaEditor: React.FC<{
     const [paramLoading, setParamLoading] = useState(false)
     const [constantLoading, setConstantLoading] = useState(false)
 
-
+    const paramCategoryAsyncSelectProps: MyAsyncSelectProps<ParamCategory, ParamCategoryQueryParams> = {
+        key: "paramCategory/domain/" + domainId,
+        url: `${Host}/api/rule/composer/list/paramCategory`,
+        query: { domainId: domainId, setupChildren: true, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+        convertFunc: (item) => { return { label: item.label, value: item.id , children: item.children?.map((e)=> ({label: e.label, value: e.id}))} }
+    }
     const paramAsyncSelectProps: MyAsyncSelectProps<Param, ParamQueryParams> = {
         key: "param/type/" + param?.paramType.id,
         url: `${Host}/api/rule/composer/list/param`,
@@ -66,18 +71,34 @@ export const ValueMetaEditor: React.FC<{
         //console.log("value?.valueType=" + value?.valueType)
         // if (valueMeta?.valueType === 'Param') {
         setParamLoading(true)
-        cachedFetch<any[]>({
-            method: "GET",
-            url: paramAsyncSelectProps.url,
-            data: paramAsyncSelectProps.query,
-            shortKey: paramAsyncSelectProps.key,
-            onDone: () => { setParamLoading(false) },
-            onOK: (data) => {
-                setParamLoading(false)
-                //setData(data)
-                setParamOptions(data.map((e) => paramAsyncSelectProps.convertFunc ? paramAsyncSelectProps.convertFunc(e) : e))
-            }
-        })
+        if (EnableParamCategory) {
+            cachedFetch<any[]>({
+                method: "GET",
+                url: paramCategoryAsyncSelectProps.url,
+                data: paramCategoryAsyncSelectProps.query,
+                shortKey: paramCategoryAsyncSelectProps.key,
+                onDone: () => { setParamLoading(false) },
+                onOK: (data) => {
+                    setParamLoading(false)
+                    //setData(data)
+                    setParamOptions(data.map((e) => paramCategoryAsyncSelectProps.convertFunc ? paramCategoryAsyncSelectProps.convertFunc(e) : e))
+                }
+            })
+        } else {
+            cachedFetch<any[]>({
+                method: "GET",
+                url: paramAsyncSelectProps.url,
+                data: paramAsyncSelectProps.query,
+                shortKey: paramAsyncSelectProps.key,
+                onDone: () => { setParamLoading(false) },
+                onOK: (data) => {
+                    setParamLoading(false)
+                    //setData(data)
+                    setParamOptions(data.map((e) => paramAsyncSelectProps.convertFunc ? paramAsyncSelectProps.convertFunc(e) : e))
+                }
+            })
+        }
+
         //} else if (valueMeta?.valueType === 'Constant') {
         setConstantLoading(true)
         cachedFetch<any[]>({
@@ -117,17 +138,44 @@ export const ValueMetaEditor: React.FC<{
                     { label: "手工输入", value: 'JsonValue' }]}
             />
 
-            <Select
-                style={{ width: '20%' }}
-                loading={paramLoading}
-                allowClear
-                value={value?.paramId || null}
-                //defaultValue={value?.paramId}
-                disabled={disabled ? disabled : value?.valueType !== 'Param'}
-                options={paramOptions}
-                onChange={(v) => {
-                    onChange({ ...value, paramId: v, param: Cache.findOne(paramAsyncSelectProps.key || "", v, "id")})
-                }} />
+            {
+                EnableParamCategory ?
+                    <Cascader
+                        style={{ width: '20%' }}
+                        loading={paramLoading}
+                        allowClear
+                        value={(value?.paramId && value?.param?.categoryId) ? [value.param.categoryId, value.paramId] : undefined}
+                        disabled={disabled ? disabled : value?.valueType !== 'Param'}
+                        options={paramOptions}
+                        onChange={(v) => {
+                            //value是一个数组，存放的分别是select option的value
+                            //单选：[1, "乙"] 以及 [4]；
+                            console.log("ValueMetaEditor paramId, Cascader.onChange: value=" + JSON.stringify(v))
+                            if(v){
+                                if (v.length > 1) {
+                                    onChange({ ...value, paramId: +v[1] })
+                                } else if(v.length > 0) {
+                                    onChange({ ...value, paramId: +v[0] })
+                                }
+                            }else{
+                                onChange({ ...value, paramId: undefined })
+                            }
+                            
+                        }}
+                    />
+                    : <Select
+                        style={{ width: '20%' }}
+                        loading={paramLoading}
+                        allowClear
+                        value={value?.paramId || null}
+                        //defaultValue={value?.paramId}
+                        disabled={disabled ? disabled : value?.valueType !== 'Param'}
+                        options={paramOptions}
+                        onChange={(v) => {
+                            onChange({ ...value, paramId: v, param: Cache.findOne(paramAsyncSelectProps.key || "", v, "id") })
+                        }} />
+            }
+
 
             <Cascader
                 style={{ width: '30%' }}
@@ -144,8 +192,8 @@ export const ValueMetaEditor: React.FC<{
                     //eg：树形select的option的value 
                     //单选：[1, "乙"] 以及 [4]；
                     //多选选中多个[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
-                    console.log("ValueMetaEditor constant, Cascader.onChange: value=" + JSON.stringify(value))
-                    console.log("param?.paramType.code=" + param?.paramType.code)
+                    //console.log("ValueMetaEditor constant, Cascader.onChange: value=" + JSON.stringify(value))
+                    //console.log("param?.paramType.code=" + param?.paramType.code)
                     if (v && v.length > 0) {
                         let jsonValue
                         if (multiple) {
@@ -158,7 +206,6 @@ export const ValueMetaEditor: React.FC<{
                         onChange({ ...value, constantIds: v, constantIdsStr: undefined, jsonValue: undefined })
                     }
                 }}
-
             />
 
             <JsonValueEditor width="35%"
@@ -166,7 +213,7 @@ export const ValueMetaEditor: React.FC<{
                 onChange={(v) => { onChange({ ...value, jsonValue: v }) }}
                 type={multiple ? param?.paramType.code.replaceAll("Set", "") + "Set" : param?.paramType.code.replaceAll("Set", "")}
                 multiple={multiple === true}
-                
+
                 disabled={disabled ? disabled : value?.valueType !== 'JsonValue'} />
         </Space.Compact>
     </Form.Item>

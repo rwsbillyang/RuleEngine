@@ -34,6 +34,10 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
   const currentQuery = v ? JSON.parse(v) : props.initialQuery
   const { current } = useRef({ query: { ...currentQuery } as Q })
 
+
+  // console.log("currentQuery=", currentQuery)
+  // console.log("current.query=", current.query)
+
   //删除后从缓存中刷新
   useBus('refreshList-' + props.listApi, () => {
     setRefresh()
@@ -72,6 +76,7 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
     if (MyProConfig.EnableLog) console.log("search: " + JSON.stringify(params))
     resetPagination()
     const q = { ...params, pagination: current.query?.pagination } as Q
+    current.query = q
     CacheStorage.saveObject(cachedQueryKey, q, StorageType.OnlySessionStorage)
 
     setUseCache(false)

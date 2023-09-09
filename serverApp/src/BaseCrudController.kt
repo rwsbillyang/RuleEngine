@@ -31,6 +31,8 @@ import kotlinx.serialization.encodeToString
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.komapper.core.dsl.Meta
+import org.komapper.core.dsl.expression.WhereDeclaration
+import org.komapper.core.dsl.operator.and
 import org.slf4j.LoggerFactory
 
 
@@ -40,6 +42,7 @@ class BaseCrudController : KoinComponent {
     companion object {
         const val Name_domain = "domain"
         const val Name_param = "param"
+        const val Name_paramCategory = "paramCategory"
         const val Name_paramType = "paramType"
         const val Name_constant = "constant"
         const val Name_operator = "operator"
@@ -62,7 +65,34 @@ class BaseCrudController : KoinComponent {
                         params.toSqlPagination()
                     ).onEach { it.toBean(service) })
             )
+            Name_paramCategory -> {
+                val setupChildren = (params as ParamCategoryQueryParams).setupChildren
+                val list = service.findPage(
+                    Meta.paramCategory,
+                    params.toSqlPagination()
+                )
 
+                val list2 = if(setupChildren){
+                    val w1: WhereDeclaration = { Meta.param.categoryId.isNull() }
+                    val w2: WhereDeclaration = { Meta.param.domainId eq params.domainId }
+                    val uncategoryParams = service.findAll(Meta.param, w2.and(w1)).onEach { it.toBean(service) }
+                    if(uncategoryParams.isNotEmpty()){
+                        val unCategory = ParamCategory("未分类", params.domainId, -1, null, uncategoryParams)
+                        if(list.isEmpty()){
+                            listOf(unCategory)
+                        }else{
+                            list.onEach { it.setupChildren(service) }
+                                .toMutableList()
+                                .apply{ add(unCategory) }
+                        }
+                    }else{
+                        list.onEach { it.setupChildren(service) }
+                    }
+                }else{
+                    list.onEach { it.toBean(service) }
+                }
+                return MySerializeJson.encodeToString(DataBox.ok(list2))
+            }
             Name_paramType -> MySerializeJson.encodeToString(
                 DataBox.ok(
                     service.findPage(
@@ -148,7 +178,14 @@ class BaseCrudController : KoinComponent {
                         "param/$id"
                     )?.apply { toBean(service) })
             )
-
+            Name_paramCategory -> MySerializeJson.encodeToString(
+                DataBox.ok(
+                    service.findOne(
+                        Meta.paramCategory,
+                        { Meta.paramCategory.id eq id },
+                        "paramCategory/$id"
+                    )?.apply { toBean(service) })
+            )
             Name_paramType -> MySerializeJson.encodeToString(
                 DataBox.ok(
                     service.findOne(
@@ -251,7 +288,17 @@ class BaseCrudController : KoinComponent {
                         e.id?.let { "param/${it}" }).apply { toBean(service) })
             )
         }
-
+        Name_paramCategory -> {
+            val e = call.receive<ParamCategory>()
+            MySerializeJson.encodeToString(
+                DataBox.ok(
+                    service.save(
+                        Meta.paramCategory,
+                        e,
+                        e.id == null,
+                        e.id?.let { "paramCategory/${it}" }).apply { toBean(service) })
+            )
+        }
         Name_paramType -> {
             val e = call.receive<ParamType>()
             MySerializeJson.encodeToString(
@@ -346,6 +393,7 @@ class BaseCrudController : KoinComponent {
         val count = when (name) {
             Name_domain -> service.delete(Meta.domain, { Meta.domain.id eq id }, "domain/$id")
             Name_param -> service.delete(Meta.param, { Meta.param.id eq id }, "param/$id")
+            Name_paramCategory -> service.delete(Meta.paramCategory, { Meta.paramCategory.id eq id }, "paramCategory/$id")
             Name_paramType -> service.delete(Meta.paramType, { Meta.paramType.id eq id }, "paramType/$id")
             Name_constant -> service.delete(Meta.constant, { Meta.constant.id eq id }, "constant/$id")
             Name_operator -> service.delete(Meta.operator, { Meta.operator.id eq id }, "operator/$id")
@@ -389,7 +437,11 @@ class BaseCrudController : KoinComponent {
                 { Meta.param.id inList ids.map { it } },
                 null,
                 ids.map { "param/$it" })
-
+            Name_paramCategory -> service.delete(
+                Meta.paramCategory,
+                { Meta.paramCategory.id inList ids.map { it } },
+                null,
+                ids.map { "paramCategory/$it" })
             Name_paramType -> service.delete(
                 Meta.paramType,
                 { Meta.paramType.id inList ids.map { it } },

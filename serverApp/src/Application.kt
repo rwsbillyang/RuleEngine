@@ -35,7 +35,7 @@ val MySerializeJson = Json {
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) { //"X-Auth-uId", "X-Auth-oId", "X-Auth-unId","X-Auth-CorpId","Authorization"
-    // java -jar build/libs/RuleComposer-1.0.0-all.jar
+    // java -jar -DwithSPA=../webapp/www/ build/libs/RuleComposer-1.0.0-all.jar
     // java -jar -DwithSPA=../webapp/www/ -DdbHost=127.0.0.1 -DdbPort=3306 -DdbName=ruleEngineDb -DdbUser=root -DdbPwd=123456 -DdbHost=127 build/libs/RuleComposer-1.0.0-all.jar
     // nohup java -jar -DwithSPA=../webapp/www/ -DdbHost=127.0.0.1 -DdbPort=3306 -DdbName=ruleEngineDb -DdbUser=root -DdbPwd=123456 -DdbHost=127 build/libs/RuleComposer-1.0.0-all.jar > log/err.txt 2>&1 &
     val dbHost = System.getProperty("dbHost") ?: "127.0.0.1"
@@ -44,12 +44,6 @@ fun Application.module(testing: Boolean = false) { //"X-Auth-uId", "X-Auth-oId",
     val dbUser = System.getProperty("dbUser") ?: "root"
     val dbPwd = System.getProperty("dbPwd") ?: "123456"
     val withSPA = System.getProperty("withSPA")
-
-    log.info("======dbHost=$dbHost======")
-    log.info("======dbPort=$dbPort======")
-    log.info("======dbName=$dbName======")
-    log.info("======dbUser=$dbUser======")
-    log.info("======dbPort=$dbPort======")
 
     val app = this
     val mainModule = AppModule(
@@ -87,6 +81,11 @@ fun Application.module(testing: Boolean = false) { //"X-Auth-uId", "X-Auth-oId",
         log.info("======installCORS======")
         installCORS(false)
     }
+    log.info("======dbHost=$dbHost======")
+    log.info("======dbPort=$dbPort======")
+    log.info("======dbName=$dbName======")
+    log.info("======dbUser=$dbUser======")
+    log.info("======dbPort=$dbPort======")
 }
 
 

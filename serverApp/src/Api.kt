@@ -55,6 +55,9 @@ fun Routing.composerApi() {
             get<ParameterQueryParams>{
                 call.respondBoxJsonText(crudController.findPage(BaseCrudController.Name_param, it))
             }
+            get<ParamCategoryQueryParams>{
+                call.respondBoxJsonText(crudController.findPage(BaseCrudController.Name_paramCategory, it))
+            }
             get<ParameterTypeQueryParams>{
                 call.respondBoxJsonText(crudController.findPage(BaseCrudController.Name_paramType, it))
             }

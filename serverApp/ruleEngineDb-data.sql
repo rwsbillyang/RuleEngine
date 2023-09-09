@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 8.0.30)
 # Database: ruleEngineDb
-# Generation Time: 2023-09-06 09:15:02 +0000
+# Generation Time: 2023-09-08 08:32:39 +0000
 # ************************************************************
 
 
@@ -85,6 +85,36 @@ CREATE TABLE `t_operator` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
+LOCK TABLES `t_operator` WRITE;
+/*!40000 ALTER TABLE `t_operator` DISABLE KEYS */;
+
+INSERT INTO `t_operator` (`id`, `label`, `code`, `is_sys`, `remark`, `type`)
+VALUES
+	(1,'等于','eq',1,NULL,'Basic'),
+	(2,'不等于','ne',1,NULL,'Basic'),
+	(3,'大于','gt',1,NULL,'Basic'),
+	(4,'大于或等于','gte',1,NULL,'Basic'),
+	(5,'小于','lt',1,NULL,'Basic'),
+	(6,'小于或等于','lte',1,NULL,'Basic'),
+	(7,'区间范围','between',1,NULL,'Basic'),
+	(8,'不在区间范围','notBetween',1,NULL,'Basic'),
+	(9,'存在于','in',1,'单个元素存在于集合中: 前者存在于后者中','Basic'),
+	(10,'不存在于','nin',1,'单个元素不存在于集合中：前者不存在于后者中','Basic'),
+	(11,'包含','contains',1,'值集合包含某个元素：前者包含后者','Collection'),
+	(12,'不包含','notContains',1,'值集合不包含某个元素：前者不包含后者','Collection'),
+	(13,'包含全部','containsAll',1,'值集合包含所有元素：前者包含所有后者，即后者是前者子集','Collection'),
+	(14,'任意一个存在于','anyIn',1,'任意元素存在于集合中，前者任意一个元素存在于后者中，即交集非空','Collection'),
+	(15,'几个存在于','numberIn',1,'两个集合交集中的元素是几个','Collection'),
+	(16,'至少几个存在于','gteNumberIn',1,'两个集合交集中的元素不小于几','Collection'),
+	(17,'至多几个存在于','lteNumberIn',1,'两个集合交集中的元素不大于几','Collection'),
+	(18,'都存在于','allIn',1,'元素全部元素存在于集合中: 前者都存在于后者中，即前者是后者子集','Collection'),
+	(19,'都不存在于','allNotIn',1,'元素全部元素都不存在于集合中，前者任何一个元素都不出现于后者中，二者无交集','Collection'),
+	(20,'或者','or',1,'逻辑或(OR)','Logical'),
+	(21,'并且','and',1,'逻辑且(AND)','Logical'),
+	(22,'均非','none',1,'逻辑都不是(All NOT)','Logical');
+
+/*!40000 ALTER TABLE `t_operator` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Dump of table t_param
@@ -120,6 +150,25 @@ CREATE TABLE `t_param_type` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
+LOCK TABLES `t_param_type` WRITE;
+/*!40000 ALTER TABLE `t_param_type` DISABLE KEYS */;
+
+INSERT INTO `t_param_type` (`id`, `label`, `code`, `support_op_ids`, `is_sys`, `is_basic`)
+VALUES
+	(1,'字符串','String','1,2,3,4,5,6,7,8,9,10',1,1),
+	(2,'整数','Int','1,2,3,4,5,6,7,8,9,10',1,1),
+	(3,'长整数','Long','1,2,3,4,5,6,7,8,9,10',1,1),
+	(4,'小数','Double','1,2,3,4,5,6,7,8,9,10',1,1),
+	(5,'日期时间','Datetime','1,2,3,4,5,6,7,8,9,10',1,1),
+	(6,'布尔','Bool','1',1,1),
+	(7,'字符串集合','StringSet','11,12,13,14,15,16,17,18,19',1,0),
+	(8,'整数集合','IntSet','11,12,13,14,15,16,17,18,19',1,0),
+	(9,'长整数集合','LongSet','11,12,13,14,15,16,17,18,19',1,0),
+	(10,'小数集合','DoubleSet','11,12,13,14,15,16,17,18,19',1,0),
+	(11,'日期集合','DateTimeSet','11,12,13,14,15,16,17,18,19',1,0);
+
+/*!40000 ALTER TABLE `t_param_type` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Dump of table t_rule

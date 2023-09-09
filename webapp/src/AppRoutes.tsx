@@ -16,6 +16,8 @@ import { RuleTable } from './pages/rule/RuleTable'
 import { RuleEdit } from './pages/rule/RuleEdit'
 import { ActionTable } from './pages/rule/ActionTable'
 import { RuleGroupTable } from './pages/rule/RuleGroupTable'
+import { ParamCategoryTable } from './pages/basic/ParamCategory'
+import { EnableParamCategory } from './Config'
 
 
 
@@ -41,6 +43,11 @@ const menuRoutes: MyRouteObject[] = [
     //element: lazyLoad(<Page2 />),//优先级高于children
     children:[
       {
+        path: '/basic/domain',
+        id: '领域',
+        element: lazyLoad(<DomainTable />)
+      },
+      {
         path: '/basic/type',
         id: '类型',
         element: lazyLoad(<ParamTypeTable />)
@@ -54,6 +61,12 @@ const menuRoutes: MyRouteObject[] = [
         path: '/basic/constant',
         id: '常量',
         element: lazyLoad(<ConstantTable />)
+      },
+      {
+        path: '/basic/paramCategory',
+        id: '变量分类',
+        hideInMenu: !EnableParamCategory,
+        element: lazyLoad(<ParamCategoryTable />)
       },
       {
         path: '/basic/param',
@@ -76,11 +89,7 @@ const menuRoutes: MyRouteObject[] = [
       //   hideInMenu: true,
       //   element: lazyLoad(<ComplexExpressionEditor />)
       // },
-      {
-        path: '/basic/domain',
-        id: '领域',
-        element: lazyLoad(<DomainTable />)
-      }
+      
     ]
   },
   

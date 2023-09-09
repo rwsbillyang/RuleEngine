@@ -5,7 +5,7 @@ import { AllDomainKey, Domain, DomainQueryParams, RuleCommon, RuleGroup, RuleGro
 import { useSearchParams } from "react-router-dom"
 import { DownOutlined } from '@ant-design/icons'
 import { MyProTable } from "@/myPro/MyProTable"
-import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps"
+import { asyncSelectProps2Request } from "@/myPro/MyProTableProps"
 import { ProColumns } from "@ant-design/pro-table"
 import { Host } from "@/Config"
 

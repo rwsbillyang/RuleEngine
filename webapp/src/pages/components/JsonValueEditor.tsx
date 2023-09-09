@@ -22,7 +22,7 @@ export const JsonValueEditor: React.FC<{
   //console.log("JsonValueEditor: jsonValue="+JSON.stringify(jsonValue))
   if (multiple) {
     //TODO: 不同的类型通过数组的方式给予支持
-    return <Select style={{ width: width }} mode="tags" tokenSeparators={[',']} disabled={disabled} value={value?.value} onChange={onChange? (v) => onChange({ _class: type || 'String', value: (type === 'Int' || type === 'Long' || type === 'Double') ? (Array.isArray(v) ? v.map((e) => +e) : +v) : v }): undefined} />
+    return <Select style={{ width: width }} mode="tags" allowClear tokenSeparators={[',']} disabled={disabled} value={value?.value} onChange={onChange? (v) => onChange({ _class: type || 'String', value: (type === 'Int' || type === 'Long' || type === 'Double') ? (Array.isArray(v) ? v.map((e) => +e) : +v) : v }): undefined} />
   } else {
     if (type === 'Bool')
       return <Switch style={{ width: width }} disabled={disabled} checked={value?.value === true} onChange={onChange? (v) => onChange({ _class: type, value: v }): undefined} />

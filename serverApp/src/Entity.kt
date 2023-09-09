@@ -121,10 +121,12 @@ data class Param(
     val mapKey: String,
     val remark: String? = null,//备注
     val domainId: Int? = null, //domain.id
+    val categoryId: Int? = null,
     val valueScopeIds: String? = null, //值范围来自哪些常量的id
     @KomapperId @KomapperAutoIncrement
     val id: Int? = null,
 
+    @KomapperIgnore var paramCategory: ParamCategory? = null, //categoryId
     @KomapperIgnore var paramType: ParamType? = null, //typeId
     @KomapperIgnore var domain: Domain? = null, //domainId
     @KomapperIgnore var valueScopes: List<Constant>? = null
@@ -132,21 +134,39 @@ data class Param(
     fun toBean(service: BaseCrudService){
         domain = domainId?.let{service.findOne(Meta.domain, {Meta.domain.id eq it}, "domain/${it}")}
         paramType = service.findOne(Meta.paramType, {Meta.paramType.id eq typeId}, "paramType/${typeId}")
+        paramCategory = service.findOne(Meta.paramCategory, {Meta.paramCategory.id eq categoryId}, "paramCategory/${categoryId}")
         if(valueScopeIds != null) valueScopes = valueScopeIds.split(",").mapNotNull{service.findOne(Meta.constant, {Meta.constant.id eq it.toInt()} ,"constant/${it}")}
     }
 }
 
+@Serializable
+@KomapperEntity
+@KomapperTable("t_param_category")
+data class ParamCategory(
+    val label: String,
+    val domainId: Int? = null, //domain.id
+    @KomapperId @KomapperAutoIncrement
+    val id: Int? = null,
 
+    @KomapperIgnore var domain: Domain? = null,
+    @KomapperIgnore var children: List<Param>? = null
+){
+    fun toBean(service: BaseCrudService){
+        domain = domainId?.let{service.findOne(Meta.domain, {Meta.domain.id eq it}, "domain/${it}")}
+    }
+    fun setupChildren(service: BaseCrudService){
+        children = service.findAll(Meta.param,  {
+            Meta.param.categoryId eq id
+            Meta.param.domainId eq domainId
+        } ).onEach { it.toBean(service) }
+    }
+}
 
 
 /**
  * 表达式，构成规则的条件
- * @param key 用于从map中取值
- * @param op 操作符
- * @param value 值
- * @param valueType 参数变量类型
+ * @param type 类型
  */
-
 @Serializable
 @KomapperEntity
 @KomapperTable("t_expression")

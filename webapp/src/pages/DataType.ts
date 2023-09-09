@@ -32,6 +32,7 @@ export interface OperatorQueryParams extends BasePageQuery {
     ids?: string //,分隔的id ， 即根据operator.id列表查询
 }
 
+    
 
 
 export const AllParamTypeKey = "paramAll"
@@ -105,6 +106,8 @@ export interface Param extends LabeldBean {
     paramType: ParamType,
     typeId: number,
 
+    categoryId?: number,
+    paramCategory?: ParamCategory,
 
     valueScopeIds?: string, //值范围来自哪些常量的id
     valueScopes?: Constant[],
@@ -115,13 +118,24 @@ export interface ParamQueryParams extends BasePageQuery {
     typeId?: number
     mapKey?: string
     domainId?: number
+    categoryId?: number
 }
 
-
+export interface ParamCategoryQueryParams extends BasePageQuery {
+    label?: string
+    domainId?: number
+    setupChildren: boolean //在通过分类选择变量时设置为true
+}
+export interface ParamCategory extends LabeldBean{
+    domainId?: number, //domain.id
+    domain?: Domain, 
+    children?: Param[]
+}
 
 export interface ExpressionQueryParams extends BasePageQuery {
     label?: string
     domainId?: number
+    
     type?: 'Basic' | 'Complex'
 }
 /**

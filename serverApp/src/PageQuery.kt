@@ -39,7 +39,8 @@ class ParameterQueryParams(
     val label: String? = null,
     val typeId: Int? = null,
     val mapKey: String? = null,
-    val domainId: Int? = null
+    val domainId: Int? = null,
+    val categoryId: Int? = null
 ) : IUmiPaginationParams {
     override fun toSqlPagination(): SqlPagination {
         val meta = Meta.param
@@ -65,9 +66,49 @@ class ParameterQueryParams(
         val w2: WhereDeclaration? = typeId?.let { { meta.typeId eq it } }
         val w3: WhereDeclaration? = mapKey?.let { { meta.mapKey like "%${it}%" } }
         val w4: WhereDeclaration? = domainId?.let { { meta.domainId eq it } }
+        val w5: WhereDeclaration? = categoryId?.let { { meta.categoryId eq it } }
         //pageSize为-1时表示该查询条件下的全部数据
         return SqlPagination(sort, pagination.pageSize, (pagination.current - 1) * pagination.pageSize)
-            .addWhere(w1, w2, w3, w4, lastW)
+            .addWhere(w1, w2, w3, w4, w5, lastW)
+    }
+}
+
+
+@Resource("/paramCategory")
+@Serializable
+class ParamCategoryQueryParams(
+    override val umi: String? = null,
+    val label: String? = null,
+    val domainId: Int? = null,
+
+    val setupChildren: Boolean = false //在通过分类选择变量时设置为true
+) : IUmiPaginationParams {
+    override fun toSqlPagination(): SqlPagination {
+        val meta = Meta.paramCategory
+        val lastId = pagination.lastId
+        var lastW: WhereDeclaration? = null
+        val sort: SortExpression
+
+        //一般是根据pagination.sKey进行排序，但此处总是根据id进行排序
+        val sortKey = meta.id
+        sort = if (pagination.sort == Sort.DESC) sortKey.desc() else sortKey.asc()
+        if (lastId != null) {
+            val lastT = lastId.toInt()
+            lastW = if (pagination.sort == Sort.DESC) {
+                { sortKey less lastT }
+            } else {
+                { sortKey greater lastT }
+            }
+        }
+
+        val w1: WhereDeclaration? = if (label != null) {
+            { meta.label like "%${label}%" }
+        } else null
+
+        val w4: WhereDeclaration? = domainId?.let { { meta.domainId eq it } }
+        //pageSize为-1时表示该查询条件下的全部数据
+        return SqlPagination(sort, pagination.pageSize, (pagination.current - 1) * pagination.pageSize)
+            .addWhere(w1, w4, lastW)
     }
 }
 
