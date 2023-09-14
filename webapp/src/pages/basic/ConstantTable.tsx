@@ -147,6 +147,6 @@ export const ConstantTable: React.FC = () => {
 
   const props : MyProTableProps<Constant, ConstantQueryParams> = {...defaultProps(name), transformBeforeSave, transformBeforeEdit } 
   
-  return <MyProTable<Constant, ConstantQueryParams> {...props} myTitle="常量" columns={columns} initialValues={{ isEnum: false }} initialQuery={initialQuery} />
+  return <MyProTable<Constant, ConstantQueryParams> {...props} columns={columns} initialValues={{ isEnum: false }} initialQuery={initialQuery} />
 }
 

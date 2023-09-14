@@ -1,21 +1,14 @@
+
+import { MenuDataItem } from "@ant-design/pro-layout";
 import { RouteObject } from "react-router-dom";
 
-export type MyRouteObject = RouteObject & {
-    /** @name 在菜单中隐藏子节点 */
-  hideChildrenInMenu?: boolean;
-  /** @name 在菜单中隐藏自己和子节点 */
-  hideInMenu?: boolean;
-  /** @name 菜单的icon */
-  icon?: React.ReactNode;
-  /** @name 菜单的名字 */
-  name?: string;
-  /** @name disable 菜单选项 */
-  disabled?: boolean;
-  /** @name 指定外链打开形式，同a标签 */
-  target?: string;
 
-  children?: MyRouteObject[];
-}
+export type MyRoute = Omit<RouteObject, 'children'> & Omit<MenuDataItem, 'routes'> & {
+  children?: MyRoute[];
+  onClick?: (e: MyRoute) => void
+};
+
+
 
 // //copy from antd pro
 // interface MenuDataItem {

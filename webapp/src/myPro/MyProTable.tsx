@@ -11,7 +11,41 @@ import { Button, Modal, message } from 'antd';
 const { confirm } = Modal;
 import useBus, { dispatch } from 'use-bus';
 import { Link, useNavigate } from 'react-router-dom';
+import { RouteContext, RouteContextType } from '@ant-design/pro-layout';
 
+
+
+//给currentQuery中的初始值设置到columns中去，以让searchForm有正确的初始值
+//顺带添加一些actions操作
+function applyinitalQuery<Q extends BasePageQuery = BasePageQuery>(actions: ProColumns, saveApi?: string, delApi?: string, columns?: ProColumns[], query?: Q) {
+  //const supportEdit = props.editForm && typeof props.editForm === "function" && props.editForm()
+
+  if ((saveApi || delApi) && columns && columns.length > 0) {
+    if (!contains(columns, actions, (e1, e2) => e1.title === e2.title)) {
+      columns.push(actions)
+    }
+  }
+
+
+  if (!query) return columns
+  for (const item in query) {
+    if (item) {
+      const value = query[item]
+      if (value === null || value === undefined || value === "") {
+
+      } else {
+        columns?.forEach((e) => {
+          const key = e.key || e.dataIndex
+          if (key === item) {
+            e.initialValue = value
+          }
+        })
+      }
+    }
+  }
+
+  return columns
+}
 /**
  * 1. 列表数据可被缓存（若指定cacheKey的话），下次将会自动从缓存加载
  * 2. 搜索表单中的值自动被缓存： 上次搜索后的搜索条件将存储于缓存中，搜索表单将显示上次搜索值，列表数据将与结果对应；
@@ -91,116 +125,98 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
     setQuery(current.query)
   }, [])
 
-  //编辑、删除等按钮
-  const actions: ProColumns = props.actions ? props.actions : {
-    title: '操作',
-    valueType: 'option',
-    dataIndex: 'actions',
-    render: (text, row) => [
-      // EditorHub('Link', false, row, props.columns, props.editConfig), //报错，undefined of length
-      <EditorHub tableProps={props} style='Link' isAdd={false} record={row} columns={props.columns} key="edit" />,// //编辑某行数据时，编辑前对其进行变换
-      props.delApi ? <a onClick={() => deleteOne(row, props.delApi + "/" + row[(props.idKey || UseCacheConfig.defaultIdentiyKey || "id")], undefined, props.listApi, props.cacheKey, props.idKey)} key="delete" >删除</a> : undefined,
-    ].filter((e) => !!e)
-  }
-
-  //给currentQuery中的初始值设置到columns中去，以让searchForm有正确的初始值
-  //顺带添加一些actions操作
-  const applyinitalQuery = (columns?: ProColumns[], query?: Q) => {
-    //const supportEdit = props.editForm && typeof props.editForm === "function" && props.editForm()
-
-    if ((props.saveApi || props.delApi) && columns && columns.length > 0) {
-      if (!contains(columns, actions, (e1, e2) => e1.title === e2.title)) {
-        columns.push(actions)
-      }
-    }
 
 
-    if (!query) return columns
-    for (const item in query) {
-      if (item) {
-        const value = query[item]
-        if (value === null || value === undefined || value === "") {
 
-        } else {
-          columns?.forEach((e) => {
-            const key = e.key || e.dataIndex
-            if (key === item) {
-              e.initialValue = value
-            }
-          })
-        }
-      }
-    }
 
-    return columns
-  }
-
-  //避免applyinitalQuery添加actions时重复不断添加
-  useMemo(() => { return applyinitalQuery(props.columns, props.initialQuery) }, [])
 
   //if (MyProConfig.EnableLog) console.log("isLoading=" + isLoading + ", current.query=" + JSON.stringify(current.query)+ ", list=" + JSON.stringify(list))
 
-  //若提供了自定义的toolBarRender则优先使用自定义的
-  const myToolBarRender = props.toolBarRender ? props.toolBarRender : () => [
-    <EditorHub tableProps={props} style='Button' isAdd={true} record={props.initialValues} columns={props.columns} />
-  ]
 
-  return <div>
-    <ProTable<T, Q>
-      {...props}
-      title={() => props.myTitle}
-      loading={isLoading}
-      columns={props.columns}
-      formRef={formRef} // 赋值ref
-      dataSource={props.listTransform ? props.listTransform(list) : list}
-      rowKey={props.rowKey || props.idKey || "_id"}
-      pagination={props.pagination ? props.pagination : false}
-      onReset={searchReset}
-      onSubmit={search}
-      toolBarRender={myToolBarRender}
 
-    //request?: ( params: U & {pageSize?: number; current?: number; keyword?: string;}, 
-    //  sort: Record<string, SortOrder>, 
-    //  filter: Record<string, (string | number)[] | null>) => Promise<Partial<RequestData<DataSource>>>;
-    // request={(params, sort, filter) => {
-    //   return fetchListCachely(props.listApi, params2Query(params, sort, filter), props.cacheKey)
-    // }}
-    />
+  return <RouteContext.Consumer>
+    {(value: RouteContextType) => {
+      const title = value.title ? value.title : ""
+      //console.log("RouteContextType", value)
 
-    {props.needLoadMore !== false && list && list.length > 0 && <LoadMore
-      loadMoreState={loadMoreState}
-      isError={isError}
-      errMsg={errMsg}
-      loadMore={() => {
-        setUseCache(false)
-        setIsLoadMore(true)
+      //若提供了自定义的toolBarRender则优先使用自定义的
+      const myToolBarRender = props.toolBarRender ? props.toolBarRender : () => [
+        <EditorHub title={title} tableProps={props} style='Button' isAdd={true} record={props.initialValues} columns={props.columns} />
+      ]
 
-        const p = current.query?.pagination
+      //编辑、删除等按钮
+      const actions: ProColumns = props.actions ? props.actions : {
+        title: '操作',
+        valueType: 'option',
+        dataIndex: 'actions',
+        render: (text, row) => [
+          // EditorHub('Link', false, row, props.columns, props.editConfig), //报错，undefined of length
+          <EditorHub title={title} tableProps={props} style='Link' isAdd={false} record={row} columns={props.columns} key="edit" />,// //编辑某行数据时，编辑前对其进行变换
+          props.delApi ? <a onClick={() => deleteOne(row, props.delApi + "/" + row[(props.idKey || UseCacheConfig.defaultIdentiyKey || "id")], undefined, props.listApi, props.cacheKey, props.idKey)} key="delete" >删除</a> : undefined,
+        ].filter((e) => !!e)
+      }
 
-        //如果指定了current，且大于0，则优先使用current进行分页
-        if (p?.current) {
-          p.current += 1
-          p.lastId = undefined
-        } else {
-          //排序时，若指定了sortKey则使用指定的，否则默认使用_id
-          const sortKey = (p?.sKey) ? p.sKey : (props.idKey || "_id")
-          const lastValue = list[list.length - 1][sortKey] + "" //转换为字符串
-          if (p)
-            p.lastId = lastValue
-          else {
-            if (current.query) {
-              current.query.pagination = { lastId: lastValue }
+      //避免applyinitalQuery添加actions时重复不断添加
+     // const columns = useMemo(() => { return applyinitalQuery(actions, props.saveApi, props.delApi, props.columns, props.initialQuery) }, [])
+      const columns = applyinitalQuery(actions, props.saveApi, props.delApi, props.columns, props.initialQuery)
+
+      return <div>
+        <ProTable<T, Q>
+          {...props}
+          loading={isLoading}
+          columns={columns}
+          formRef={formRef} // 赋值ref
+          dataSource={props.listTransform ? props.listTransform(list) : list}
+          rowKey={props.rowKey || props.idKey || "_id"}
+          pagination={props.pagination ? props.pagination : false}
+          onReset={searchReset}
+          onSubmit={search}
+          toolBarRender={myToolBarRender}
+
+        //request?: ( params: U & {pageSize?: number; current?: number; keyword?: string;}, 
+        //  sort: Record<string, SortOrder>, 
+        //  filter: Record<string, (string | number)[] | null>) => Promise<Partial<RequestData<DataSource>>>;
+        // request={(params, sort, filter) => {
+        //   return fetchListCachely(props.listApi, params2Query(params, sort, filter), props.cacheKey)
+        // }}
+        />
+
+        {props.needLoadMore !== false && list && list.length > 0 && <LoadMore
+          loadMoreState={loadMoreState}
+          isError={isError}
+          errMsg={errMsg}
+          loadMore={() => {
+            setUseCache(false)
+            setIsLoadMore(true)
+
+            const p = current.query?.pagination
+
+            //如果指定了current，且大于0，则优先使用current进行分页
+            if (p?.current) {
+              p.current += 1
+              p.lastId = undefined
             } else {
-              const q: BasePageQuery = { pagination: { lastId: lastValue } }
-              current.query = q as Q
+              //排序时，若指定了sortKey则使用指定的，否则默认使用_id
+              const sortKey = (p?.sKey) ? p.sKey : (props.idKey || "_id")
+              const lastValue = list[list.length - 1][sortKey] + "" //转换为字符串
+              if (p)
+                p.lastId = lastValue
+              else {
+                if (current.query) {
+                  current.query.pagination = { lastId: lastValue }
+                } else {
+                  const q: BasePageQuery = { pagination: { lastId: lastValue } }
+                  current.query = q as Q
+                }
+              }
             }
-          }
-        }
 
-        setQuery(current.query)
-      }}
-    />}
-  </div>
+            setQuery(current.query)
+          }}
+        />}
+      </div>;
+    }}
+  </RouteContext.Consumer>
 }
 
 /**
@@ -257,7 +273,7 @@ function MySchemaFormEditor<T extends BaseRecord, Q extends BasePageQuery>(props
   const columns = props.columns
 
   return <BetaSchemaForm<T>
-    title={props.tableProps.myTitle}
+    title={props.title}
     trigger={props.isAdd === true ? <Button type="primary"> <PlusOutlined />新增</Button> : <a>编辑</a>}
     layoutType={layout}
     initialValues={props.record}
@@ -314,7 +330,7 @@ export function saveOne<T extends BaseRecord>(
     console.log("saveOne: oldValues=", oldValues)
     console.log("saveOne:  values=", values)
   }
-  const newValues: T = Object.assign({...oldValues}, values) //{ ...oldValues, ...values } //bugfix如果修改时去掉了某字段值，则values中为undfined，而合并后依旧是旧值，没有去掉 通过ProForm的omitNil={false} 禁止自动清空 null 和 undefined 的数据解决
+  const newValues: T = Object.assign({ ...oldValues }, values) //{ ...oldValues, ...values } //bugfix如果修改时去掉了某字段值，则values中为undfined，而合并后依旧是旧值，没有去掉 通过ProForm的omitNil={false} 禁止自动清空 null 和 undefined 的数据解决
   if (MyProConfig.EnableLog) {
     //此处输出的newValues值是后续已经transform的，因为输出延迟，拿到的值已经被transform
     console.log("after values merge oldValues, new values=", newValues)
@@ -377,9 +393,9 @@ export function deleteOne(
   cacheKey?: string,
   idKey?: string
 ) {
-  if(!delApi){
+  if (!delApi) {
     alert("no delApi")
-    return 
+    return
   }
 
   const id = item ? item[idKey || UseCacheConfig.defaultIdentiyKey] : undefined

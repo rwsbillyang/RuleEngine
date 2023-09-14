@@ -15,7 +15,6 @@ import { ProColumns } from "@ant-design/pro-table";
  */
 
 export interface MyProTableProps<T extends BaseRecord, Q extends BasePageQuery> {
-  myTitle?: string,   //TODO：以后无需提供，从route中提取
   initialQuery?: Q //列表初始查询条件
   listApi: string, //请求列表api，如'/api/oa/admin/list'
   needLoadMore?: boolean //默认为true，是否显示加载更多按钮 
@@ -37,6 +36,7 @@ export interface MyProTableProps<T extends BaseRecord, Q extends BasePageQuery> 
 
 
 export interface EditProps<T extends BaseRecord, Q extends BasePageQuery> {
+  title?:string,
   tableProps: MyProTableProps<T, Q>,
   style: 'Button' | 'Link',
   isAdd: boolean,

@@ -193,7 +193,6 @@ export const ComplexExpressionTable: React.FC = () => {
 
   //因为共用columns，故先解构，避免相互干扰
   return <MyProTable<ComplexExpressionRecord, ExpressionQueryParams>
-    myTitle="复杂逻辑表达式"
     {...props}
     columns={[...columns]}
     initialQuery={initialQuery}

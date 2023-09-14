@@ -41,5 +41,5 @@ export const ActionTable: React.FC = () => {
   
     const props = defaultProps(name) 
 
-    return <MyProTable<RuleAction, RuleActionQueryParams> myTitle="动作" {...props}  columns={columns}   />
+    return <MyProTable<RuleAction, RuleActionQueryParams> {...props}  columns={columns}   />
   }

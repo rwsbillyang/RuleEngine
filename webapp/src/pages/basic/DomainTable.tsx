@@ -31,5 +31,5 @@ export const DomainTable: React.FC = () => {
   
   const props = defaultProps(name) 
 
-  return <MyProTable<Domain, DomainQueryParams>  myTitle="领域" {...props}  columns={columns}   />
+  return <MyProTable<Domain, DomainQueryParams> {...props}  columns={columns}   />
 }

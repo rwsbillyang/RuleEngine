@@ -150,7 +150,7 @@ export const ParamTable: React.FC = () => {
       transformBeforeEdit
     }
 
-  return <MyProTable<Param, ParamQueryParams> myTitle="变量" {...props} columns={columns} 
+  return <MyProTable<Param, ParamQueryParams> {...props} columns={columns} 
   initialQuery={initialQuery} 
   />
 }

@@ -50,5 +50,5 @@ export const OperatorTable: React.FC = () => {
     editForm: (e) => e?.isSys === false ? 'ModalForm' : undefined
   }
 
-  return <MyProTable<Operator, OperatorQueryParams> myTitle="比较符" {...props} initialQuery={initialQuery} columns={columns} />
+  return <MyProTable<Operator, OperatorQueryParams> {...props} initialQuery={initialQuery} columns={columns} />
 }

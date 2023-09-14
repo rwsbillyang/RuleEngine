@@ -1,60 +1,69 @@
 import React from 'react'
-import {  ReactNode, Suspense } from 'react'
+import { ReactNode, Suspense } from 'react'
 import { RouteObject } from 'react-router-dom'
-import { Home } from './pages/Home'
+
+import { Cache } from '@rwsbillyang/usecache';
+
+
 import { NoFoundPage } from './pages/404'
 
-import { MyRouteObject } from './myPro/MyRouteObject'
-import { MySimpleLayout } from './myPro/MySimpleLayout'
+import { MyRoute } from './myPro/MyRoute'
+//import { MySimpleLayout } from './myPro/MySimpleLayout'
 import { ParamTable } from './pages/basic/ParamTable'
 import { ParamTypeTable } from './pages/basic/ParamTypeTable'
 import { OperatorTable } from './pages/basic/OperatorTable'
 import { ConstantTable } from './pages/basic/ConstantTable'
 import { DomainTable } from './pages/basic/DomainTable'
-import { BasicExpressionTable, ComplexExpressionTable} from './pages/basic/ExpressionTable'
+import { BasicExpressionTable, ComplexExpressionTable } from './pages/basic/ExpressionTable'
 import { RuleTable } from './pages/rule/RuleTable'
 import { RuleEdit } from './pages/rule/RuleEdit'
 import { ActionTable } from './pages/rule/ActionTable'
 import { RuleGroupTable } from './pages/rule/RuleGroupTable'
 import { ParamCategoryTable } from './pages/basic/ParamCategory'
 import { EnableParamCategory } from './Config'
+import MyProLayout, { MyProLayoutProps } from './myPro/MyProLayout';
 
+
+import {
+  GithubFilled,
+  InfoCircleOutlined,
+  TranslationOutlined,
+  ClearOutlined,
+  PartitionOutlined,
+  ProfileOutlined
+} from '@ant-design/icons';
+import { ProLayoutProps } from '@ant-design/pro-layout';
+import { Tooltip } from 'antd';
 
 
 // 实现懒加载的用Suspense包裹 定义函数
-const lazyLoad = (children: ReactNode): ReactNode =>{
+const lazyLoad = (children: ReactNode): ReactNode => {
   return <Suspense fallback={<div>Loading...</div>}>
     {children}
   </Suspense>
 }
 
-const menuRoutes: MyRouteObject[] = [
-  {
-    index: true,
-    id: 'Home',
-    name: "首页",
-    hideInMenu: true,
-    element: lazyLoad(<Home />)
-  }, 
+const menuRoutes: MyRoute[] = [
   {
     path: '/basic',
     id: 'basic',
+    icon:<ProfileOutlined />,
     name: "基础数据",
     //element: lazyLoad(<Page2 />),//优先级高于children
-    children:[
+    children: [
       {
         path: '/basic/domain',
-        id: '领域',
+        name: '领域',
         element: lazyLoad(<DomainTable />)
       },
       {
         path: '/basic/type',
-        id: '类型',
+        name: '类型',
         element: lazyLoad(<ParamTypeTable />)
       },
       {
         path: '/basic/operator',
-        id: "操作符",
+        name: "操作符",
         element: lazyLoad(<OperatorTable />)
       },
       {
@@ -64,79 +73,126 @@ const menuRoutes: MyRouteObject[] = [
       },
       {
         path: '/basic/paramCategory',
-        id: '变量分类',
+        name: '变量分类',
         hideInMenu: !EnableParamCategory,
         element: lazyLoad(<ParamCategoryTable />)
       },
       {
         path: '/basic/param',
-        id: '变量',
+        name: '变量',
         element: lazyLoad(<ParamTable />)
       },
       {
         path: '/basic/basicExpression',
-        id: '基本逻辑表达式',
+        name: '基本表达式',
         element: lazyLoad(<BasicExpressionTable />)
       },
       {
         path: '/basic/complexExpression',
-        id: '复合逻辑表达式',
+        name: '复合表达式',
         element: lazyLoad(<ComplexExpressionTable />)
-      },
-      // {
-      //   path: '/basic/expression/editComplex',
-      //   id: '编辑复合表达式',
-      //   hideInMenu: true,
-      //   element: lazyLoad(<ComplexExpressionEditor />)
-      // },
-      
+      }
     ]
   },
-  
   {
     path: '/rule',
+    icon:<PartitionOutlined />,
     id: 'rule',
     name: "规则",
-    children:[
+    children: [
       {
         path: '/rule/action',
-        id: '动作',
+        name: '动作',
         element: lazyLoad(<ActionTable />)
       },
       {
         path: '/rule/list',
-        id: '规则',
+        name: '规则',
         element: lazyLoad(<RuleTable />)
       },
       {
         path: '/rule/editRule',
-        id: '编辑规则',
+        name: '编辑规则',
         hideInMenu: true,
         element: lazyLoad(<RuleEdit />)
       },
       {
         path: '/rule/group',
-        id: '规则组',
+        name: '规则组',
         element: lazyLoad(<RuleGroupTable />)
       }
-    
     ]
   }
 ]
 
-export const AppRoutes: RouteObject[] =  [
+
+
+const proLayoutProps: MyProLayoutProps = {
+  title: "Rule Composer",
+  //logo: null,
+  //layout: 'mix',
+  //dark: true, //bugfix sidebar弹出菜单与菜单字体色一致看不清
+
+  route: {
+    path: '/',
+    children: menuRoutes  //路由嵌套，子路由的元素需使用<Outlet />
+  },
+  //siderMenuType: "group",
+  menu: {
+    collapsedShowGroupTitle: true,
+    locale: true
+  },
+  menuFooterRender: (props) => {
+    if (props?.collapsed) return undefined;
+    return (
+      <div
+        style={{
+          textAlign: 'center',
+          paddingBlockStart: 12,
+        }}
+      >
+        <div> © 2023 RuleComposer</div>
+        <div>by rwsbillyang@qq.com</div>
+      </div>
+    );
+  },
+  actionsRender: (props) => {
+    if (props.isMobile) return [];
+    return [
+      <Tooltip title="清除缓存"><ClearOutlined key="ClearOutlined" onClick={() => Cache.evictAllCaches()} /></Tooltip>,
+      <Tooltip title="中文/Engilish"><TranslationOutlined key="TranslationOutlined" /></Tooltip>,
+      <Tooltip title="版本"><InfoCircleOutlined key="InfoCircleFilled" /></Tooltip>,
+      <Tooltip title="GitHub"><a href="https://github.com/rwsbillyang/RuleEngine" target="_blank"><GithubFilled key="GithubFilled"/></a></Tooltip>,
+    ];
+  }
+}
+
+export const AppRoutes: RouteObject[] = [
   {
     path: '/',
-    element: <MySimpleLayout menuRoutes={menuRoutes}/>,
-    //路由嵌套，子路由的元素需使用<Outlet />
-    children: menuRoutes
+    //element: <MySimpleLayout menuRoutes={menuRoutes} navRoutes={actions}/>,
+    element: <MyProLayout {...proLayoutProps} />,
+    children: menuRoutes  //路由嵌套，子路由的元素需使用<Outlet />
   },
-
   {
     path: '/login',
     element: lazyLoad(<NoFoundPage />)
   }
-
 ]
 
+
+// const actions: MyRouteObject[] = [
+//   {
+//     path: '',
+//     name: "zn/en",
+//     onClick: (e) => {
+//       console.log("TODO, switch language")
+//     },
+//   },
+//   {
+//     path: '',
+//     name: "清空缓存",
+//     onClick: (e) => Cache.evictAllCaches()
+//   }
+// ]
 

@@ -45,5 +45,5 @@ export const ParamCategoryTable: React.FC = () => {
   
   const props = defaultProps(name) 
 
-  return <MyProTable<ParamCategory, ParamCategoryQueryParams>  myTitle="变量分类" {...props}  columns={columns}   />
+  return <MyProTable<ParamCategory, ParamCategoryQueryParams> {...props}  columns={columns}   />
 }

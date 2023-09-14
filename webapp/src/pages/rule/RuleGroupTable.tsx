@@ -155,7 +155,6 @@ export const RuleGroupTable: React.FC = () => {
 
     return <MyProTable<RuleCommon, RuleGroupQueryParams>
         {...rubleGroupTableProps}
-        myTitle="规则组"
         expandable={expandable}
         columns={ruleGroupColumns}
         initialQuery={initialQuery}

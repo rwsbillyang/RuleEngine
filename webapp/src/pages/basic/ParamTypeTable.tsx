@@ -56,5 +56,5 @@ export const ParamTypeTable: React.FC = () => {
       editForm: (e) => e?.isSys === false ? 'ModalForm' : undefined
     }
 
-  return <MyProTable<ParamType, ParamTypeQueryParams> myTitle="类型" {...props} initialQuery={initialQuery} columns={columns} />
+  return <MyProTable<ParamType, ParamTypeQueryParams> {...props} initialQuery={initialQuery} columns={columns} />
 }

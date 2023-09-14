@@ -216,7 +216,6 @@ export const RuleTable: React.FC = () => {
 
     return <MyProTable<RuleCommon, RuleQueryParams> 
     {...rubleTableProps} 
-    myTitle="规则" 
     expandable={expandable} 
     columns={ruleColumns} 
     initialQuery={initialQuery} 

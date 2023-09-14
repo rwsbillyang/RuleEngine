@@ -4,17 +4,21 @@ import { Link, matchRoutes, Outlet, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 //import { AppRoutes } from './AppRoutes';
 import React from 'react';
-import { MyRouteObject } from './MyRouteObject';
+import {  MyRouteObject } from './MyRoute';
 
 const { SubMenu } = Menu;
 const { Header, Content, Sider } = Layout;
 
-const routesToMenu = (routes: MyRouteObject[], recusively: boolean = true, keyPreix: string = "") => {
+export const routesToMenu = (routes: MyRouteObject[], recusively: boolean = true, keyPreix: string = "") => {
   if (recusively)
     return routes.map((e,i) =>e.hideInMenu ? null: ((e.hideChildrenInMenu != true && e.children && e.children.length > 0) ?
       <SubMenu key={keyPreix+i} title={e.name || e.id || e.path}>
         {routesToMenu(e.children, recusively, keyPreix+i+"-")}
-      </SubMenu> : <Menu.Item key={keyPreix+i} icon={e.icon} disabled={e.disabled} title={e.name || e.id || e.path}> <Link to={e.path || '/'} target={e.target}>{e.name || e.id || e.path}</Link></Menu.Item>))
+      </SubMenu> 
+      : <Menu.Item key={keyPreix+i} icon={e.icon} disabled={e.disabled} title={e.name || e.id || e.path}> 
+        {e.onClick? <div onClick={()=> e.onClick? e.onClick(e): console.log("no click?") }>{e.name || e.id}</div> 
+        : <Link to={e.path || '/'} target={e.target}>{e.name || e.id || e.path}</Link>}
+      </Menu.Item>))
   else
     return routes.map((e,i) => <Menu.Item key={keyPreix+i} icon={e.icon} disabled={e.disabled} title={e.name || e.id || e.path}> <Link to={e.path || '/'}>{e.name || e.id || e.path}</Link></Menu.Item>)
 }
@@ -34,7 +38,7 @@ const selectedPaths = ( menuRoutes: MyRouteObject[]) => {
 }
 
 //在AppRoute中的根路由中，作为其component
-export const MySimpleLayout: React.FC<{ menuRoutes: MyRouteObject[], navRoutes?: MyRouteObject[] }> = ({ menuRoutes, navRoutes }) => {
+export const MySimpleLayout: React.FC<{ menuRoutes: MyRouteObject[], navRoutes?: MyRouteObject[]}> = ({ menuRoutes, navRoutes }) => {
   const location = useLocation();
   const [defaultNavSelectedKeys, setDefaultNavSelectedKeys] = useState<string[]>([]);
   const [defaultSelectedKeys, setDefaultSelectedKeys] = useState<string[]>([]);
@@ -59,11 +63,11 @@ export const MySimpleLayout: React.FC<{ menuRoutes: MyRouteObject[], navRoutes?:
 
   return (
     <Layout>
-      {navRoutes && navRoutes.length > 0 && <Header className="header">
-        <div className="logo" />
+      {(navRoutes && navRoutes.length > 0) && <Header className="header" style={{height: "48"}}>
+        <div className='logo'/>
         <Menu theme="dark" mode="horizontal" defaultSelectedKeys={defaultNavSelectedKeys}>
           {routesToMenu(navRoutes, false,"header")}
-        </Menu>
+        </Menu>  
       </Header>}
 
 
