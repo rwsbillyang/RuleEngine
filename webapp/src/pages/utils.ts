@@ -1,5 +1,5 @@
 import { Cache } from '@rwsbillyang/usecache'
-import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpression, ComplexExpressionMeta, ComplexExpressionRecord, Expression, OpValue, ParamType, ValueMeta } from "./DataType"
+import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpression, ComplexExpressionMeta, ComplexExpressionRecord, Expression, JsonValue, OpValue, ParamType, ValueMeta } from "./DataType"
 
 
 /**
@@ -64,7 +64,12 @@ export const basicExpressionMeta2String = (meta?: BasicExpressionMeta)=>{
     .map((e)=> valueMeta2String(e))
     .join(", ")
 
-    return meta.param?.label + " " + meta.op?.label + oprand
+    if(meta.param)
+        return meta.param.label + " " + meta.op?.label + oprand
+    else if(meta.mapKey)
+        return meta.mapKey + " " + meta.op?.label + oprand
+    else 
+        return "unknown " + meta.op?.label + oprand
 }
 
 
@@ -95,18 +100,25 @@ export const complexExpressionMeta2String = (meta?: ComplexExpressionMeta)=>{
 export const valueMeta2String = (valueMeta?: ValueMeta) => {
     if(!valueMeta) return ""
     if(valueMeta.valueType  === 'Param'){
-        return "变量"+ valueMeta.param?.label + "("+ valueMeta.param?.mapKey+")"
+        return "变量"+ valueMeta.param?.label + ": "+ valueMeta.param?.mapKey
     }else if(valueMeta.valueType  === 'Constant'){
-        return "常量" + "("+ valueMeta.jsonValue?.value+")"       
+        return "常量" + ": "+ jsonValue2String(valueMeta.jsonValue)     
     }else if(valueMeta.valueType  === 'JsonValue'){
-        return "值" + "("+ valueMeta.jsonValue?.value+")"    
+        return "值" + ": "+ jsonValue2String(valueMeta.jsonValue)    
     }else{
         console.warn("should not come here, wrong valueMeta.valueType =" + valueMeta.valueType )
         return "wrong valueMeta.valueType!!!"
     }
 }
 
+const jsonValue2String = (jsonValue?: JsonValue) => {
+    if(!jsonValue) return ""
+    if(Array.isArray(jsonValue.value)){
+        return "[" + jsonValue.value.join(",") + "]"
+    }else 
+        return jsonValue.value
 
+}
 
 /**
  * 将BasicExpressionMeta转换为对应的表达式
@@ -115,13 +127,13 @@ export const valueMeta2String = (valueMeta?: ValueMeta) => {
  */
 export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
     if (!meta) return undefined
-    if (!meta.param || !meta.op) {
-        console.log("should not come here: no param or op")
+    if(!meta.op){
+        console.log("should not come here: no op")
         return undefined
     }
     const expr: BasicExpression = {
-        _class: meta.param.paramType.code,
-        key: meta.param.mapKey,
+        _class: "",
+        key: "",
         op: meta.op.code,
         other: valueMeta2OpValue(meta.other),
         start: valueMeta2OpValue(meta.start),
@@ -130,7 +142,19 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
         e: valueMeta2OpValue(meta.e),
         num: valueMeta2OpValue(meta.num)
     }
-    return expr
+    if(meta.param){
+        expr._class = meta.param.paramType.code
+        expr.key = meta.param.mapKey
+        return expr
+    }
+    if(meta.mapKey && meta.paramType){
+        expr._class = meta.paramType.code
+        expr.key = meta.mapKey
+        return expr
+    }
+
+    console.log("should not come here: please check meta.param, meta.mapKey/meta.paramType")
+    return undefined
 }
 
 /**

@@ -80,7 +80,7 @@ class ParamCategoryQueryParams(
     override val umi: String? = null,
     val label: String? = null,
     val domainId: Int? = null,
-
+    val typeId: Int? = null,//非空表示只需要该类型下的树
     val setupChildren: Boolean = false //在通过分类选择变量时设置为true
 ) : IUmiPaginationParams {
     override fun toSqlPagination(): SqlPagination {

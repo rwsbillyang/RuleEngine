@@ -22,6 +22,7 @@ import com.github.rwsbillyang.ktorKit.ApiJson
 import com.github.rwsbillyang.ktorKit.apiBox.BatchOperationParams
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.ktorKit.apiBox.IUmiPaginationParams
+import com.github.rwsbillyang.ktorKit.db.andWhere
 
 import com.github.rwsbillyang.ruleEngine.core.expression.*
 
@@ -74,8 +75,12 @@ class BaseCrudController : KoinComponent {
 
                 val list2 = if(setupChildren){
                     val w1: WhereDeclaration = { Meta.param.categoryId.isNull() }
-                    val w2: WhereDeclaration = { Meta.param.domainId eq params.domainId }
-                    val uncategoryParams = service.findAll(Meta.param, w2.and(w1)).onEach { it.toBean(service) }
+                    val w2: WhereDeclaration? = if(params.domainId != null) {
+                        { Meta.param.domainId eq params.domainId }
+                    } else null
+                    val w3: WhereDeclaration? = if(params.typeId != null) {
+                        { Meta.param.typeId eq params.typeId } } else null
+                    val uncategoryParams = service.findAll(Meta.param, andWhere(w1,w2,w3)).onEach { it.toBean(service) }
                     if(uncategoryParams.isNotEmpty()){
                         val unCategory = ParamCategory("未分类", params.domainId, -1, null, uncategoryParams)
                         if(list.isEmpty()){
@@ -88,6 +93,11 @@ class BaseCrudController : KoinComponent {
                     }else{
                         list.onEach { it.setupChildren(service) }
                     }
+
+                    //只保留有typeId的
+                    if(params.typeId != null){
+                        list.filter{ !it.children.isNullOrEmpty() && it.children!!.any { it.typeId == params.typeId}}
+                    }else list
                 }else{
                     list.onEach { it.toBean(service) }
                 }

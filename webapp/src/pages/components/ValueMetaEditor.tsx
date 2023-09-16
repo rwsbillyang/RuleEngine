@@ -1,5 +1,5 @@
 import { Cascader, Form, Select, Space } from "antd"
-import { Constant, ConstantQueryParams, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ValueMeta } from "../DataType"
+import { Constant, ConstantQueryParams, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, ValueMeta } from "../DataType"
 import { JsonValueEditor } from "./JsonValueEditor"
 import React, { useEffect, useState } from "react"
 import { MyAsyncSelectProps } from "@/myPro/MyProTableProps"
@@ -23,7 +23,7 @@ interface CascaderOption {
  * bugfix: 里面的字段UI全部是受控组件, 用于解决灰色（使用现有表达式）时指定表达式的meta值而UI不能更新的问题
 */
 export const ValueMetaEditor: React.FC<{
-    param?: Param,
+    paramType?: ParamType,
     multiple: boolean,
     domainId?: number,
     name: string,
@@ -32,27 +32,27 @@ export const ValueMetaEditor: React.FC<{
     constantQueryParams: ConstantQueryParams,
     value?: ValueMeta,
     onChange: (v: ValueMeta) => void
-}> = ({ multiple, param, domainId, value, name, label, onChange, disabled, constantQueryParams }) => {
+}> = ({ multiple, paramType, domainId, value, name, label, onChange, disabled, constantQueryParams }) => {
     const [paramOptions, setParamOptions] = useState<DefaultOptionType[]>()
     const [constantOptions, setConstantOptions] = useState<CascaderOption[]>()
     const [paramLoading, setParamLoading] = useState(false)
     const [constantLoading, setConstantLoading] = useState(false)
 
     const paramCategoryAsyncSelectProps: MyAsyncSelectProps<ParamCategory, ParamCategoryQueryParams> = {
-        key: "paramCategory/domain/" + domainId,
+        key: "paramCategory/domain/" + domainId + "/type/" + paramType?.id,
         url: `${Host}/api/rule/composer/list/paramCategory`,
-        query: { domainId: domainId, setupChildren: true, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+        query: { domainId: domainId, typeId: paramType?.id, setupChildren: true, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
         convertFunc: (item) => { return { label: item.label, value: item.id , children: item.children?.map((e)=> ({label: e.label, value: e.id}))} }
     }
     const paramAsyncSelectProps: MyAsyncSelectProps<Param, ParamQueryParams> = {
-        key: "param/type/" + param?.paramType.id,
+        key: "param/type/" + paramType?.id,
         url: `${Host}/api/rule/composer/list/param`,
-        query: { domainId: domainId, typeId: param?.paramType.id, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+        query: { domainId: domainId, typeId: paramType?.id, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
         convertFunc: (item) => { return { label: item.label, value: item.id } }
     }
 
     const constantAsyncSelectProps: MyAsyncSelectProps<Constant, ConstantQueryParams> = {
-        key: "constant/type/" + param?.paramType.id,
+        key: "constant/t/" + paramType?.id+"/d/"+domainId + "/ids/"+constantQueryParams.ids, //ConstantQueryParams中的参数各种变化，不仅仅是paramType?.id一种
         url: `${Host}/api/rule/composer/list/constant`,
         query: constantQueryParams,
         convertFunc: (item) => {
@@ -68,7 +68,7 @@ export const ValueMetaEditor: React.FC<{
 
     //load select options async
     useEffect(() => {
-        //console.log("value?.valueType=" + value?.valueType)
+        //console.log("paramType=", paramType)
         // if (valueMeta?.valueType === 'Param') {
         setParamLoading(true)
         if (EnableParamCategory) {
@@ -197,9 +197,9 @@ export const ValueMetaEditor: React.FC<{
                     if (v && v.length > 0) {
                         let jsonValue
                         if (multiple) {
-                            jsonValue = getJsonValueFromArrayArray(multiple, v, param, constantAsyncSelectProps.key)
+                            jsonValue = getJsonValueFromArrayArray(multiple, v, paramType, constantAsyncSelectProps.key)
                         } else {
-                            jsonValue = getJsonValueFromArray(multiple, v, param, constantAsyncSelectProps.key)
+                            jsonValue = getJsonValueFromArray(multiple, v, paramType, constantAsyncSelectProps.key)
                         }
                         onChange({ ...value, constantIds: v, constantIdsStr: JSON.stringify(v), jsonValue: jsonValue })
                     } else {
@@ -211,7 +211,7 @@ export const ValueMetaEditor: React.FC<{
             <JsonValueEditor width="35%"
                 value={value?.jsonValue} //TODO: 即使valueMeta.jsonValue被Cascader的onChange更新，此处也仍是旧值
                 onChange={(v) => { onChange({ ...value, jsonValue: v }) }}
-                type={multiple ? param?.paramType.code.replaceAll("Set", "") + "Set" : param?.paramType.code.replaceAll("Set", "")}
+                type={multiple ? paramType?.code.replaceAll("Set", "") + "Set" : paramType?.code.replaceAll("Set", "")}
                 multiple={multiple === true}
 
                 disabled={disabled ? disabled : value?.valueType !== 'JsonValue'} />
@@ -220,7 +220,7 @@ export const ValueMetaEditor: React.FC<{
 }
 
 //arry: 单选：[1, "乙"] 以及 [4]；
-export const getJsonValueFromArray = (multiple: boolean, arry: (string | number)[], param?: Param, constantKey?: string) => {
+export const getJsonValueFromArray = (multiple: boolean, arry: (string | number)[], paramType?: ParamType, constantKey?: string) => {
     //假定select中value都是id值，事实也是如此
     const constantId = arry[0]
     const constant: Constant | undefined = Cache.findOne(constantKey || "", constantId, "id")
@@ -228,7 +228,7 @@ export const getJsonValueFromArray = (multiple: boolean, arry: (string | number)
         let jsonValue
         if (constant.isEnum) {
             if (arry.length > 1) {
-                jsonValue = { value: arry[1], _class: param?.paramType.code || constant.jsonValue?._class || "String" }
+                jsonValue = { value: arry[1], _class: paramType?.code || constant.jsonValue?._class || "String" }
             } else {
                 jsonValue = constant?.jsonValue //此时其值为数组
             }
@@ -247,11 +247,11 @@ export const getJsonValueFromArray = (multiple: boolean, arry: (string | number)
     return undefined
 }
 //arry: 多选选中多个[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
-export const getJsonValueFromArrayArray = (multiple: boolean, arrayArray: (string | number)[][], param?: Param, constantKey?: string) => {
-    const value = arrayArray.flatMap((e) => getJsonValueFromArray(multiple, e, param, constantKey)?.value)
+export const getJsonValueFromArrayArray = (multiple: boolean, arrayArray: (string | number)[][], paramType?: ParamType, constantKey?: string) => {
+    const value = arrayArray.flatMap((e) => getJsonValueFromArray(multiple, e, paramType, constantKey)?.value)
         .filter((e) => !!e) //因为e有可能是单个元素也有可能是数组，故使用flatMap 而不是map
 
-    const _class = (param?.paramType.code.replaceAll("Set", "") || "String") + "Set"
+    const _class = (paramType?.code.replaceAll("Set", "") || "String") + "Set"
 
     return { _class, value }
 }

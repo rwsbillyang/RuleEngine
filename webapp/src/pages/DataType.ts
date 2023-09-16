@@ -124,6 +124,7 @@ export interface ParamQueryParams extends BasePageQuery {
 export interface ParamCategoryQueryParams extends BasePageQuery {
     label?: string
     domainId?: number
+    typeId?: number //非空表示只需要该类型下的树
     setupChildren: boolean //在通过分类选择变量时设置为true
 }
 export interface ParamCategory extends LabeldBean{
@@ -177,8 +178,12 @@ export interface BasicExpressionMeta extends ExpressionMeta{
     _class: string, //'Bool' | 'Int' | 'Double' | 'Long' | 'String' ....
     //domainId?: number,
 
-    paramId?: number,
+    paramId?: number,//与mapKey&paramTypeId二选一
     param?: Param,
+
+    mapKey?: string,
+    paramTypeId?: number,
+    paramType?: ParamType,
 
     other?: ValueMeta
     start?: ValueMeta//key所在变量范围比较
