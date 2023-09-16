@@ -4,12 +4,12 @@ import { Link, matchRoutes, Outlet, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 //import { AppRoutes } from './AppRoutes';
 import React from 'react';
-import {  MyRouteObject } from './MyRoute';
+import {  MyRoute } from './MyRoute';
 
 const { SubMenu } = Menu;
 const { Header, Content, Sider } = Layout;
 
-export const routesToMenu = (routes: MyRouteObject[], recusively: boolean = true, keyPreix: string = "") => {
+export const routesToMenu = (routes: MyRoute[], recusively: boolean = true, keyPreix: string = "") => {
   if (recusively)
     return routes.map((e,i) =>e.hideInMenu ? null: ((e.hideChildrenInMenu != true && e.children && e.children.length > 0) ?
       <SubMenu key={keyPreix+i} title={e.name || e.id || e.path}>
@@ -23,7 +23,7 @@ export const routesToMenu = (routes: MyRouteObject[], recusively: boolean = true
     return routes.map((e,i) => <Menu.Item key={keyPreix+i} icon={e.icon} disabled={e.disabled} title={e.name || e.id || e.path}> <Link to={e.path || '/'}>{e.name || e.id || e.path}</Link></Menu.Item>)
 }
 
-const selectedPaths = ( menuRoutes: MyRouteObject[]) => {
+const selectedPaths = ( menuRoutes: MyRoute[]) => {
     const routes = matchRoutes(menuRoutes, location.pathname); 
     const pathArr: string[] = [];
     if (routes !== null) {
@@ -38,7 +38,7 @@ const selectedPaths = ( menuRoutes: MyRouteObject[]) => {
 }
 
 //在AppRoute中的根路由中，作为其component
-export const MySimpleLayout: React.FC<{ menuRoutes: MyRouteObject[], navRoutes?: MyRouteObject[]}> = ({ menuRoutes, navRoutes }) => {
+export const MySimpleLayout: React.FC<{ menuRoutes: MyRoute[], navRoutes?: MyRoute[]}> = ({ menuRoutes, navRoutes }) => {
   const location = useLocation();
   const [defaultNavSelectedKeys, setDefaultNavSelectedKeys] = useState<string[]>([]);
   const [defaultSelectedKeys, setDefaultSelectedKeys] = useState<string[]>([]);

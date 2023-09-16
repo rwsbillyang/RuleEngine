@@ -41,7 +41,7 @@ export const BaiscExpressionRecordEditor: React.FC<{
 
 
   return <ModalForm<BasicExpressionRecord> initialValues={record} layout="horizontal"
-    title="基本逻辑表达式"
+    title="基本表达式"
     trigger={isAdd ? <Button type="primary">新建</Button> : <a key="editLink">编辑</a>}
     autoFocusFirstInput
     modalProps={{

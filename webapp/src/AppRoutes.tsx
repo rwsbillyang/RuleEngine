@@ -32,7 +32,6 @@ import {
   PartitionOutlined,
   ProfileOutlined
 } from '@ant-design/icons';
-import { ProLayoutProps } from '@ant-design/pro-layout';
 import { Tooltip } from 'antd';
 
 

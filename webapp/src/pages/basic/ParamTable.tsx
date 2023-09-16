@@ -38,7 +38,7 @@ export const ParamTable: React.FC = () => {
       title: '分类',
       key: "categoryId",
       dataIndex: ['paramCategory', 'label'],
-      dependencies: ['domainId'],
+      dependencies: ['domainId'], //bugfix 注释掉此行无提示：react-dom.development.js:86 Warning: React does not recognize the `formItemProps` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `formitemprops` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
       fieldProps: { allowClear: true },
       hideInForm: !EnableParamCategory,
       hideInSearch:!EnableParamCategory,

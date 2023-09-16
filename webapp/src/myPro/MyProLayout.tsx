@@ -33,7 +33,7 @@ export default (props: MyProLayoutProps) => {
                     }
                     return <div onClick={() => { 
                         setPathname(menuItemProps.path || '/') 
-                        console.log("menu clicked: "+menuItemProps.path)
+                        //console.log("menu clicked: "+menuItemProps.path)
                         }}>
                         <Link to={menuItemProps.path} target={menuItemProps.target}>{defaultDom}</Link>
                     </div>
