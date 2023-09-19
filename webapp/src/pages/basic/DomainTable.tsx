@@ -5,7 +5,7 @@ import React from "react"
 import { Domain, DomainQueryParams } from "../DataType"
 import { MyProTable } from "@/myPro/MyProTable"
 import { ProColumns } from "@ant-design/pro-table"
-import { defaultProps } from "../moduleTableProps"
+import { defaultProps, mustFill } from "../moduleTableProps"
 
 
 
@@ -18,14 +18,7 @@ export const DomainTable: React.FC = () => {
     {
       title: '名称',
       dataIndex: 'label',
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-            message: '此项为必填项',
-          },
-        ],
-      },
+      formItemProps: mustFill,
     }
   ]
   

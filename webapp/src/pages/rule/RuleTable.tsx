@@ -11,7 +11,7 @@ import { ProColumns } from "@ant-design/pro-table"
 import { Host } from "@/Config"
 
 
-import { defaultProps } from "../moduleTableProps"
+import { defaultProps, mustFill } from "../moduleTableProps"
 
 
 import { RuleEditModal } from "./RuleEdit"
@@ -24,14 +24,7 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
     {
         title: '名称',
         dataIndex: 'label',
-        formItemProps: {
-            rules: [
-                {
-                    required: true,
-                    message: '此项为必填项',
-                },
-            ],
-        },
+        formItemProps: mustFill
     },
     {
         title: '类型',
@@ -90,14 +83,7 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
         key: "thenAction",
         valueType: "select",
         hideInSearch: true,
-        formItemProps: {
-            rules: [
-                {
-                    required: true,
-                    message: '此项为必填项',
-                },
-            ],
-        },
+        formItemProps: mustFill
     },
     {
         title: 'Else',

@@ -4,14 +4,14 @@ import React from "react"
 import { AllDomainKey, AllParamTypeKey, Constant, ConstantQueryParams, Domain, DomainQueryParams, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, ParamTypeQueryParams } from "../DataType"
 
 import { useSearchParams } from "react-router-dom"
-
+import { Cache } from '@rwsbillyang/usecache'
 import { MyProTable } from "@/myPro/MyProTable"
 import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps"
 import { ProColumns } from "@ant-design/pro-table"
 import { EnableParamCategory, Host } from "@/Config"
-import { getBasicTypeId } from "../utils"
+import { getBasicTypeId, typeCode2Id } from "../utils"
 
-import { defaultProps } from "../moduleTableProps"
+import { defaultProps, mustFill } from "../moduleTableProps"
 
 
 export const ParamTable: React.FC = () => {
@@ -53,50 +53,30 @@ export const ParamTable: React.FC = () => {
     {
       title: '名称',
       dataIndex: 'label',
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-            message: '此项为必填项',
-          },
-        ],
-      },
+      formItemProps: mustFill
     },
     {
       title: '索引键',
+      tooltip: "根据该键，获取对应的变量值，如map的key",
       dataIndex: 'mapKey',
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-            message: '此项为必填项',
-          },
-        ],
-      },
+      formItemProps: mustFill
     },
     {
       title: '类型',
       key: "typeId",
       dataIndex: ['paramType', 'label'], //取record中的type中的label展示, 由于QueryParams不支持嵌套对象，因此都需提供search.transform进行搜索项键值转换
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-            message: '此项为必填项',
-          },
-        ],
-      },
+      formItemProps: mustFill,
       request: () => asyncSelectProps2Request<ParamType, ParamTypeQueryParams>({
         key: AllParamTypeKey,//列表页中是全部加载，此处也是全部加载
         url: `${Host}/api/rule/composer/list/paramType`,
         query: { pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
-        convertFunc: (item) => { return { label: item.code, value: item.id } }
+        convertFunc: (item) => { return { label: item.label, value: item.id } }
       })
     },   
 
     {
       title: '值域',
-      tooltip: "值只能来自对应的枚举类型",
+      tooltip: "值来自哪些常量",
       key: 'constantIds',
       dataIndex: ['valueScopes', 'label'],
       renderText: (text, row) => row.valueScopes?.map((e) => e.label)?.join(", "),
@@ -104,12 +84,14 @@ export const ParamTable: React.FC = () => {
       fieldProps: { allowClear: true, mode: "multiple" },
       dependencies: ['domainId', 'typeId'], //若选择了枚举，只支持基本类型，否则未全部
       request: (params) => {
+        const paramType: ParamType = Cache.findOne(AllParamTypeKey, params.typeId, "id")
         let basicTypeId = getBasicTypeId(params.typeId)
-        
+        const setTypeId = paramType? typeCode2Id(paramType.code.replaceAll("Set", "") + "Set") : undefined
+        const typeIds = [basicTypeId, setTypeId].filter(e=>!!e).join(",")
         return asyncSelectProps2Request<Constant, ConstantQueryParams>({
-          key: "constantEnum/domain/" + params.domainId + "/basicType/" + basicTypeId,
+          key: "constantEnum/domain/" + params.domainId + "/typeIds/" + typeIds,
           url: `${Host}/api/rule/composer/list/constant`,
-          query: { isEnum: true, typeIds: [basicTypeId].join(","), domainId: params.domainId, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+          query: { typeIds: typeIds, domainId: params.domainId, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
           convertFunc: (item) => { return { label: item.label, value: item.id } }
         }, params)
       }

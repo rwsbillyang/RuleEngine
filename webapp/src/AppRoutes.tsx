@@ -67,7 +67,7 @@ const menuRoutes: MyRoute[] = [
       },
       {
         path: '/basic/constant',
-        id: '常量',
+        name: '常量',
         element: lazyLoad(<ConstantTable />)
       },
       {
@@ -171,7 +171,7 @@ export const AppRoutes: RouteObject[] = [
     path: '/',
     //element: <MySimpleLayout menuRoutes={menuRoutes} navRoutes={actions}/>,
     element: <MyProLayout {...proLayoutProps} />,
-    children: menuRoutes  //路由嵌套，子路由的元素需使用<Outlet />
+    children: menuRoutes as RouteObject[]  //路由嵌套，子路由的元素需使用<Outlet />
   },
   {
     path: '/login',

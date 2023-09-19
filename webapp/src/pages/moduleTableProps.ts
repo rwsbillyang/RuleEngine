@@ -2,6 +2,17 @@ import { Host } from "@/Config";
 import { MyProTableProps } from "@/myPro/MyProTableProps";
 import { BasePageQuery, BaseRecord } from "@rwsbillyang/usecache";
 
+
+export const mustFill = {
+  rules: [
+    {
+      required: true,
+      message: '此项为必填项',
+    },
+  ],
+}
+
+
 /**
  * 
  * @param name object name

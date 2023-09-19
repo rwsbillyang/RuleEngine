@@ -5,7 +5,7 @@ import { ProColumns } from "@ant-design/pro-table"
 
 import { RuleAction, RuleActionQueryParams } from "../DataType"
 import { MyProTable } from "@/myPro/MyProTable"
-import { defaultProps } from "../moduleTableProps"
+import { defaultProps, mustFill } from "../moduleTableProps"
 
 
 export const ActionTable: React.FC = () => {
@@ -17,14 +17,7 @@ export const ActionTable: React.FC = () => {
         title: 'key',
         dataIndex: 'actionKey',
         tooltip: "使用时必须调用RuleEngine注册该key对应的动作",
-        formItemProps: {
-          rules: [
-            {
-              required: true,
-              message: '此项为必填项',
-            },
-          ],
-        },
+        formItemProps: mustFill
       },
       {
         title: '名称',

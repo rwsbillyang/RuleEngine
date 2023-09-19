@@ -15,25 +15,17 @@ import { RuleEditModal } from "./RuleEdit"
 import { initialValueRule, rubleTableProps } from "./RuleTable"
 import { BetaSchemaForm } from "@ant-design/pro-form"
 
-import { defaultProps } from "../moduleTableProps"
+import { defaultProps, mustFill } from "../moduleTableProps"
 
 import { deleteRuleOrGroup, saveRuleOrGroup } from "./RuleCommon"
 
 
 const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup> = 
     [
-
         {
             title: '名称',
             dataIndex: 'label',
-            formItemProps: {
-                rules: [
-                    {
-                        required: true,
-                        message: '此项为必填项',
-                    },
-                ],
-            },
+            formItemProps: mustFill
         },
         {
             title: '类型',
