@@ -91,12 +91,12 @@ data class Constant(
 
     @KomapperIgnore var paramType: ParamType? = null, //typeId 前端列表中需要使用该信息
     @KomapperIgnore var domain: Domain? = null, //domainId 前端列表中需要使用该信息
-    @KomapperIgnore @Contextual var jsonValue: JsonValue? = null
+    //@KomapperIgnore @Contextual var jsonValue: JsonValue? = null
 ){
     fun toBean(service: BaseCrudService){
         domain = domainId?.let{service.findOne(Meta.domain, {Meta.domain.id eq it}, "domain/${it}")}
         paramType = service.findOne(Meta.paramType, {Meta.paramType.id eq typeId}, "paramType/${typeId}")
-        if(jsonValue == null && value != null) jsonValue = MySerializeJson.decodeFromString(value!!)
+        //if(jsonValue == null && value != null) jsonValue = MySerializeJson.decodeFromString(value!!)
     }
     // 若注释掉，则前端保存时负责提供相应字符串的值
 //    fun toEntity(){

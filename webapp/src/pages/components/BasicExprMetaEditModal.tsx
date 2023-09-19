@@ -300,17 +300,17 @@ export const BasicExprMetaEditModal: React.FC<{
 
 
         return operandConfig.err ? <div> {operandConfig.err} </div> : <>
-          {operandConfig.other && <ValueMetaEditor name="other" constantQueryParams={getConstantQueryParams({ useSelf: true }, domainId, operandConfig.param, newMeta.paramType)} label="值" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={operandConfig.multiple === true} value={newMeta.other} onChange={(v) => { setNewMeta({ ...newMeta, other: v }) }} />}
+          {operandConfig.other && <ValueMetaEditor name="other" constantQueryParams={getConstantQueryParams2({ useSelf: true }, domainId, operandConfig.param, operandConfig.paramType)} label="值" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={operandConfig.multiple === true} value={newMeta.other} onChange={(v) => { setNewMeta({ ...newMeta, other: v }) }} />}
 
-          {operandConfig.start && <ValueMetaEditor name="start" constantQueryParams={getConstantQueryParams({ useSelf: true }, domainId, operandConfig.param, newMeta.paramType)} label="起始" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={false} value={newMeta.start} onChange={(v) => { setNewMeta({ ...newMeta, start: v }) }} />}
+          {operandConfig.start && <ValueMetaEditor name="start" constantQueryParams={getConstantQueryParams2({ useSelf: true }, domainId, operandConfig.param, operandConfig.paramType)} label="起始" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={false} value={newMeta.start} onChange={(v) => { setNewMeta({ ...newMeta, start: v }) }} />}
 
-          {operandConfig.end && <ValueMetaEditor name="end" constantQueryParams={getConstantQueryParams({ useSelf: true }, domainId, operandConfig.param, newMeta.paramType)} label="终止" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={false} value={newMeta.end} onChange={(v) => { setNewMeta({ ...newMeta, end: v }) }} />}
+          {operandConfig.end && <ValueMetaEditor name="end" constantQueryParams={getConstantQueryParams2({ useSelf: true }, domainId, operandConfig.param, operandConfig.paramType)} label="终止" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={false} value={newMeta.end} onChange={(v) => { setNewMeta({ ...newMeta, end: v }) }} />}
 
-          {operandConfig.set && <ValueMetaEditor name="set" constantQueryParams={getConstantQueryParams({ toSetType: true }, domainId, operandConfig.param, newMeta.paramType)} label="集合" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={true} value={newMeta.set} onChange={(v) => { setNewMeta({ ...newMeta, set: v }) }} />}
+          {operandConfig.set && <ValueMetaEditor name="set" constantQueryParams={getConstantQueryParams2({ toSetType: true }, domainId, operandConfig.param, operandConfig.paramType)} label="集合" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={true} value={newMeta.set} onChange={(v) => { setNewMeta({ ...newMeta, set: v }) }} />}
 
-          {operandConfig.e && <ValueMetaEditor name="e" constantQueryParams={getConstantQueryParams({ toBasicType: true }, domainId, operandConfig.param, newMeta.paramType)} label="某项" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={false} value={newMeta.e} onChange={(v) => { setNewMeta({ ...newMeta, e: v }) }} />}
+          {operandConfig.e && <ValueMetaEditor name="e" constantQueryParams={getConstantQueryParams2({ toBasicType: true }, domainId, operandConfig.param, operandConfig.paramType)} label="某项" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={false} value={newMeta.e} onChange={(v) => { setNewMeta({ ...newMeta, e: v }) }} />}
 
-          {operandConfig.num && <ValueMetaEditor name="num" constantQueryParams={getConstantQueryParams({ paramType: ["Int", "Long"] }, domainId, operandConfig.param, newMeta.paramType)} disabled={!!exprId} label="数量" paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={false} value={newMeta.num} onChange={(v) => { setNewMeta({ ...newMeta, num: v }) }} />}
+          {operandConfig.num && <ValueMetaEditor name="num" constantQueryParams={getConstantQueryParams2({ paramType: ["Int", "Long"] }, domainId, operandConfig.param, operandConfig.paramType)} disabled={!!exprId} label="数量" paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={false} value={newMeta.num} onChange={(v) => { setNewMeta({ ...newMeta, num: v }) }} />}
         </>
       }}
     </ProFormDependency>
@@ -503,12 +503,13 @@ export const checkAvailable = (paramType?: ParamType, op?: Operator) => {
 /**
  * 使用哪种类型的变量
  * 优先顺序：paramType > toSetType > toBasicType > useSelf
+ * 
  */
 export interface ParamTypeConfig {
   paramType?: string[]
-  toSetType?: boolean,
-  toBasicType?: boolean
-  useSelf?: boolean
+  toSetType?: boolean, //deprecated
+  toBasicType?: boolean  //deprecated
+  useSelf?: boolean //deprecated
 }
 
 
@@ -529,41 +530,75 @@ export interface ParamTypeConfig {
  * @param paramTypeCode 如果不提供将使用param的类型，因为有的比较符要求操作数类型与自己并不一致，如集合是否包含某项，某变量是否在集合中，交集数量等
  * @returns 返回ConstantQueryParams，其中包含了domainId，pagination, 以及ids或typeIds等字段
  */
-const getConstantQueryParams = (config: ParamTypeConfig, domainId?: number, param?: Param, paramType?: ParamType) => {
+// const getConstantQueryParams = (config: ParamTypeConfig, domainId?: number, param?: Param, paramType?: ParamType) => {
+//   const queryParams: ConstantQueryParams = { domainId: domainId, pagination: { pageSize: -1, sKey: "id", sort: 1 } }//pageSize: -1为全部加载
+
+//   if(param){
+//     if (param.valueScopeIds && param.valueScopeIds.length > 0) {
+//       queryParams.ids = param.valueScopeIds
+//       //return queryParams
+//     } else {
+//       if (config.paramType && config.paramType.length > 0) {
+//         queryParams.typeIds = config.paramType.map((e) => typeCode2Id(e)).filter((e) => e !== undefined).join(",")
+//       } else if (config.toSetType) {//还须包括对应的枚举类型
+//         const setTypeId = typeCode2Id(param.paramType.code + "Set") || param.paramType.id
+//         queryParams.typeIds = [setTypeId].join(",")
+//       } else if (config.toBasicType) {//还须包括对应的枚举类型
+//         const basicTypeId = getBasicTypeId(param.paramType.id) || param.paramType.id
+//         queryParams.typeIds = [basicTypeId].join(",")
+//       } else {
+//         queryParams.typeIds = [param.paramType.id].join(",")
+//       }
+//     }
+//   }else if(paramType) {
+//     if (config.paramType && config.paramType.length > 0) {
+//       queryParams.typeIds = config.paramType.map((e) => typeCode2Id(e)).filter((e) => e !== undefined).join(",")
+//     } else if (config.toSetType) {//还须包括对应的枚举类型
+//       const setTypeId = typeCode2Id(paramType.code + "Set") || paramType.id
+//       queryParams.typeIds = [setTypeId].join(",")
+//     } else if (config.toBasicType) {//还须包括对应的枚举类型
+//       const basicTypeId = getBasicTypeId(paramType.id) || paramType.id
+//       queryParams.typeIds = [basicTypeId].join(",")
+//     } else {
+//       queryParams.typeIds = [paramType.id].join(",")
+//     }
+//   }
+
+//   console.log("ConstantQueryParams=" + JSON.stringify(queryParams))
+//   return queryParams
+// }
+/**
+ * 不再区分toSetType、toBasicType、useSelf，统一使用其对应的所有基本类型以及Set类型，从中单选、多选或全选
+ * @param config 
+ * @param domainId 
+ * @param param 
+ * @param paramType 
+ * @returns 
+ */
+const getConstantQueryParams2 = (config: ParamTypeConfig, domainId?: number, param?: Param, paramType?: ParamType) => {
   const queryParams: ConstantQueryParams = { domainId: domainId, pagination: { pageSize: -1, sKey: "id", sort: 1 } }//pageSize: -1为全部加载
 
   if(param){
     if (param.valueScopeIds && param.valueScopeIds.length > 0) {
       queryParams.ids = param.valueScopeIds
-      //return queryParams
-    } else {
-      if (config.paramType && config.paramType.length > 0) {
-        queryParams.typeIds = config.paramType.map((e) => typeCode2Id(e)).filter((e) => e !== undefined).join(",")
-      } else if (config.toSetType) {
-        const setTypeId = typeCode2Id(param.paramType.code + "Set") || param.paramType.id
-        queryParams.typeIds = [setTypeId].join(",")
-      } else if (config.toBasicType) {
-        const basicTypeId = getBasicTypeId(param.paramType.id) || param.paramType.id
-        queryParams.typeIds = [basicTypeId].join(",")
-      } else {
-        queryParams.typeIds = [param.paramType.id].join(",")
-      }
-    }
-  }else if(paramType) {
-    if (config.paramType && config.paramType.length > 0) {
-      queryParams.typeIds = config.paramType.map((e) => typeCode2Id(e)).filter((e) => e !== undefined).join(",")
-    } else if (config.toSetType) {
-      const setTypeId = typeCode2Id(paramType.code + "Set") || paramType.id
-      queryParams.typeIds = [setTypeId].join(",")
-    } else if (config.toBasicType) {
-      const basicTypeId = getBasicTypeId(paramType.id) || paramType.id
-      queryParams.typeIds = [basicTypeId].join(",")
-    } else {
-      queryParams.typeIds = [paramType.id].join(",")
+      return queryParams
     }
   }
+  if (config.paramType && config.paramType.length > 0) {
+    queryParams.typeIds = config.paramType.map((e) => typeCode2Id(e)).filter((e) => e !== undefined).join(",")
+    return queryParams
+  }
+  const type = param?.paramType || paramType
+  if(!type){
+    console.warn("no paramType or param?.paramType")
+    return queryParams
+  }
+  
+  //除了指定的值域和类型外，其它的都是有基本类型（包括枚举）和Set类型, 可以单选、多选和全选
+  const basicTypeId = getBasicTypeId(type.id) || type.id
+  const setTypeId = typeCode2Id(type.code + "Set")
+  queryParams.typeIds = [basicTypeId, setTypeId].filter(e=>!!e).join(",")
 
-  //console.log("ConstantQueryParams=" + JSON.stringify(queryParams))
+  console.log("ConstantQueryParams2=" + JSON.stringify(queryParams))
   return queryParams
 }
-

@@ -52,15 +52,17 @@ export const ValueMetaEditor: React.FC<{
     }
 
     const constantAsyncSelectProps: MyAsyncSelectProps<Constant, ConstantQueryParams> = {
-        key: "constant/t/" + paramType?.id+"/d/"+domainId + "/ids/"+constantQueryParams.ids, //ConstantQueryParams中的参数各种变化，不仅仅是paramType?.id一种
+        key: "constant/t/" + constantQueryParams?.typeIds+"/d/"+domainId + "/ids/"+constantQueryParams.ids, //ConstantQueryParams中的参数各种变化，不仅仅是paramType?.id一种
         url: `${Host}/api/rule/composer/list/constant`,
         query: constantQueryParams,
         convertFunc: (item) => {
-            if (item.isEnum) {
-                if (item.jsonValue?.value && Array.isArray(item.jsonValue.value)) {
+            if(item.value) item.jsonValue = JSON.parse(item.value)
+            if (item.jsonValue?.value && Array.isArray(item.jsonValue.value)) {
+                if(item.isEnum){
+                    return { label: item.label, value: item.id, children: item.jsonValue.value.map((e) => { return { label: e.label || e.value , value: e.value } }) }
+                }else{
                     return { label: item.label, value: item.id, children: item.jsonValue.value.map((e) => { return { label: e.toString(), value: e } }) }
-                } else
-                    return { label: item.label, value: item.id }
+                }                  
             } else
                 return { label: item.label, value: item.id }
         }
@@ -219,26 +221,28 @@ export const ValueMetaEditor: React.FC<{
     </Form.Item>
 }
 
-//arry: 单选：[1, "乙"] 以及 [4]；
+//单选取值：获取选中的值
+//arry: 从枚举类型中选[1, 0], [1, "甲"]以及 [4]；
 export const getJsonValueFromArray = (multiple: boolean, arry: (string | number)[], paramType?: ParamType, constantKey?: string) => {
     //假定select中value都是id值，事实也是如此
     const constantId = arry[0]
     const constant: Constant | undefined = Cache.findOne(constantKey || "", constantId, "id")
     if (constant) {
-        let jsonValue
-        if (constant.isEnum) {
-            if (arry.length > 1) {
-                jsonValue = { value: arry[1], _class: paramType?.code || constant.jsonValue?._class || "String" }
-            } else {
-                jsonValue = constant?.jsonValue //此时其值为数组
+        let jsonValue  
+        if (arry.length > 1) {
+            if (constant.isEnum){
+                jsonValue = { value: arry[1], _class: paramType?.code || constant.jsonValue?._class.replaceAll("Enum", "") || "String" }
+            }else{
+                jsonValue = { value: arry[1], _class: paramType?.code || constant.jsonValue?._class.replaceAll("Set", "") || "String" }
             }
         } else {
-            jsonValue = constant?.jsonValue //值可能为数组也可能为单个元素值
+            jsonValue = constant?.jsonValue 
         }
+  
         if (multiple) {
-            jsonValue._class = jsonValue._class.replaceAll("Set", "") + "Set"
+            jsonValue._class = jsonValue._class.replaceAll("Set", "").replaceAll("Enum", "") + "Set"
         } else {
-            jsonValue._class = jsonValue._class.replaceAll("Set", "")
+            jsonValue._class = jsonValue._class.replaceAll("Set", "").replaceAll("Enum", "")
         }
         return jsonValue
     } else {
@@ -246,12 +250,12 @@ export const getJsonValueFromArray = (multiple: boolean, arry: (string | number)
     }
     return undefined
 }
-//arry: 多选选中多个[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
+//arry: 多选选中多个[[1, 2],[1, 2],[1, 2]]，[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
 export const getJsonValueFromArrayArray = (multiple: boolean, arrayArray: (string | number)[][], paramType?: ParamType, constantKey?: string) => {
     const value = arrayArray.flatMap((e) => getJsonValueFromArray(multiple, e, paramType, constantKey)?.value)
         .filter((e) => !!e) //因为e有可能是单个元素也有可能是数组，故使用flatMap 而不是map
 
-    const _class = (paramType?.code.replaceAll("Set", "") || "String") + "Set"
+    const _class = (paramType?.code.replaceAll("Set", "").replaceAll("Enum", "") || "String") + "Set"
 
     return { _class, value }
 }

@@ -2,6 +2,7 @@
 import { BasePageQuery, StorageType, BaseRecord, cachedFetchPromise } from "@rwsbillyang/usecache";
 
 import { ProColumns } from "@ant-design/pro-table";
+import { ProFormColumnsType } from "@ant-design/pro-form";
 
 
 
@@ -31,6 +32,9 @@ export interface MyProTableProps<T extends BaseRecord, Q extends BasePageQuery> 
   transformBeforeSave?: (data: T) => T //提提交保存前对提交的数据进行修改变换
   idKey?: string //primary key, _id for mongoDB doc, id for sql record
   cacheKey?: string //不同的搜索条件initialQuery，应给出不同的缓存键值，如： appId+"/fan/"+scene，否则可能共用列表值
+
+
+  formColumns?: ProFormColumnsType<T>[] //特殊情形下，使用单独的配置
 }
 
 
@@ -41,7 +45,8 @@ export interface EditProps<T extends BaseRecord, Q extends BasePageQuery> {
   style: 'Button' | 'Link',
   isAdd: boolean,
   record?: Partial<T>,
-  columns?: ProColumns[]
+  columns?: ProColumns[],
+  //formColumns?: ProFormColumnsType<T>[] //特殊情形下，使用单独的配置
 }
 
 /**

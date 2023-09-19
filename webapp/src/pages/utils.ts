@@ -200,11 +200,13 @@ export function meta2Expr(meta?: BasicExpressionMeta | ComplexExpressionMeta ){
  */
 const valueMeta2OpValue = (valueMeta?: ValueMeta) => {
     if (!valueMeta) return undefined
-    return {
+    const opvalue:OpValue = {
         valueType: valueMeta.valueType,
         key: valueMeta.param?.mapKey,
-        value: valueMeta.jsonValue?.value
+        value:(valueMeta.jsonValue && Array.isArray(valueMeta.jsonValue.value) && valueMeta.jsonValue?._class.indexOf("Enum") > 0) 
+        ? valueMeta.jsonValue?.value?.map(e=>e.value) : valueMeta.jsonValue?.value
     }
+    return opvalue
 }
 
 

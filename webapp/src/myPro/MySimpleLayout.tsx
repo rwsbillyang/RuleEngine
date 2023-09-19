@@ -1,6 +1,6 @@
 import { Layout, Menu } from 'antd';
 
-import { Link, matchRoutes, Outlet, useLocation } from 'react-router-dom';
+import { Link, matchRoutes, Outlet, RouteObject, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 //import { AppRoutes } from './AppRoutes';
 import React from 'react';
@@ -24,7 +24,7 @@ export const routesToMenu = (routes: MyRoute[], recusively: boolean = true, keyP
 }
 
 const selectedPaths = ( menuRoutes: MyRoute[]) => {
-    const routes = matchRoutes(menuRoutes, location.pathname); 
+    const routes = matchRoutes(menuRoutes as RouteObject[], location.pathname); 
     const pathArr: string[] = [];
     if (routes !== null) {
       routes.forEach((item) => {

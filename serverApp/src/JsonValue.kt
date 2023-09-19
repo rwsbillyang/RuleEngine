@@ -134,3 +134,47 @@ class StringSetValue(
 class LocalDateTimeSetValue(
     val value: Set<LocalDateTime>
 ): JsonValue()
+
+
+
+
+
+// 以下为枚举类型,为枚举增加了枚举名称label
+
+
+//T: Int, Long, Double, String, DateTime
+@Serializable
+class LabelValue<T>(
+    val label: String? = null,
+    val value: T
+)
+@Serializable
+@SerialName(IType.Type_IntEnum)
+class IntEnumValue(
+    val value: List<LabelValue<Int>>
+): JsonValue()
+
+
+@Serializable
+@SerialName(IType.Type_LongEnum)
+class LongEnumValue(
+    val value: List<LabelValue<Long>>
+): JsonValue()
+
+@Serializable
+@SerialName(IType.Type_DoubleEnum)
+class DoubleEnumValue(
+    val value: List<LabelValue<Double>>
+): JsonValue()
+
+@Serializable
+@SerialName(IType.Type_StringEnum)
+class StringEnumValue(
+    val value: List<LabelValue<String>>
+): JsonValue()
+
+@Serializable
+@SerialName(IType.Type_DateTimeEnum)
+class LocalDateTimeEnumValue(
+    val value: List<LabelValue<LocalDateTime>>
+): JsonValue()

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { PlusOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import ProTable, { ProColumns, ProTableProps } from '@ant-design/pro-table';
 import { Cache, BasePageQuery, StorageType, CacheStorage, useCacheList, BaseRecord, UseCacheConfig, cachedFetch, cachedFetchPromise, contains } from '@rwsbillyang/usecache';
@@ -126,12 +126,7 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
   }, [])
 
 
-
-
-
-
   //if (MyProConfig.EnableLog) console.log("isLoading=" + isLoading + ", current.query=" + JSON.stringify(current.query)+ ", list=" + JSON.stringify(list))
-
 
 
   return <RouteContext.Consumer>
@@ -270,7 +265,7 @@ function EditorHub<T extends BaseRecord, Q extends BasePageQuery>(props: EditPro
 function MySchemaFormEditor<T extends BaseRecord, Q extends BasePageQuery>(props: EditProps<T, Q>) {
   // const { message } = App.useApp();
   const layout = props.tableProps.layoutType || 'ModalForm'
-  const columns = props.columns
+  const columns = props.tableProps.formColumns || (props.columns? (props.columns as any) : undefined)
 
   return <BetaSchemaForm<T>
     title={props.title}
@@ -278,7 +273,7 @@ function MySchemaFormEditor<T extends BaseRecord, Q extends BasePageQuery>(props
     layoutType={layout}
     initialValues={props.record}
     omitNil={false} //ProForm 会自动清空 null 和 undefined 的数数据，如果你约定了 nil 代表某种数据，可以设置为 false 关闭此功能
-    columns={columns ? (columns as any) : undefined}
+    columns={columns}
     onFinish={async (v) => {
       return saveOne(v,
         props.isAdd ? props.tableProps.initialValues : props.record,

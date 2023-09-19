@@ -55,10 +55,14 @@ export interface ParamTypeQueryParams extends BasePageQuery {
 }
 
 
+export interface LabelValue{
+    label?: string,
+    value: string | number //: Int, Long, Double, String, DateTime
+}
 
 export interface JsonValue {
     _class: string, //backend ktorkit lib set: classDiscriminator="_class"
-    value?: boolean | string | number | (string | number)[]
+    value?: boolean | string | number | (string | number)[] | LabelValue[]
 }
 /**
  * 值常量
