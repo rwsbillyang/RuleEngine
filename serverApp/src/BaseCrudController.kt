@@ -33,7 +33,6 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.komapper.core.dsl.Meta
 import org.komapper.core.dsl.expression.WhereDeclaration
-import org.komapper.core.dsl.operator.and
 import org.slf4j.LoggerFactory
 
 
@@ -365,7 +364,7 @@ class BaseCrudController : KoinComponent {
             MySerializeJson.encodeToString(
                 DataBox.ok(
                     //1是新增时没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
-                    service.save(Meta.rule, e, e.id == null, "rule/${e.id}").toRuleCommon(service,null,false))
+                    service.save(Meta.rule, e, e.id == null, "rule/${e.id}").toRuleCommon(null))
             )
         }
 
@@ -376,7 +375,7 @@ class BaseCrudController : KoinComponent {
             MySerializeJson.encodeToString(
                 DataBox.ok(
                     //1是新增时没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
-                    service.save(Meta.ruleGroup, e, e.id == null, "ruleGroup/${e.id}").toRuleCommon(service,null, false))
+                    service.save(Meta.ruleGroup, e, e.id == null, "ruleGroup/${e.id}").toRuleCommon(null))
             )
         }
 

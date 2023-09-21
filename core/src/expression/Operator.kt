@@ -48,11 +48,12 @@ enum class EnumOp(val label: String, val remark: String? = null) {
  * 集合容器操作符
  * */
 enum class EnumCollectionOp (val label: String, val remark: String? = null){
+    eq("等于", "集合所包含元素相同"),
     contains("包含", "值集合包含某个元素：前者包含后者"),
     notContains("不包含", "值集合不包含某个元素：前者不包含后者"),
     containsAll("包含全部", "值集合包含所有元素：前者包含所有后者，即后者是前者子集"),
     anyIn("任意一个存在于", "任意元素存在于集合中，前者任意一个元素存在于后者中，即交集非空"),//即numberOfIn > 0
-    numberIn("几个存在于", "两个集合交集中的元素是几个"),
+    numberIn("有几个存在于", "两个集合交集中的元素是几个"),
     gteNumberIn("至少几个存在于","两个集合交集中的元素不小于几"),//集合v0存在于集合v1中的元素数量
     lteNumberIn("至多几个存在于","两个集合交集中的元素不大于几"),//集合v0存在于集合v1中的元素数量
     allIn("都存在于", "元素全部元素存在于集合中: 前者都存在于后者中，即前者是后者子集"),//元素全部元素存在于集合中，即是子集 即numberOfIn == sizeOf(collection1)

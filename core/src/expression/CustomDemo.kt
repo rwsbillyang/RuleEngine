@@ -28,10 +28,10 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("mytypeXXX")
 class MyExtendExpression(
-    override val key: String,
-    override val op: String,
+    val key: String,
+    val op: String,
     //val value: User? == null // Any_value_type_can_be_serialized. eg: User
-): BasicExpression(){
+): LogicalExpr(){
     override fun eval(dataPicker: (String) -> Any?) = when(op){
         "isVip" -> {
             //val v0 = map[key] as User? // Any_value_type_can_be_serialized?

@@ -53,11 +53,7 @@ fun Application.module(testing: Boolean = false) { //"X-Auth-uId", "X-Auth-oId",
 
     installModule(mainModule)
 
-    //为减少后端启动的java app数量，将各程序的业务模块集中到一个app中，在nginx配置中都使用同一个upstream即可
-    //需要放到一起的话，就引入对应的依赖，install对应的业务模块，这款模块依然可以放入到不同的数据库中，互不干扰
-    //前端可以采用分离的webapp（对应不同不同的域名），需在nginx中配置对应的virtual host
-    //前端也可以集成到一起，放到一个webapp中，各应用（如公众号或企业微信agent应用），使用该webapp对应的域名下不同的路径即可
-
+    //使用SQL数据库，非默认设置
     installModule(bizModule,dbName, DbType.SQL, dbUser, dbPwd, dbHost, dbPort)
 
     defaultInstall(enableJwt = false, false, enableWebSocket = false)

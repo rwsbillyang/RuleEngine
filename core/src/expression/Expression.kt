@@ -49,15 +49,21 @@ export interface ComplexExpression  extends Expr{
     sub: BasicExpression[]
 }
  * */
+@Serializable
 sealed class LogicalExpr{
     abstract fun eval(dataPicker: (String) -> Any?): Boolean
 }
 
-abstract class BasicExpression: LogicalExpr(){
-    abstract val key: String
-    abstract val op: String
-}
+//在sealed class与具体子类之间，多加了一个类层次，导致反序列化时报错：
+//JsonDecodingException: Polymorphic serializer was not found for class discriminator
+//@Serializable
+//@SerialName("Basic")
+//abstract class BasicExpression: LogicalExpr(){
+//    abstract val key: String
+//    abstract val op: String
+//}
 
+@Serializable
 enum class ValueType{
     Param, Constant, JsonValue
 }
@@ -81,10 +87,10 @@ class OpValue<T>(
 @Serializable
 @SerialName(IType.Type_Bool)
 class BoolExpression(
-    override val key: String,
-    override val op: String,
+    val key: String,
+    val op: String,
     val other: OpValue<Boolean>
-): BasicExpression() {
+): LogicalExpr() {
     override fun eval(dataPicker: (String) -> Any?) 
     = BoolType.op(op, dataPicker(key) as Boolean?, other.real(dataPicker))
 }
@@ -92,13 +98,13 @@ class BoolExpression(
 @Serializable
 @SerialName(IType.Type_Int)
 class IntExpression(
-    override val key: String,
-    override val op: String,
+     val key: String,
+     val op: String,
     val other: OpValue<Int>? = null,
     val start: OpValue<Int>? = null,//key所在变量范围比较
     val end: OpValue<Int>? = null,//key所在变量范围比较
     val set: OpValue<Set<Int>>? = null//key所在变量是否存在于set中
-): BasicExpression() {
+): LogicalExpr() {
     override fun eval(dataPicker: (String) -> Any?) =
             IntType.op(op, dataPicker(key) as Int?,
                other?.real(dataPicker), start?.real(dataPicker), end?.real(dataPicker), set?.real(dataPicker))
@@ -109,13 +115,13 @@ class IntExpression(
 @Serializable
 @SerialName(IType.Type_Long)
 class LongExpression(
-    override val key: String,
-    override val op: String,
+    val key: String,
+    val op: String,
     val other: OpValue<Long>? = null,
     val start: OpValue<Long>? = null,
     val end: OpValue<Long>? = null,
     val set: OpValue<Set<Long>>? = null
-): BasicExpression() {
+): LogicalExpr() {
     override fun eval(dataPicker: (String) -> Any?) = LongType.op(op, dataPicker(key) as Long?,
         other?.real(dataPicker), start?.real(dataPicker), end?.real(dataPicker), set?.real(dataPicker))
 }
@@ -123,13 +129,13 @@ class LongExpression(
 @Serializable
 @SerialName(IType.Type_Double)
 class DoubleExpression(
-    override val key: String,
-    override val op: String,
+    val key: String,
+    val op: String,
     val other: OpValue<Double>? = null,
     val start: OpValue<Double>? = null,
     val end: OpValue<Double>? = null,
     val set: OpValue<Set<Double>>? = null
-): BasicExpression() {
+): LogicalExpr() {
     override fun eval(dataPicker: (String) -> Any?) = DoubleType.op(op, dataPicker(key) as Double?,  other?.real(dataPicker), start?.real(dataPicker), end?.real(dataPicker), set?.real(dataPicker))
 }
 
@@ -137,13 +143,13 @@ class DoubleExpression(
 @Serializable
 @SerialName(IType.Type_String)
 class StringExpression(
-    override val key: String,
-    override val op: String,
+    val key: String,
+    val op: String,
     val other: OpValue<String>? = null,
     val start: OpValue<String>? = null,
     val end: OpValue<String>? = null,
     val set: OpValue<Set<String>>? = null
-): BasicExpression() {
+): LogicalExpr() {
     override fun eval(dataPicker: (String) -> Any?) = StringType.op(op, dataPicker(key) as String?,  other?.real(dataPicker), start?.real(dataPicker), end?.real(dataPicker), set?.real(dataPicker))
 }
 
@@ -152,72 +158,72 @@ class StringExpression(
 @Serializable
 @SerialName(IType.Type_Datetime)
 class DatetimeExpression(
-    override val key: String,
-    override val op: String,
+    val key: String,
+    val op: String,
     val other: OpValue<LocalDateTime>? = null,
     val start: OpValue<LocalDateTime>? = null,
     val end: OpValue<LocalDateTime>? = null,
     val set: OpValue<Set<LocalDateTime>>? = null
-): BasicExpression() {
+): LogicalExpr() {
     override fun eval(dataPicker: (String) -> Any?) = DateTimeType.op(op, dataPicker(key) as LocalDateTime?,  other?.real(dataPicker), start?.real(dataPicker), end?.real(dataPicker), set?.real(dataPicker))
 }
 
 @Serializable
 @SerialName(IType.Type_IntSet)
 class IntSetExpression(
-    override val key: String,
-    override val op: String,
+    val key: String,
+    val op: String,
     val other: OpValue<Set<Int>>? = null,
     val e: OpValue<Int>? = null,//key所在变量集中是否包含e
     val num: OpValue<Int>? = null //key所在变量集与other交集元素个事 与num比较
-): BasicExpression() {
+): LogicalExpr() {
     override fun eval(dataPicker: (String) -> Any?) = IntSetType.op(op,  dataPicker(key) as Set<Int>?, other?.real(dataPicker), e?.real(dataPicker), num?.real(dataPicker))
 }
 
 @Serializable
 @SerialName(IType.Type_LongSet)
 class LongSetExpression(
-    override val key: String,
-    override val op: String,
+    val key: String,
+    val op: String,
     val other: OpValue<Set<Long>>? = null,
     val e: OpValue<Long>? = null,//key所在变量集中是否包含e
     val num: OpValue<Int>? = null //key所在变量集与other交集元素个事 与num比较
-): BasicExpression() {
+): LogicalExpr() {
     override fun eval(dataPicker: (String) -> Any?) = LongSetType.op(op,  dataPicker(key) as Set<Long>?, other?.real(dataPicker), e?.real(dataPicker), num?.real(dataPicker))
 }
 
 @Serializable
 @SerialName(IType.Type_DoubleSet)
 class DoubleSetExpression(
-    override val key: String,
-    override val op: String,
+    val key: String,
+    val op: String,
     val other: OpValue<Set<Double>>? = null,
     val e: OpValue<Double>? = null,//key所在变量集中是否包含e
     val num: OpValue<Int>? = null //key所在变量集与other交集元素个事 与num比较
-): BasicExpression() {
+): LogicalExpr() {
     override fun eval(dataPicker: (String) -> Any?) = DoubleSetType.op(op, dataPicker(key) as Set<Double>?, other?.real(dataPicker), e?.real(dataPicker), num?.real(dataPicker))
 }
 
 @Serializable
 @SerialName(IType.Type_StringSet)
 class StringSetExpression(
-    override val key: String,
-    override val op: String,
+    val key: String,
+    val op: String,
     val other: OpValue<Set<String>>? = null,
     val e: OpValue<String>? = null,//key所在变量集中是否包含e
     val num: OpValue<Int>? = null //key所在变量集与other交集元素个事 与num比较
-): BasicExpression() {
+): LogicalExpr() {
     override fun eval(dataPicker: (String) -> Any?) = StringSetType.op(op,  dataPicker(key) as Set<String>?, other?.real(dataPicker), e?.real(dataPicker), num?.real(dataPicker))
 }
 
 @Serializable
 @SerialName(IType.Type_DateTimeSet)
 class DateTimeSetExpression(
-    override val key: String,
-    override val op: String,
+    val key: String,
+    val op: String,
     val other: OpValue<Set<LocalDateTime>>? = null,
     val e: OpValue<LocalDateTime>? = null,//key所在变量集中是否包含e
     val num: OpValue<Int>? = null //key所在变量集与other交集元素个事 与num比较
-): BasicExpression() {
+): LogicalExpr() {
     override fun eval(dataPicker: (String) -> Any?) = DateTimeSetType.op(op,  dataPicker(key) as Set<LocalDateTime>?, other?.real(dataPicker), e?.real(dataPicker), num?.real(dataPicker))
 }

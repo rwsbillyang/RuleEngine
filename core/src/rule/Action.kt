@@ -18,7 +18,10 @@
 
 package com.github.rwsbillyang.ruleEngine.core.rule
 
-class Action(
-    val key: String,
-    val remark: String? = null,
-    val action: (currentRule: IRule, parentRule: IRule?) -> Unit)
+//class Action(
+//    val key: String,
+//    val remark: String? = null,
+//    val action: (currentRule: IRule, parentRule: IRule?) -> Unit)
+
+
+typealias Action = (currentRule: EvalRule, parentRule: EvalRule?) -> Unit

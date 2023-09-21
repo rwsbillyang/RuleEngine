@@ -98,12 +98,6 @@ data class Constant(
         paramType = service.findOne(Meta.paramType, {Meta.paramType.id eq typeId}, "paramType/${typeId}")
         //if(jsonValue == null && value != null) jsonValue = MySerializeJson.decodeFromString(value!!)
     }
-    // 若注释掉，则前端保存时负责提供相应字符串的值
-//    fun toEntity(){
-//        if(jsonValue != null) {
-//            value = MySerializeJson.encodeToString(jsonValue!!)
-//        }
-//    }
 }
 
 
@@ -186,14 +180,7 @@ data class Expression(
     //数据库中的字段转换成给前端展示需要的字段
     fun toBean(service: BaseCrudService){
         domain = domainId?.let{service.findOne(Meta.domain, {Meta.domain.id eq it}, "domain/${it}")}
-        //if(expr == null && exprStr != null) expr = MySerializeJson.decodeFromString(exprStr!!)
-        //if(meta == null && metaStr != null) meta = MySerializeJson.decodeFromString(metaStr!!)
     }
-    //前端提交的数据转换一下，赋值给要保存到数据库中的字段  若注释掉，则前端保存时负责提供相应字符串的值
-//    fun toEntity(){
-//        if(expr != null) exprStr = MySerializeJson.encodeToString(expr!!)
-//        if(meta != null) metaStr = MySerializeJson.encodeToString(meta!!)
-//    }
 }
 
 
@@ -230,6 +217,7 @@ class RuleCommon(
     val remark: String?,
     val enable: Boolean ,
     val tags: String?,
+    val exclusive: Boolean,
     val domainId: Int?,
     var domain: Domain? , //前端列表数据需要
     var children: List<RuleCommon> ? = null //为前端构造tree型列表展示，不再使用List<Rule>和List<RuleGroup>，让前端子列表统一
@@ -263,6 +251,7 @@ data class Rule(
     //@Contextual var expr : LogicalExpr? = null,//由exprStr解析或前端提供
     //@Contextual var meta: ExpressionMeta? = null//由metaStr解析或前端提供
 
+    val exclusive: Boolean = false, //chidlren是否互斥
 
     val ruleChildrenIds: String? = null, // json string of Rule.id List, insert/save one when create a child in front end
     val ruleGroupChildrenIds: String? = null,// json string of RuleGroup.id List, insert one when create a child in front end
@@ -274,10 +263,10 @@ data class Rule(
     //@KomapperIgnore var ruleGroupChildren: List<RuleGroup>? = null,
     //@KomapperIgnore var children: MutableList<RuleCommon> ? = null //为前端构造tree型列表展示，不再使用List<Rule>和List<RuleGroup>，让前端子列表统一
 ){
-    fun toRuleCommon(service: BaseCrudService, path: MutableList<String>? = null, setupChildrenAndPath: Boolean = true): RuleCommon  {
-        val pair = if(setupChildrenAndPath)getChildrenTree(service, path) else Pair(listOf(), null) //在新增和鞭酒修改时无需构建children，因1是没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
+    fun toRuleCommon(service: BaseCrudService?, path: MutableList<String>? = null): RuleCommon  {
+        val pair = if(service != null)getChildrenTree(service, path) else Pair(listOf(), null) //在新增和鞭酒修改时无需构建children，因1是没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
         return RuleCommon(
-            pair.first, this, null, id, "rule$id", level, label, priority, remark, enable, tags, domainId, domain, pair.second
+            pair.first, this, null, id, "rule$id", level, label, priority, remark, enable, tags, exclusive, domainId,  domain, pair.second
         )
     }
 
@@ -348,10 +337,10 @@ data class RuleGroup(
     //@KomapperIgnore var ruleChildren: List<Rule>? = null,
     //@KomapperIgnore var ruleGroupChildren: List<RuleGroup>? = null,
 ){
-    fun toRuleCommon(service: BaseCrudService, path: MutableList<String>? = null, setupChildrenAndPath: Boolean = true): RuleCommon  {
-        val pair = if(setupChildrenAndPath)getChildrenTree(service, path) else Pair(listOf(), null) //在新增和鞭酒修改时无需构建children，因1是没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
+    fun toRuleCommon(service: BaseCrudService?, path: MutableList<String>? = null): RuleCommon  {
+        val pair = if(service != null)getChildrenTree(service, path) else Pair(listOf(), null) //在新增和鞭酒修改时无需构建children，因1是没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
         return RuleCommon(
-            pair.first, null, this, id, "group$id", level, label, priority, remark, enable, tags, domainId, domain, pair.second
+            pair.first, null, this, id, "group$id", level, label, priority, remark, enable, tags, exclusive, domainId, domain, pair.second
         )
     }
 

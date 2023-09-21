@@ -21,28 +21,58 @@ package com.github.rwsbillyang.ruleEngine.core.rule
 
 class TreeNode<T>(
     val data: T?,
-    val parents: MutableList<TreeNode<T>> = mutableListOf(),
-    val children: MutableList<TreeNode<T>>  = mutableListOf()
+    val parents: MutableList<String> = mutableListOf(),
+    val children: MutableList<String> = mutableListOf()
 )
 
-class ResultCollector<T>(
-    val root: TreeNode<T> = TreeNode(null),
-    val nodeDataPicker: (IRule)-> T )
+/**
+ * data（自己任意定义的类型T）收集器，需提供一个命中的EvalRule到T的转换器
+ * 最终结果保存在收集器的resultMap中，它是一个有着指向父子节点的树形结构，而root是其起始节点
+ *
+ * @param nodeDataPicker 将当前命中的EvalRule转换为Pair，其中第一个为唯一键值，第二个是自定义的data
+ * 两个值将被保存到resultMap中，并构建亲子关系节点
+ * */
+class ResultTreeCollector<T>(
+    val nodeDataPicker: (EvalRule)-> Pair<String, T>)
 {
-    val map: MutableMap<T, TreeNode<T>> = mutableMapOf()
+    val root: TreeNode<T> = TreeNode(null)
+    val resultMap: MutableMap<String, TreeNode<T>> = mutableMapOf()
 
-    fun collect(currentRule: IRule, parentRule: IRule?){
-        val currentNode = TreeNode(nodeDataPicker(currentRule))
-        map[nodeDataPicker(currentRule)] = currentNode
+    /**
+     * 收集结果
+     * */
+    fun collect(currentRule: EvalRule, parentRule: EvalRule?){
+        val pair = nodeDataPicker(currentRule)
+        val childKey = pair.first
+        val currentNode = resultMap[childKey]?:TreeNode(pair.second)
+        resultMap[childKey] = currentNode
 
         if(parentRule == null)
         {
-            root.children.add(currentNode)
+            root.children.add(childKey)
+            println("add top key: $childKey")
         }else{
-            val parentKey = nodeDataPicker(parentRule)
-            val parentNode = map[parentKey]?:TreeNode(nodeDataPicker(parentRule))
-            parentNode.children.add(currentNode)
-            currentNode.parents.add(parentNode)
+            val pair2 = nodeDataPicker(parentRule)
+            val parentKey = pair2.first
+            val parentNode = resultMap[parentKey]?:TreeNode(pair2.second)
+            resultMap[parentKey] = parentNode
+            parentNode.children.add(childKey)
+            currentNode.parents.add(parentKey)
+        }
+    }
+
+    /**
+     * 对结果进行doSth操作
+     * */
+    fun traverseResult(rootNode: TreeNode<T> = root, doSth: (TreeNode<T>) -> Unit){
+        rootNode.children.forEach{
+            val node = resultMap[it]
+            if(node != null){
+                doSth(node)
+                traverseResult(node,doSth)
+            }else{
+                System.err.println("no treeNode, but has key=$it")
+            }
         }
     }
 }

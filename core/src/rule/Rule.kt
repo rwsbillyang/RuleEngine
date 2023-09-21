@@ -20,65 +20,82 @@ package com.github.rwsbillyang.ruleEngine.core.rule
 
 import com.github.rwsbillyang.ruleEngine.core.expression.LogicalExpr
 
-interface IRule{
-    val id: String
-    fun eval(dataPicker: (key: String) -> Any?,parentRule: IRule?,
-             thenAction: ((currentRule: IRule, parentRule: IRule?) -> Boolean) ? = null,
-             elseAction: ((currentRule: IRule, parentRule: IRule?) -> Boolean) ? = null): Boolean
-}
+
 
 /**
- * @param id rule id
- * @param logicalExpr condition
- * @param customThenAction 若提供，则使用它，否则使用eval函数中的thenAction
- * @param customElseAction2 若提供，则使用它，否则使用eval函数中的elseAction
+ * @param logicalExpr 表达式
+ * @param exclusive 子节点是否互斥
+ * @param action logicalExpr执行结果为true时的动作
+ * @param elseAction logicalExpr执行结果为false时的动作
+ * @param extra 附属信息，通常是对应的规则或规则组 不同环境中数据库规则实体定义可能不同
  * */
-class Rule(
-    override val id: String,
-    val logicalExpr: LogicalExpr,
-    val children: List<IRule>? = null,
-    val customThenAction: ((currentRule: IRule, parentRule: IRule?) -> Boolean) ? = null,
-    val customElseAction: ((currentRule: IRule, parentRule: IRule?) -> Boolean) ? = null
-): IRule{
-    override fun eval(dataPicker: (String) -> Any?, parentRule: IRule?,
-                      thenAction: ((currentRule: IRule, parentRule: IRule?) -> Boolean) ? ,
-                      elseAction: ((currentRule: IRule, parentRule: IRule?) -> Boolean) ?): Boolean {
-        if(logicalExpr.eval(dataPicker)){
-            (customThenAction?:thenAction)?.let { it(this, parentRule) }
-            if(!children.isNullOrEmpty()){
-                children.forEach { it.eval(dataPicker, this,thenAction, elseAction) }
-            }
-            return true
-        }else{
-            (customElseAction?:elseAction)?.let { it(this, parentRule) }
+class EvalRule(
+    val logicalExpr: LogicalExpr?,
+    val exclusive: Boolean,
+    val action: String? = null,
+    val elseAction: String? = null,
+    val extra: Any?
+){
+    /**
+     * @param dataProvider 根据key获取对应的变量值
+     * @param loadChildrenFunc 加载子规则节点extra，通常是根据子节点id查询
+     * @param toEvalRule 将extra规则转换为EvalRule
+     * @param parentRule 当前规则的父规则，方便收集命中信息
+     * @param collector 提供的话则收集匹配的规则
+     * */
+    fun <T> eval(
+        dataProvider: (key: String) -> Any?,
+        loadChildrenFunc: (parent: Any?) -> List<Any>?,
+        toEvalRule: (extra: Any) -> EvalRule,
+        parentRule: EvalRule?,
+        collector: ResultTreeCollector<T>?
+    ): Boolean {
+         if(logicalExpr != null){
+             if(logicalExpr.eval(dataProvider)){
+                 collector?.collect(this, parentRule)
+                 (action?.let { RuleEngine.getAction(it) }?:RuleEngine.defaultAction)?.let { it(this, parentRule) }
+                 evalChildren(dataProvider, loadChildrenFunc, toEvalRule, collector)
+
+                 return true
+             }else{
+                 (elseAction?.let { RuleEngine.getAction(it) }?:RuleEngine.defaultElseAction)?.let { it(this, parentRule) }
+                 return false
+             }
+         }else{
+             val flag = evalChildren(dataProvider, loadChildrenFunc, toEvalRule, collector)
+             if(flag) {//当顶级节点为group时，因为没有自己的expr，只要有子节点，就会执行collect
+                 collector?.collect(this, parentRule)
+             }
+             return flag
+         }
+    }
+    private fun <T> evalChildren(
+        dataProvider: (key: String) -> Any?,
+        loadChildrenFunc: (parent: Any?) -> List<Any>?,
+        toEvalRule: (extra: Any,) -> EvalRule,
+        collector: ResultTreeCollector<T>?
+    ): Boolean
+    {
+        val children = loadChildrenFunc(extra)?.map{ toEvalRule(it) }
+        if(children == null){
+            System.err.println("no loadChildrenFunc, do nothing")
             return false
         }
-    }
+        if(children.isEmpty()) return false
 
-}
-
-
-class RuleGroup(
-    override val id: String,
-    val exclusive: Boolean = true,
-    val children: List<IRule>
-): IRule{
-    override fun eval(dataPicker: (String) -> Any?,parentRule: IRule?,
-                      thenAction: ((currentRule: IRule, parentRule: IRule?) -> Boolean)?,
-                      elseAction: ((currentRule: IRule, parentRule: IRule?) -> Boolean)?): Boolean {
         if(exclusive){
             for(r in children){
-                if(r.eval(dataPicker,this, thenAction, elseAction)){
+                if(r.eval(dataProvider, loadChildrenFunc, toEvalRule, this, collector)){
                     return true
                 }
             }
             return false
         }else{
+            var flag = false
             for(r in children){
-                r.eval(dataPicker, this,thenAction, elseAction)
+                flag = flag || r.eval(dataProvider, loadChildrenFunc, toEvalRule, this, collector)
             }
-            return false
+            return flag
         }
     }
 }
-
