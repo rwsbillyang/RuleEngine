@@ -169,7 +169,7 @@ dependencies {
     implementation project(":core")
 
 
-    //compileOnly "com.github.rwsbillyang:yinyang:1.0.0"
-    implementation "com.github.rwsbillyang:yinyang:1.0.0"
+    compileOnly "com.github.rwsbillyang:yinyang:1.0.0"
+    //implementation "com.github.rwsbillyang:yinyang:1.0.0"
 }
 
