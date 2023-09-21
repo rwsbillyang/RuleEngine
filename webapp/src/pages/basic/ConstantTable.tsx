@@ -168,12 +168,12 @@ export const ConstantTable: React.FC = () => {
       e.typeId = +e.typeInfo.value
       delete e.typeInfo
 
-      if (e.jsonValue?.value && Array.isArray(e.jsonValue?.value)) {
-        e.jsonValue?.value.forEach(e => {
-          delete e["0"]//为何数组元素中存在一个0的字段？
-          delete e["1"] //应该是旧格式修改时被antd自动添加上的，新建的记录无这些字段
-        })
-      }
+      // if (e.jsonValue?.value && Array.isArray(e.jsonValue?.value)) {
+      //   e.jsonValue?.value.forEach(e => {
+      //     delete e["0"]//为何数组元素中存在一个0的字段？
+      //     delete e["1"] //应该是旧格式修改时被antd自动添加上的，新建的记录无这些字段
+      //   })
+      // }
 
 
       e.value = JSON.stringify(e.jsonValue)
@@ -218,7 +218,7 @@ const getJsonValueColumn = (isEnum?: boolean, typeInfo?: LabeledValue) => {
   }
 
 
-  console.log("vauleType=" + vauleType) //+ ",typeInfo",typeInfo)
+ // console.log("vauleType=" + vauleType) //+ ",typeInfo",typeInfo)
 
   let columns: ProFormColumnsType[]
   if (isEnum) {
@@ -255,7 +255,7 @@ const getJsonValueColumn = (isEnum?: boolean, typeInfo?: LabeledValue) => {
     columns = [
       {
         title: "集合值", //需要构建一个JsonValue，并且根据枚举以及type选择不同的控件
-        dataIndex: ['jsonValue', 'value'],//从后端提供的jsonValue中取值
+        dataIndex: 'jsonValue',//从后端提供的jsonValue中取值
         valueType: vauleType,
         width: 'md',
         renderText: (text, record) => record.jsonValue?.value + "",
@@ -296,11 +296,6 @@ const getJsonValueColumn = (isEnum?: boolean, typeInfo?: LabeledValue) => {
         valueType: vauleType,
         width: 'md',
         renderText: (text, record) => record.jsonValue?.value + "",
-        // renderFormItem: (schema, config, form) => {
-        //   //console.log("schema=" + JSON.stringify(schema))
-        //   //console.log("config=" + JSON.stringify(config))
-        //   return <JsonValueEditor type={typeInfo?.label} width="100%" multiple={false} value={jsonValue}/>
-        // },
         formItemProps: mustFill,
         hideInSearch: true
       }

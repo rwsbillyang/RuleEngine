@@ -72,6 +72,7 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
         dataIndex: 'remark',
         valueType: 'textarea',
         ellipsis: true,
+        hideInTable: true,
         hideInSearch: true
     },
 
@@ -82,8 +83,7 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
         dataIndex: ['rule', 'thenAction'],
         key: "thenAction",
         valueType: "select",
-        hideInSearch: true,
-        formItemProps: mustFill
+        hideInSearch: true
     },
     {
         title: 'Else',
@@ -129,7 +129,7 @@ export const rubleTableProps = {
 
         //保存它们对应的string信息
         delete e.meta
-        delete e.tagList
+        //delete e.tagList
         delete e.expr
 
         return e

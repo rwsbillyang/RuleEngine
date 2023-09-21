@@ -86,7 +86,7 @@ export const ParamTable: React.FC = () => {
       request: (params) => {
         const paramType: ParamType = Cache.findOne(AllParamTypeKey, params.typeId, "id")
         let basicTypeId = getBasicTypeId(params.typeId)
-        const setTypeId = paramType? typeCode2Id(paramType.code.replaceAll("Set", "") + "Set") : undefined
+        const setTypeId = paramType? typeCode2Id(paramType.code.replaceAll("Set", "").replaceAll("Enum", "") + "Set") : undefined
         const typeIds = [basicTypeId, setTypeId].filter(e=>!!e).join(",")
         return asyncSelectProps2Request<Constant, ConstantQueryParams>({
           key: "constantEnum/domain/" + params.domainId + "/typeIds/" + typeIds,

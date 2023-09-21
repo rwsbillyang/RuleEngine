@@ -40,6 +40,7 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
         {
             title: '所属',
             key: "domainId",
+            hideInTable: true,
             dataIndex: ['domain', 'label'],
             request: () => asyncSelectProps2Request<Domain, DomainQueryParams>({
                 key: AllDomainKey, //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
@@ -52,7 +53,7 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
             title: '排他性',
             tooltip: "任意一个rule的条件成立则退出",
             valueType: "switch",
-            dataIndex: ['ruleGroup', 'exclusive'],
+            dataIndex: 'exclusive',
         },
         {
             title: '状态',
@@ -75,6 +76,7 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
             dataIndex: 'remark',
             valueType: 'textarea',
             ellipsis: true,
+            hideInTable: true,
             hideInSearch: true
         }
     ]
@@ -122,7 +124,7 @@ export const RuleGroupTable: React.FC = () => {
         valueType: 'option',
         dataIndex: 'actions',
         render: (dom, record, index, action, schema) => {
-            console.log("row.label=" + record.label + ", index=" + index)
+            //console.log("row.label=" + record.label + ", index=" + index)
 
             return [
                 <Dropdown key="addSub" menu={{

@@ -279,7 +279,8 @@ export interface RuleCommon{
     tags?: string, 
     domainId?: number,
     domain?: Domain, //前端列表数据需要
-    children?: RuleCommon[]
+    children?: RuleCommon[],
+    exclusive: boolean
 }
 
 
@@ -315,6 +316,8 @@ export interface Rule extends BaseRecord {
     ruleParentIds?: string, // json string of Rule.id List, 后端维护该值，前端不做任何变动，insert/save one when create a child in front end
     ruleGroupParentIds?: string,// json string of RuleGroup.id List,后端维护该值，前端不做任何变动， insert one when create a child in front end
     
+
+    exclusive?: boolean // default false,
     //ruleParentIdList?: string[], //only for frontend
     //ruleGroupParentIdList?: string[]//only for frontend
 

@@ -152,7 +152,7 @@ export const ValueMetaEditor: React.FC<{
                         onChange={(v) => {
                             //value是一个数组，存放的分别是select option的value
                             //单选：[1, "乙"] 以及 [4]；
-                            console.log("ValueMetaEditor paramId, Cascader.onChange: value=" + JSON.stringify(v))
+                            //console.log("ValueMetaEditor paramId, Cascader.onChange: value=" + JSON.stringify(v))
                             if(v){
                                 if (v.length > 1) {
                                     onChange({ ...value, paramId: +v[1] })
@@ -194,7 +194,7 @@ export const ValueMetaEditor: React.FC<{
                     //eg：树形select的option的value 
                     //单选：[1, "乙"] 以及 [4]；
                     //多选选中多个[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
-                    //console.log("ValueMetaEditor constant, Cascader.onChange: value=" + JSON.stringify(value))
+                    //console.log("ValueMetaEditor constant, Cascader.onChange:multiple="+ multiple + ", v=" + JSON.stringify(v))
                     //console.log("param?.paramType.code=" + param?.paramType.code)
                     if (v && v.length > 0) {
                         let jsonValue
@@ -253,7 +253,7 @@ export const getJsonValueFromArray = (multiple: boolean, arry: (string | number)
 //arry: 多选选中多个[[1, 2],[1, 2],[1, 2]]，[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
 export const getJsonValueFromArrayArray = (multiple: boolean, arrayArray: (string | number)[][], paramType?: ParamType, constantKey?: string) => {
     const value = arrayArray.flatMap((e) => getJsonValueFromArray(multiple, e, paramType, constantKey)?.value)
-        .filter((e) => !!e) //因为e有可能是单个元素也有可能是数组，故使用flatMap 而不是map
+        .filter((e) => e !== undefined) //因为e有可能是单个元素也有可能是数组，故使用flatMap 而不是map
 
     const _class = (paramType?.code.replaceAll("Set", "").replaceAll("Enum", "") || "String") + "Set"
 

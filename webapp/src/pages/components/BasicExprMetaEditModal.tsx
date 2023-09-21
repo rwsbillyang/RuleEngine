@@ -37,6 +37,7 @@ export const BasicExprMetaEditModal: React.FC<{
   const initialMeta: BasicExpressionMeta = { _class: "Basic" }
   const [newExprId, setNewExprId] = useState(exprId)
   const [newMeta, setNewMeta] = useState(meta || initialMeta)
+  const [opTooltip, setOpTooltip] = useState<string>()
   //console.log("BasicExprMetaEditModal, meta=", meta)
   //console.log("BasicExprMetaEditModal, newMeta=", newMeta)
 
@@ -235,6 +236,7 @@ export const BasicExprMetaEditModal: React.FC<{
         return <ProFormSelect
           name="opId"
           initialValue={newMeta?.opId}
+          tooltip={opTooltip}
           label="比较符"
           dependencies={["exprId", "paramId", "paramTypeId"]}//不可少，否则request不重新请求
           disabled={!!exprId}
@@ -285,6 +287,7 @@ export const BasicExprMetaEditModal: React.FC<{
         newMeta.param = operandConfig.param  //newMeta.paramId更新后也需要更新对应的param
         newMeta.paramType = operandConfig.paramType
         newMeta.op = operandConfig.op //同上
+        
 
         //console.log(newMeta)
 
@@ -350,7 +353,7 @@ const asyncGetOpOptions = (paramId?: number, domainId?: number, categoryId?: num
   let param: Param | undefined
   if (EnableParamCategory) {
     if (categoryId && paramId) {
-      const elems = TreeCache.getElementsByPathIdsInTreeFromCache(ParamCategoryKeyPrefix + domainId, [categoryId, paramId], "id", "children", StorageType.OnlySessionStorage, false)
+      const elems = TreeCache.getElementsByPathIdsInTreeFromCache(ParamCategoryKeyPrefix + domainId, [categoryId, paramId], "id")
       if (elems) {
         param = elems[1]
       } else {
@@ -430,7 +433,7 @@ const getValueMapParam = (domainId?: number, paramId?: number, opId?: number, ca
   let param: Param | undefined
   if (EnableParamCategory) {
     if (categoryId && paramId) {
-      const elems = TreeCache.getElementsByPathIdsInTreeFromCache(ParamCategoryKeyPrefix + domainId, [categoryId, paramId], "id", "children", StorageType.OnlySessionStorage, false)
+      const elems = TreeCache.getElementsByPathIdsInTreeFromCache(ParamCategoryKeyPrefix + domainId, [categoryId, paramId], "id")
       if (elems) {
         param = elems[1]
       } else {
@@ -487,7 +490,7 @@ export const checkAvailable = (paramType?: ParamType, op?: Operator) => {
   } else {
     if (opCode === 'contains' || opCode === 'notContains')
       config.e = true
-    else if (opCode === 'containsAll' || opCode === 'anyIn' || opCode === 'allIn' || opCode === 'allNotIn') {
+    else if (opCode === 'eq' || opCode === 'containsAll' || opCode === 'anyIn' || opCode === 'allIn' || opCode === 'allNotIn') {
       config.other = true
     } else if (opCode === 'numberIn' || opCode === 'gteNumberIn' || opCode === 'lteNumberIn') {
       config.other = true
@@ -596,9 +599,9 @@ const getConstantQueryParams2 = (config: ParamTypeConfig, domainId?: number, par
   
   //除了指定的值域和类型外，其它的都是有基本类型（包括枚举）和Set类型, 可以单选、多选和全选
   const basicTypeId = getBasicTypeId(type.id) || type.id
-  const setTypeId = typeCode2Id(type.code + "Set")
-  queryParams.typeIds = [basicTypeId, setTypeId].filter(e=>!!e).join(",")
+  const setTypeId = typeCode2Id(type.code.replaceAll("Set", "").replaceAll("Enum", "") + "Set")
+  queryParams.typeIds = [basicTypeId, setTypeId].filter(e=> e !== undefined).join(",")
 
-  console.log("ConstantQueryParams2=" + JSON.stringify(queryParams))
+  //console.log("ConstantQueryParams2=" + JSON.stringify(queryParams))
   return queryParams
 }
