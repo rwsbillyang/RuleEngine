@@ -12,7 +12,7 @@ import { ComplexExprTransfer } from './ComplexExprTransfer';
 
 
 const ExpressionKeyPrefix = "complexExpression/domain/"
-const LogicalOpKey = "op/Logical"
+export const LogicalOpKey = "op/Logical"
 /**
  *  编辑ComplexExpressionMeta的Modal对话框：用于选择metaList和opId
  * 在创建规则时，可从现有表达式中选择

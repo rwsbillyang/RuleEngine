@@ -10,6 +10,7 @@ import { basicExpressionMeta2String, basicMeta2Expr, complexExpressionMeta2Strin
 
 import md5 from "md5"
 import { Host } from '@/Config';
+import { LogicalOpKey } from './ComplexExprMetaEditModal';
 
 export const ComplexExprTransfer: React.FC<{ domainId?: number, meta?: ComplexExpressionMeta, onSelectedChange: (keys: string[], records?: ExpressionRecord[]) => void }> = ({ domainId, meta, onSelectedChange }) => {
 
@@ -21,7 +22,7 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta?: ComplexEx
 
   //transfer right list
   const [targetKeys, setTargetKeys] = useState<string[]>([]);
-  const { current } = useRef<{ allRecords: ExpressionRecord[] }>({ allRecords: [] }) //用于从现有记录中查询名称
+  const { current } = useRef<{ allRecords: ExpressionRecord[], allExprList: ExpressionRecord[]}>({ allRecords: [], allExprList: []}) //用于从现有记录中查询名称
   
   useMemo(()=>{
     onSelectedChange(targetKeys, getByIds(exprList, targetKeys, "key"))
@@ -62,8 +63,9 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta?: ComplexEx
     } else {
       setTargetKeys([])
     }
+    current.allExprList = result
     setExprList(result)
-    console.log("finally,  exprList=", result)
+    //console.log("finally,  exprList=", result)
   }
 
   //加载domainId下所有表达式， 用于放置在transfer的左侧， 然后解析现有的ComplexExpressionMeta
@@ -190,15 +192,17 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta?: ComplexEx
       setTargetKeys(newTargetKeys)
     }}
     onSelectChange={(sourceSelectedKeys, targetSelectedKeys) => {
-      console.log("onSelectChange: sourceSelectedKeys=" + JSON.stringify(sourceSelectedKeys) 
-      + ", targetSelectedKeys=" + JSON.stringify(targetSelectedKeys) 
-      + ", exprList=",exprList) //第一次点击选中时，exprList总是为空，事实上，其已经有多个元素了
+      // console.log("onSelectChange: sourceSelectedKeys=" + JSON.stringify(sourceSelectedKeys) 
+      // + ", targetSelectedKeys=" + JSON.stringify(targetSelectedKeys) 
+      // + ", exprList=",exprList) //第一次点击选中时，exprList总是为空，事实上，其已经有多个元素了
       if (sourceSelectedKeys.length === 1) {
-        const list = getByIds(exprList, sourceSelectedKeys, "key")
+        //第一次点击选中时，exprList总是为空，事实上，其已经有多个元素了.
+        //改用current.allExprList解决问题，current.allExprList在完成exprList的初始化添加更新后，也被更新
+        const list = getByIds(current.allExprList, sourceSelectedKeys, "key")
         if (list?.length === 1 && list[0].type === "Basic")
         {
             setBasicRecord1(list[0] as BasicExpressionRecord)
-            console.log("onSelectChange: left BasicRecord1=", list[0])
+          //  console.log("onSelectChange: left BasicRecord1=", list[0])
         }
         else
           setBasicRecord1(undefined)
@@ -207,15 +211,14 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta?: ComplexEx
       }
 
       if (targetSelectedKeys.length === 1) {
-        const list = getByIds(exprList, targetSelectedKeys, "key")
+        const list = getByIds(current.allExprList, targetSelectedKeys, "key")
         if (list?.length === 1 && list[0].type === "Basic")
         { 
           setBasicRecord2(list[0] as BasicExpressionRecord)
-          console.log("onSelectChange: right BasicRecord2=", list[0])
+         // console.log("onSelectChange: right BasicRecord2=", list[0])
         }else
         {
            setBasicRecord2(undefined)
-           console.log("onSelectChange: right list?.length="+  list?.length)
         }
       } else {
         setBasicRecord2(undefined)
@@ -358,7 +361,7 @@ const LogicalExprDropDwon: React.FC<{ title?: string, disabled?: boolean, onClic
   useEffect(() => {
     cachedGet<Operator[]>(`${Host}/api/rule/composer/list/operator`, (data) => setOps(data),
       { type: 'Logical', pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载)
-      "ops/Logical")
+      LogicalOpKey)
   }, [])
 
   const onClick2: MenuProps['onClick'] = ({ key }) => {
