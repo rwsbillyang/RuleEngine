@@ -95,8 +95,8 @@ class BaseCrudController : KoinComponent {
 
                     //只保留有typeId的
                     if(params.typeId != null){
-                        list.filter{ !it.children.isNullOrEmpty() && it.children!!.any { it.typeId == params.typeId}}
-                    }else list
+                        list.filter{ it.children != null && it.children!!.any { it.typeId == params.typeId}}.filter{it.children!!.isNotEmpty() }
+                    }else list.filter{ !it.children.isNullOrEmpty() }
                 }else{
                     list.onEach { it.toBean(service) }
                 }
