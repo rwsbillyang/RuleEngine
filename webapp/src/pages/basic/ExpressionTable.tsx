@@ -91,13 +91,13 @@ export const BasicExpressionTable: React.FC = () => {
       //因BaiscExpressionEditor中paramId和opId值在form中，与上一级与domainId等平齐，但后端保存在meta中，
       //所以form编辑时，往上提一级
       //此函数在操作这一栏render "编辑" 按钮时，给BaiscExpressionEditor传初始值时执行
-      //console.log("BasicExpressionTable: to transformBeforeEdit...")
+      
       if (!e) return e
       e.meta = e.metaStr ? JSON.parse(e.metaStr) : undefined
       e.expr = e.exprStr ? JSON.parse(e.exprStr) : undefined
       e["paramId"] = e.meta?.paramId || e.meta?.param?.id
       e["opId"] = e.meta?.opId || e.meta?.op?.id
-
+      //console.log("after BasicExpressionTable transformBeforeEdit... e=",e)
       return e
     }
   }

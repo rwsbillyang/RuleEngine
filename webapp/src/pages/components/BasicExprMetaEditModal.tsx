@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { ModalForm, ProFormCascader, ProFormDependency, ProFormInstance, ProFormSelect, ProFormText } from "@ant-design/pro-form";
 import { AllParamTypeKey, BasicExpressionMeta, ConstantQueryParams, Expression, ExpressionQueryParams, Operator, OperatorQueryParams, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, ParamTypeQueryParams } from "../DataType";
 
-import { TreeCache, Cache, contains, StorageType } from "@rwsbillyang/usecache"
+import { TreeCache, Cache, contains } from "@rwsbillyang/usecache"
 import { asyncSelectProps2Request } from "@/myPro/MyProTableProps";
 import { EnableParamCategory, Host } from "@/Config";
 import { ValueMetaEditor } from "./ValueMetaEditor";
@@ -16,7 +16,18 @@ const ParamCategoryKeyPrefix = "paramCategoryWithChildren/domain/"
 const OpKeyPrefix = "op/type/"
 
 /***
- * 编辑基本表达式BasicExpressionMeta，确定键值、比较符和操作数
+ * 编辑BasicExpressionMeta，确定变量(现有变量、或键及paramType)、比较符和操作数other,set,e, num etc.
+ * 
+ * 当编辑旧值时，旧值为meta，放在meta中
+ * 当使用现有表达式时，切换exprId时，重新设置newMeta
+ * 当完全新建时，meta为空
+ * 
+ * 编辑状态下：
+ * (1) 切换exprId，将导致对应的meta被重新设置为表达式的meta，一切都改变，mapKey和paramTypeId不可用；清空exprId将导致其它字段都被重置，mapKey和paramTypeId可用
+ * (2) 切换paramId，不可使用mapKey和paramTypeId；清空paramId，mapKey和paramTypeId可用，opId被重置
+ * (2) 切换paramTypeId，opId被清空
+ * (3) 清空或改变exprId、paramId、paramTypeId任意一个，将导致opId被清空
+ * 
  * @param title 展示的名称，如需自定义可指定
  * @param triggerName trigger中名称，如需自定义可指定
  * @param domainId
@@ -36,22 +47,26 @@ export const BasicExprMetaEditModal: React.FC<{
 }> = ({ title, triggerName, domainId, onDone, exprId, meta, cannotChooseOne }) => {
   const initialMeta: BasicExpressionMeta = { _class: "Basic" }
   const [newExprId, setNewExprId] = useState(exprId)
-  const [newMeta, setNewMeta] = useState(meta || initialMeta)
+
+   //传递值时，必须新建一份copy，否则当新建再次打开对话框时，将仍在newMeta上修改，保存时冲掉原来的值
+  const [newMeta, setNewMeta] = useState(meta? {...meta} : initialMeta)
   const [opTooltip, setOpTooltip] = useState<string>()
+  
   //console.log("BasicExprMetaEditModal, meta=", meta)
   //console.log("BasicExprMetaEditModal, newMeta=", newMeta)
 
 
   const formRef = useRef<ProFormInstance>()
   useEffect(() => {
-    if (newExprId) {
+    if (newExprId) {//使用现有表达式切换，导致setNewMeta和setOpTooltip
       const expression: Expression | undefined = Cache.findOne(ExpressionKeyPrefix + domainId, newExprId, "id")
       const meta = expression?.metaStr ? JSON.parse(expression?.metaStr) : undefined
       console.log("=====update newMeta by newExprId=" + newExprId, meta)
 
-      if (meta)
+      if (meta){
         setNewMeta(meta)
-      else {
+        setOpTooltip(meta.op?.remark)
+      }else {
         console.log("no expression or expression.metaStr when newExprId changed")
       }
 
@@ -64,8 +79,9 @@ export const BasicExprMetaEditModal: React.FC<{
       }
 
       formRef?.current?.setFieldValue("opId", meta?.opId)
-    }
-
+    }else
+      setOpTooltip(newMeta.op?.remark)
+    
   }, [newExprId])
 
 
@@ -74,7 +90,7 @@ export const BasicExprMetaEditModal: React.FC<{
     formRef={formRef}
     layout="horizontal"
     title={title || "编辑基本表达式"}
-    trigger={<a >{triggerName || "编辑"}</a>}
+    trigger={<a>{triggerName || "编辑"}</a>}
     autoFocusFirstInput
     modalProps={{
       destroyOnClose: false,
@@ -90,6 +106,11 @@ export const BasicExprMetaEditModal: React.FC<{
         formRef?.current?.setFieldValue("opId", undefined)
         formRef?.current?.setFieldValue("paramTypeId", undefined)
         formRef?.current?.setFieldValue("mapKey", undefined)
+
+        newMeta.paramId = undefined
+        newMeta.opId = undefined
+        newMeta.paramTypeId = undefined
+        newMeta.mapKey = undefined
       }
       setNewExprId(v?.exprId)
 
@@ -98,28 +119,36 @@ export const BasicExprMetaEditModal: React.FC<{
         formRef?.current?.setFieldValue("paramTypeId", undefined)
         formRef?.current?.setFieldValue("mapKey", undefined)
         formRef?.current?.setFieldValue("opId", undefined)
+
+        newMeta.opId = undefined
+        newMeta.paramTypeId = undefined
+        newMeta.mapKey = undefined
       }
 
       if(v.paramTypeId && newMeta.paramTypeId != v.paramTypeId){ //paramTypeId改变
         console.log("paramTypeId reset...")
         formRef?.current?.setFieldValue("opId", undefined)
+
+        newMeta.opId = undefined
       }
 
     }}
     submitTimeout={2000}
     onFinish={async (values) => {
-      //console.log("BasicExprMetaEditModal: ModalForm.onFinish: values=", );
+      newMeta.paramId = values.paramId
       newMeta.paramTypeId = values.paramTypeId
       newMeta.mapKey = values.mapKey
-      
+      newMeta.opId = values.opId
+      newMeta._class = values._class
+
       if (!newMeta.opId || (!newMeta.paramId && (!newMeta.mapKey || newMeta.paramTypeId === undefined))
         || (!newMeta.other && !newMeta.start && !newMeta.end && !newMeta.e && !newMeta.set && newMeta.num === undefined)) {
         console.log("newMeta=", newMeta)
         message.warning("表达式信息不全")
         return false
       } else {
-        newMeta._class = values._class
         onDone(newMeta, newExprId)
+        //console.log("BasicExprMetaEditModal: ModalForm.onFinish: newMeta=", newMeta);
         return true
       }
     }}>
@@ -151,7 +180,7 @@ export const BasicExprMetaEditModal: React.FC<{
             <ProFormCascader
               name="paramId" //单选：[1, 5] 以及 [4]；
               label="已有变量"
-              initialValue={(newMeta?.paramId && newMeta?.param?.categoryId) ? [newMeta.param.categoryId, newMeta.paramId] : undefined}
+              initialValue={newMeta?.paramId}
               disabled={!!exprId}
               request={() => asyncSelectProps2Request<ParamCategory, ParamCategoryQueryParams>({
                 key: ParamCategoryKeyPrefix + domainId, //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
@@ -186,7 +215,8 @@ export const BasicExprMetaEditModal: React.FC<{
         return <Space.Compact style={{ width: '100%' }}>
           <ProFormSelect
             label="或变量类型及键"
-            style={{ width: '50%' }}
+            //style={{ width: '50%' }}
+            width="md"
             name="paramTypeId"
             disabled={!!exprId || !!paramId}
             initialValue={newMeta?.paramTypeId}
@@ -197,7 +227,8 @@ export const BasicExprMetaEditModal: React.FC<{
               convertFunc: (item) => { return { label: item.label, value: item.id } }
             })} />
           <ProFormText
-            style={{ width: '50%' }}
+            //style={{ width: '50%' }}
+            width="md"
             name="mapKey"
             initialValue={newMeta?.mapKey}
             disabled={!!exprId || !!paramId}
@@ -209,38 +240,37 @@ export const BasicExprMetaEditModal: React.FC<{
     <ProFormDependency name={["exprId", "paramId", "paramTypeId"]}>
       {({exprId, paramId, paramTypeId }) => {
         //console.log("update op: exprId=" + exprId + ", paramId=" + paramId + ", paramTypeId=" + paramTypeId )
-        const myRequest = () => {
-          //console.log("op request: exprId=" + exprId + ", paramId=" + paramId + ", paramTypeId=" + paramTypeId )
-          //const paramId = params.paramId
-          if (paramId) {
-            if (EnableParamCategory) {
-              if (paramId && paramId.length > 1) {
-                return asyncGetOpOptions(paramId[1], domainId, paramId[0])
-              } else {
-                console.warn("no [categoryId, paramId]=" + paramId + ", get []")
-                return asyncGetOpOptions(undefined, domainId, undefined)
-              }
-            } else {
-              return asyncGetOpOptions(paramId, domainId)
-            }
-          } else {
-            //const paramTypeId = params.paramTypeId
-            if (paramTypeId === undefined) {
-              console.warn("no paramId/paramTypeId, get []")
-              return asyncGetOpOptions(undefined, domainId, undefined)
-            } else {
-              return asyncGetOpOptions(undefined, undefined, undefined, paramTypeId)
-            }
-          }
-        }
         return <ProFormSelect
+        label="比较符"
           name="opId"
           initialValue={newMeta?.opId}
           tooltip={opTooltip}
-          label="比较符"
           dependencies={["exprId", "paramId", "paramTypeId"]}//不可少，否则request不重新请求
           disabled={!!exprId}
-          request={myRequest}
+          request={() => {
+            //console.log("op request: exprId=" + exprId + ", paramId=" + paramId + ", paramTypeId=" + paramTypeId )
+            //const paramId = params.paramId
+            if (paramId) {
+              if (EnableParamCategory) {
+                if (paramId && paramId.length > 1) {
+                  return asyncGetOpOptions(paramId[1], domainId, paramId[0])
+                } else {
+                  console.warn("no [categoryId, paramId]=" + paramId + ", get []")
+                  return asyncGetOpOptions(undefined, domainId, undefined)
+                }
+              } else {
+                return asyncGetOpOptions(paramId, domainId)
+              }
+            } else {
+              //const paramTypeId = params.paramTypeId
+              if (paramTypeId === undefined) {
+                console.log("reset? not choose paramId or paramTypeId, set opertator options: []")
+                return asyncGetOpOptions(undefined, domainId, undefined)
+              } else {
+                return asyncGetOpOptions(undefined, undefined, undefined, paramTypeId)
+              }
+            }
+          }}
         />
       }}
     </ProFormDependency>
@@ -251,30 +281,33 @@ export const BasicExprMetaEditModal: React.FC<{
         let operandConfig: OperandConfig = {} //= calulateConfig(exprId, paramId, opId)
 
         if (exprId) {
-          operandConfig = checkAvailable(newMeta?.param?.paramType || newMeta.paramType, newMeta?.op)
-          operandConfig.param = newMeta?.param
-          operandConfig.paramType = newMeta?.paramType
-          operandConfig.op = newMeta?.op
-          operandConfig.err = !newMeta?.param ? "no param in meta" : undefined
+          const expression: Expression | undefined = Cache.findOne(ExpressionKeyPrefix + domainId, newExprId, "id")
+          const meta = expression?.metaStr ? JSON.parse(expression?.metaStr) : undefined
+      
+          operandConfig = checkMetaAvailable(meta.param?.paramType || meta.paramType, meta?.op)
+          operandConfig.param = meta?.param
+          operandConfig.paramType = meta?.paramType
+          operandConfig.op = meta?.op
+          operandConfig.err = (!meta?.param && !meta.mapKey)? "no param in meta in expr" : undefined
 
-          const paramType = newMeta?.param?.paramType || newMeta?.paramType
+          const paramType = meta?.param?.paramType || meta?.paramType
           operandConfig.multiple = paramType ? paramType.code.indexOf("Set") > 0 : false
         } else {
-          newMeta.opId = opId
+          //newMeta.opId = opId
 
           if (paramId) {
             if (EnableParamCategory) {//单选：[1, "乙"] 以及 [4]；
               if (paramId.length > 1) {
                 operandConfig = getValueMapParam(domainId, paramId[1], opId, paramId[0])
-                newMeta.paramId = paramId[1]
+                //newMeta.paramId = paramId
               } else {
-                console.warn("2. no [categoryId, paramId]=", paramId)
+                console.warn("EnableParamCategory is true, but paramId is not array or length is wrong, paramId=", paramId)
                 operandConfig = getValueMapParam(domainId, undefined, opId)
                 // newMeta.paramId = paramId2 
               }
             } else {
               operandConfig = getValueMapParam(domainId, paramId, opId)
-              newMeta.paramId = paramId
+              //newMeta.paramId = paramId
             }
           } else if (paramTypeId) {
             operandConfig = getValueMapParam(domainId, undefined, opId, undefined, paramTypeId)
@@ -282,24 +315,27 @@ export const BasicExprMetaEditModal: React.FC<{
           } else {
             console.log("no paramId/paramTypeId, not show valueMetaMap")
           }
-        }
-        //将param和op元数据保留下来
-        newMeta.param = operandConfig.param  //newMeta.paramId更新后也需要更新对应的param
-        newMeta.paramType = operandConfig.paramType
-        newMeta.op = operandConfig.op //同上
-        
 
-        //console.log(newMeta)
+          //将param和op元数据保留下来
+          newMeta.param = operandConfig.param  //newMeta.paramId更新后也需要更新对应的param
+          newMeta.paramType = operandConfig.paramType
+          newMeta.op = operandConfig.op //同上
+
 
         //去掉不需要的，上次修改时保留的值
-        if (newMeta) {
+          //console.log("delete the hidden valueMeta operand, operandConfig=",operandConfig)
           if (!operandConfig.other) delete newMeta.other
           if (!operandConfig.start) delete newMeta.start
           if (!operandConfig.end) delete newMeta.end
           if (!operandConfig.set) delete newMeta.set
           if (!operandConfig.e) delete newMeta.e
           if (!operandConfig.num) delete newMeta.num
+
         }
+        
+        //setOpTooltip(newMeta.op?.remark)
+
+        //console.log(newMeta)
 
 
         return operandConfig.err ? <div> {operandConfig.err} </div> : <>
@@ -324,7 +360,7 @@ export const BasicExprMetaEditModal: React.FC<{
 
 //加载操作符list，必须等上面的param加载完毕后再加载，因为需要利用其缓存
 const asyncGetOpOptions = (paramId?: number, domainId?: number, categoryId?: number, paramTypeId?: number) => {
-  //console.log("asyncGetOpOptions：domainId= + ” + domainId + “, paramId=" + paramId)
+  //console.log("asyncGetOpOptions：domainId=" + domainId + ", paramId=" + paramId)
   if (paramTypeId) {
     const paramType: ParamType = Cache.findOne(AllParamTypeKey, paramTypeId, "id")
     if (paramType) {
@@ -415,7 +451,7 @@ const getValueMapParam = (domainId?: number, paramId?: number, opId?: number, ca
         if (!op) op = Cache.findOne(OpKeyPrefix + paramType.id, opId, "id")
       }
       
-      config = checkAvailable(paramType, op)
+      config = checkMetaAvailable(paramType, op)
       //console.log(c)
 
       config.multiple = multiple
@@ -437,7 +473,7 @@ const getValueMapParam = (domainId?: number, paramId?: number, opId?: number, ca
       if (elems) {
         param = elems[1]
       } else {
-        console.log("2 not found elems by path")
+        console.log("2 not found elems by path,categoryId="+categoryId+", paramId="+paramId)
       }
     }
   } else {
@@ -458,7 +494,7 @@ const getValueMapParam = (domainId?: number, paramId?: number, opId?: number, ca
       if (!op) op = Cache.findOne(OpKeyPrefix + param.paramType.id, opId, "id")
     } 
 
-    config = checkAvailable(param.paramType, op)
+    config = checkMetaAvailable(param.paramType, op)
 
     config.multiple = multiple
     config.param = param
@@ -467,7 +503,7 @@ const getValueMapParam = (domainId?: number, paramId?: number, opId?: number, ca
   return config
 }
 
-export const checkAvailable = (paramType?: ParamType, op?: Operator) => {
+export const checkMetaAvailable = (paramType?: ParamType, op?: Operator) => {
   const config: OperandConfig = {}
   if (!paramType || !op) return config
   if (paramType.code === 'Bool') {
@@ -485,7 +521,7 @@ export const checkAvailable = (paramType?: ParamType, op?: Operator) => {
     } else if (opCode === 'in' || opCode === 'nin')
       config.set = true
     else {
-      console.log("basic Should NOT come here: opCode=" + opCode)
+      console.warn("basic Should NOT come here: opCode=" + opCode)
     }
   } else {
     if (opCode === 'contains' || opCode === 'notContains')
@@ -496,7 +532,7 @@ export const checkAvailable = (paramType?: ParamType, op?: Operator) => {
       config.other = true
       config.num = true
     } else {
-      console.log("set Should NOT come here: opCode=" + opCode)
+      console.warn("set Should NOT come here: opCode=" + opCode)
     }
   }
   return config

@@ -3,7 +3,7 @@ import { Constant, ConstantQueryParams, Param, ParamCategory, ParamCategoryQuery
 import { JsonValueEditor } from "./JsonValueEditor"
 import React, { useEffect, useState } from "react"
 import { MyAsyncSelectProps } from "@/myPro/MyProTableProps"
-import { cachedFetch, Cache } from "@rwsbillyang/usecache"
+import { cachedFetch, Cache, TreeCache } from "@rwsbillyang/usecache"
 import { DefaultOptionType } from "antd/es/select"
 import { EnableParamCategory, Host } from "@/Config"
 
@@ -120,7 +120,7 @@ export const ValueMetaEditor: React.FC<{
     }, [])
 
     //console.log("ValueMetaEditor: name=" + name)// +", valueMeta=" + JSON.stringify(valueMeta))
-    //console.log(value)
+    //console.log("ValueMetaEditor,value=",value)
     //console.log("valueMeta.jsonValue="+JSON.stringify(valueMeta.jsonValue))
 
     return <Form.Item label={label}>
@@ -143,22 +143,24 @@ export const ValueMetaEditor: React.FC<{
             {
                 EnableParamCategory ?
                     <Cascader
-                        style={{ width: '20%' }}
+                        style={{ width: '35%' }}
                         loading={paramLoading}
                         allowClear
-                        value={(value?.paramId && value?.param?.categoryId) ? [value.param.categoryId, value.paramId] : undefined}
+                        value={(value?.paramId as any || null)}
                         disabled={disabled ? disabled : value?.valueType !== 'Param'}
                         options={paramOptions}
                         onChange={(v) => {
                             //value是一个数组，存放的分别是select option的value
-                            //单选：[1, "乙"] 以及 [4]；
-                            //console.log("ValueMetaEditor paramId, Cascader.onChange: value=" + JSON.stringify(v))
+                            //单选：[1, 0] 以及 [4]；
+                            //console.log("ValueMetaEditor paramId, Cascader.onChange: value=", v)
                             if(v){
-                                if (v.length > 1) {
-                                    onChange({ ...value, paramId: +v[1] })
-                                } else if(v.length > 0) {
-                                    onChange({ ...value, paramId: +v[0] })
-                                }
+                                const key = paramCategoryAsyncSelectProps.key || ""
+                                const elems = TreeCache.getElementsByPathIdsInTreeFromCache(key, v, "id")
+                                if(!elems || elems.length !== 2){
+                                    console.warn("not found category-param, key="+key + ", path="+ JSON.stringify(v)+ ",elems=", elems) //没有找到分类-变量
+                                }else{
+                                    onChange({ ...value, paramId: v as number[], param: elems[1]})
+                                } 
                             }else{
                                 onChange({ ...value, paramId: undefined })
                             }
@@ -166,7 +168,7 @@ export const ValueMetaEditor: React.FC<{
                         }}
                     />
                     : <Select
-                        style={{ width: '20%' }}
+                        style={{ width: '35%' }}
                         loading={paramLoading}
                         allowClear
                         value={value?.paramId || null}
@@ -174,7 +176,7 @@ export const ValueMetaEditor: React.FC<{
                         disabled={disabled ? disabled : value?.valueType !== 'Param'}
                         options={paramOptions}
                         onChange={(v) => {
-                            onChange({ ...value, paramId: v, param: Cache.findOne(paramAsyncSelectProps.key || "", v, "id") })
+                            onChange({ ...value, paramId: v, param: Cache.findOne(paramAsyncSelectProps.key || "", v as number, "id") })
                         }} />
             }
 
@@ -186,8 +188,7 @@ export const ValueMetaEditor: React.FC<{
                 multiple={multiple}
                 maxTagCount="responsive"
                 allowClear
-                value={value?.constantIdsStr ? JSON.parse(value.constantIdsStr) : null}
-                //defaultValue={value?.constantIdsStr ? JSON.parse(value.constantIdsStr) : undefined}
+                value={value?.constantIds as any || null}
                 loading={constantLoading}
                 onChange={(v) => {
                     //value是一个数组，存放的分别是select option的value
@@ -197,20 +198,22 @@ export const ValueMetaEditor: React.FC<{
                     //console.log("ValueMetaEditor constant, Cascader.onChange:multiple="+ multiple + ", v=" + JSON.stringify(v))
                     //console.log("param?.paramType.code=" + param?.paramType.code)
                     if (v && v.length > 0) {
+                        const constants: Constant[] = []
                         let jsonValue
                         if (multiple) {
-                            jsonValue = getJsonValueFromArrayArray(multiple, v, paramType, constantAsyncSelectProps.key)
+                            jsonValue = getJsonValueFromArrayArray(constants, multiple, v, paramType, constantAsyncSelectProps.key)
                         } else {
-                            jsonValue = getJsonValueFromArray(multiple, v, paramType, constantAsyncSelectProps.key)
+                            jsonValue = getJsonValueFromArray(constants, multiple, v, paramType, constantAsyncSelectProps.key)
                         }
-                        onChange({ ...value, constantIds: v, constantIdsStr: JSON.stringify(v), jsonValue: jsonValue })
+                        
+                        onChange({ ...value, constantIds: v, jsonValue: jsonValue })
                     } else {
-                        onChange({ ...value, constantIds: v, constantIdsStr: undefined, jsonValue: undefined })
+                        onChange({ ...value, constantIds: undefined, jsonValue: undefined })
                     }
                 }}
             />
 
-            <JsonValueEditor width="35%"
+            <JsonValueEditor width="20%"
                 value={value?.jsonValue} //TODO: 即使valueMeta.jsonValue被Cascader的onChange更新，此处也仍是旧值
                 onChange={(v) => { onChange({ ...value, jsonValue: v }) }}
                 type={multiple ? paramType?.code.replaceAll("Set", "") + "Set" : paramType?.code.replaceAll("Set", "")}
@@ -221,9 +224,18 @@ export const ValueMetaEditor: React.FC<{
     </Form.Item>
 }
 
-//单选取值：获取选中的值
-//arry: 从枚举类型中选[1, 0], [1, "甲"]以及 [4]；
-export const getJsonValueFromArray = (multiple: boolean, arry: (string | number)[], paramType?: ParamType, constantKey?: string) => {
+
+
+/**
+ * 单选取值：获取选中的值
+ * @param constants 盛放选中的Constant结果
+ * @param multiple 是否多选
+ * @param arry 所选的id数组 从枚举或集合类型中选[1, 0], [1, "甲"]以及 [4]；
+ * @param paramType 常量类型，用于填充到jsonValue中的_class
+ * @param constantKey 从哪个缓存中搜索Constant
+ * @returns 
+ */
+const getJsonValueFromArray = (constants: Constant[], multiple: boolean, arry: (string | number)[], paramType?: ParamType, constantKey?: string) => {
     //假定select中value都是id值，事实也是如此
     const constantId = arry[0]
     const constant: Constant | undefined = Cache.findOne(constantKey || "", constantId, "id")
@@ -244,15 +256,25 @@ export const getJsonValueFromArray = (multiple: boolean, arry: (string | number)
         } else {
             jsonValue._class = jsonValue._class.replaceAll("Set", "").replaceAll("Enum", "")
         }
+        constants.push(constant)
         return jsonValue
     } else {
-        console.warn("Shoul not come here, no Constant, id=" + constantId)
+        console.warn("Should not come here, no Constant, id=" + constantId)
     }
     return undefined
 }
-//arry: 多选选中多个[[1, 2],[1, 2],[1, 2]]，[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
-export const getJsonValueFromArrayArray = (multiple: boolean, arrayArray: (string | number)[][], paramType?: ParamType, constantKey?: string) => {
-    const value = arrayArray.flatMap((e) => getJsonValueFromArray(multiple, e, paramType, constantKey)?.value)
+
+/**
+ * 多选选中多个取值
+ * @param constants 盛放选中的Constant结果
+ * @param multiple 是否多选
+ * @param arrayArray 多选选中多个[[1, 2],[1, 2],[1, 2]]，[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
+ * @param paramType 常量类型，用于填充到jsonValue中的_class
+ * @param constantKey 从哪个缓存中搜索Constant
+ * @returns 
+ */
+const getJsonValueFromArrayArray = (constants: Constant[],multiple: boolean, arrayArray: (string | number)[][], paramType?: ParamType, constantKey?: string) => {
+    const value = arrayArray.flatMap((e) => getJsonValueFromArray(constants, multiple, e, paramType, constantKey)?.value)
         .filter((e) => e !== undefined) //因为e有可能是单个元素也有可能是数组，故使用flatMap 而不是map
 
     const _class = (paramType?.code.replaceAll("Set", "").replaceAll("Enum", "") || "String") + "Set"

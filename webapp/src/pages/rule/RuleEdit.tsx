@@ -80,11 +80,11 @@ export const RuleEditModal: React.FC<{
                 return <>
                     <Form.Item label="基本条件" tooltip="基本条件和复合条件二选一">
                         {basicExpressionMeta2String(condition.meta)} <BasicExprMetaEditModal onDone={(meta, exprId) => setCondition({ meta, exprId })}
-                            domainId={domainId} exprId={condition.exprId} meta={condition.meta} />
+                            domainId={domainId} exprId={condition.exprId} meta={condition.meta?._class === "Basic" ? condition.meta: undefined} />
                     </Form.Item>
                     <Form.Item label="复合条件" tooltip="基本条件和复合条件二选一">
                         {complexExpressionMeta2String(condition.meta)} <ComplexExprMetaEditModal onDone={(meta, exprId) => setCondition({ meta, exprId })}
-                            domainId={domainId} exprId={condition.exprId} meta={condition.meta} />
+                            domainId={domainId} exprId={condition.exprId} meta={condition.meta?._class === "Complex" ? condition.meta: undefined} />
                     </Form.Item>
                 </>
             }}
@@ -92,7 +92,6 @@ export const RuleEditModal: React.FC<{
 
         <ProForm.Group>
             <ProFormSelect width="md" name={"thenAction"} label="Then动作" tooltip="条件为true时执行"
-                required
                 request={() => asyncSelectProps2Request<RuleAction, RuleActionQueryParams>({
                     key: "allActions", //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
                     url: `${Host}/api/rule/composer/list/action`,

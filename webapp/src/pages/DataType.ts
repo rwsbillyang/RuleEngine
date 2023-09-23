@@ -170,19 +170,19 @@ export interface ComplexExpressionRecord extends Expression {
     expr?: ComplexExpression
     meta?: ComplexExpressionMeta
 }
+export type ExpressionRecord = BasicExpressionRecord | ComplexExpressionRecord
 
-interface ExpressionMeta{
+interface ExpressionMetaBase{
     _class: string, //'Bool' | 'Int' | 'Double' | 'Long' | 'String' ....
-    
     opId?: number,
     op?: Operator,
 }
 
-export interface BasicExpressionMeta extends ExpressionMeta{
+export interface BasicExpressionMeta extends ExpressionMetaBase{
     _class: string, //'Bool' | 'Int' | 'Double' | 'Long' | 'String' ....
     //domainId?: number,
 
-    paramId?: number,//与mapKey&paramTypeId二选一
+    paramId?: number | number[],//与mapKey&paramTypeId二选一
     param?: Param,
 
     mapKey?: string,
@@ -198,10 +198,12 @@ export interface BasicExpressionMeta extends ExpressionMeta{
     //valueMap: Map<'other'| 'start' | 'end' | 'set' | 'e' | 'num', ValueMeta>  //  [key: string]: Constant
 }
 
-export interface ComplexExpressionMeta  extends ExpressionMeta{
+export interface ComplexExpressionMeta  extends ExpressionMetaBase{
     _class: "Complex",
     metaList: (BasicExpressionMeta | ComplexExpressionMeta)[]
 }
+export type ExpressionMeta = BasicExpressionMeta | ComplexExpressionMeta
+
 
 //若constantId、constant存在则使用constant值，否则使用value
 /**
@@ -214,10 +216,9 @@ export interface ComplexExpressionMeta  extends ExpressionMeta{
  */
 export interface ValueMeta {
     valueType?: "Param" | "Constant" | "JsonValue" | undefined
-    paramId?: number
+    paramId?: number | number[] //为数组时，表示EnableParamCategory = true
     param?: Param
     constantIds?: (string | number)[] | (string | number)[][] //eg.树形select的option的value 树形单选：[1, "乙"] 以及 [4]；多选选中多个[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
-    constantIdsStr?: string //由于constantIds类型，对于后端序列化反序列化支持不好，转换成str进行保存
     //constants?: Constant[]
     jsonValue?: JsonValue
 }

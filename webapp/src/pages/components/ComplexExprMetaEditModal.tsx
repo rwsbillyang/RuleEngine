@@ -1,21 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Dropdown, Form, MenuProps, Tooltip, Transfer, message } from 'antd';
-import type { TransferDirection, TransferListProps } from 'antd/es/transfer';
-import { cachedGet, Cache } from "@rwsbillyang/usecache"
-import { BasicExpressionMeta, BasicExpressionRecord, ComplexExpressionMeta, ComplexExpressionRecord, Expression, ExpressionQueryParams, Operator, OperatorQueryParams } from '../DataType';
+import { Form,  message } from 'antd';
+
+import { Cache } from "@rwsbillyang/usecache"
+import { ComplexExpressionMeta,  Expression, ExpressionMeta, ExpressionQueryParams, ExpressionRecord, Operator, OperatorQueryParams } from '../DataType';
 
 import { Host } from '@/Config';
 import { ModalForm, ProFormInstance, ProFormSelect, ProFormText } from '@ant-design/pro-form';
 import { asyncSelectProps2Request } from '@/myPro/MyProTableProps';
-import { basicExpressionMeta2String, basicMeta2Expr, complexExpressionMeta2String, complexMeta2Expr, meta2Expr, sortedConcat } from '../utils';
-import md5 from "md5"
-import { BasicExprMetaEditModal } from './BasicExprMetaEditModal';
+
+import { ComplexExprTransfer } from './ComplexExprTransfer';
 
 
 const ExpressionKeyPrefix = "complexExpression/domain/"
 const LogicalOpKey = "op/Logical"
 /**
- *  ComplexExpressionMeta编辑器 Modal对话框
+ *  编辑ComplexExpressionMeta的Modal对话框：用于选择metaList和opId
+ * 在创建规则时，可从现有表达式中选择
  * 
  * 包含了隐藏的_class字段、逻辑运算符选择，
  * 以及一个 (BasicExpressionMeta | ComplexExpressionMeta) 列表编辑器Transfer
@@ -44,70 +44,18 @@ export const ComplexExprMetaEditModal: React.FC<{
     meta?: ComplexExpressionMeta
     cannotChooseOne?: boolean
 }> = ({ title, triggerName, domainId, onDone, exprId, meta, cannotChooseOne }) => {
-    const [newMeta, setNewMeta] = useState(meta)
+    const initialMeta: ComplexExpressionMeta = {_class: "Complex", metaList:[]}
+    
+    //传递值时，必须新建一份copy，否则当新建再次打开对话框时，将仍在newMeta上修改，保存时冲掉原来的值
+    const [newMeta, setNewMeta] = useState(meta? {...meta} : initialMeta)
     const [newExprId, setNewExprId] = useState(exprId)
-    const { current } = useRef<{ allExpr: Expression[] }>({ allExpr: [] }) //用于从现有记录中查询名称
+    
+    const { current } = useRef<{ selectedRecords?: ExpressionRecord[] }>({}) //用于从现有记录中查询名称
+  
 
-    //transfer left list
-    //先getAllExpr加载所有expression记录，在编辑状态下，然后试图从meta中解构出来一些
-    const [exprList, setExprList] = useState<(BasicExpressionRecord | ComplexExpressionRecord)[]>([])
-
-    //transfer right list
-    const [targetKeys, setTargetKeys] = useState<string[]>([]);
-
+    //console.log("ComplexExprMetaEditModal, newMeta=",newMeta)
 
     const formRef = useRef<ProFormInstance>()
-
-    //加载全部expression记录
-    const getAllExpr = (onGetData?: () => void) => {
-        cachedGet<(BasicExpressionRecord | ComplexExpressionRecord)[]>(`${Host}/api/rule/composer/list/expression`, (data) => {
-            current.allExpr = data
-
-            let flag = false
-            data.forEach((e) => {
-                if (e.metaStr) e.meta = JSON.parse(e.metaStr)
-                if (e.exprStr) {
-                    e.expr = JSON.parse(e.exprStr)
-                    e.key = md5(sortedConcat(e.expr))
-                    const f = pushIfNotPresent(exprList, e, "key") //metaList.push(meta)
-                    flag ||= f
-                    // console.log("express, label=" + e.label + ", e.key=" + e.key + ", f="+f)
-                }
-            })
-            if (flag) setExprList([...exprList])
-            //console.log("exprList=",exprList)
-            if (onGetData) onGetData()
-        },
-            { domainId: domainId, pagination: { pageSize: -1, sKey: "id", sort: 1 } }//pageSize: -1为全部加载)
-            //,"expression/domain/" + domainId
-        )
-    }
-
-
-    //加载domainId下所有表达式， 用于放置在transfer的左侧
-    useEffect(() => {
-        getAllExpr(() => {
-            if (meta) {
-                //编辑状态下，首次加载使用待编辑的meta?.metaList
-                const list = destructComplexMetaList(current.allExpr, meta?.metaList)
-
-                if (list.length > 0) {
-                    let flag = false
-                    list.forEach((e) => {
-                        flag ||= pushIfNotPresent(exprList, e)
-                    })
-                    if (flag) setExprList([...exprList])
-                }
-
-                const list2 = getTargetKeysByMeta(meta)
-                if (list2.length > 0) setTargetKeys(list2)
-
-                //console.log("add " + list.length + " expr into left list, and target keys=", list2)
-            }
-
-        })
-    }, [])
-
 
     useEffect(() => {
         if (newExprId) {
@@ -117,21 +65,6 @@ export const ComplexExprMetaEditModal: React.FC<{
 
             if (meta) {
                 setNewMeta(meta)
-                if (expression) {
-                    console.log("switch to new expression, try add left list and target keys...")
-                    //切换exrepssion时，使用expression的meta?.metaList
-                    const list = destructComplexExpression(current.allExpr, expression)
-                    if (list.length > 0) {
-                        let flag = false
-                        list.forEach((e) => {
-                            flag ||= pushIfNotPresent(exprList, e)
-                        })
-                        if (flag) setExprList([...exprList])
-                    }
-                    const list2 = getTargetKeysByExpr(expression)
-                    if (list2.length > 0) setTargetKeys(list2)
-                }
-
                 formRef?.current?.setFieldValue("opId", meta?.opId)
             } else {
                 console.log("shold not come here: changed exprId=" + newExprId + ", but no expression or expression.metaStr")
@@ -139,62 +72,6 @@ export const ComplexExprMetaEditModal: React.FC<{
         }
 
     }, [newExprId])
-
-
-
-    //transfer foot
-    const renderFooter = (props: TransferListProps<BasicExpressionRecord | ComplexExpressionRecord>, info?: {
-        direction: TransferDirection;
-    }) => {
-        if (!info || info?.direction === 'left') {
-            return (
-                <BasicExprMetaEditModal cannotChooseOne={true} triggerName="添加基本表达式" domainId={domainId}
-                    onDone={(v) => {
-                        const mockExpr: BasicExpressionRecord = { key: md5(sortedConcat(meta2Expr(v))), meta: v, type: "Basic", label: "临时" }
-                        if (pushIfNotPresent(exprList, mockExpr, "key")) //metaList.push(v)
-                            setExprList([...exprList])
-                        else {
-                            message.info("已存在相同表达式")
-                        }
-                    }} />
-            );
-        } else
-            return (
-                <LogicalExprDropDwon disabled={targetKeys.length < 2} title="添加到左侧" onClick={(op) => {
-                    const list = getByIds(exprList, targetKeys, "key")
-                    if (list?.length === targetKeys.length) {
-                        const metaList = list.map((e) => e.meta).filter((e) => !!e) as (BasicExpressionMeta | ComplexExpressionMeta)[]
-                        const meta: ComplexExpressionMeta = {
-                            _class: "Complex",
-                            op: op,
-                            opId: op.id,
-                            metaList: metaList
-                        }
-                        const mockExpr: ComplexExpressionRecord = {
-                            label: "临时",
-                            type: "Complex",
-                            meta: meta,
-                            key: md5(sortedConcat(meta2Expr(meta)))
-                        }
-
-
-                        if (pushIfNotPresent(exprList, mockExpr, "key")) //metaList.push(meta)
-                        {
-                            setExprList([...exprList])
-                            setTargetKeys([])
-                            console.log("successful to add one complexExpressionMeta to left")
-                        } else {
-                            console.log("left already exsit")
-                            message.info("左侧已存在相同条件")
-                        }
-
-                    } else {
-                        console.warn("fail to get metaList from targetKeys=", targetKeys)
-                    }
-
-                }} />
-            );
-    };
 
 
 
@@ -214,26 +91,32 @@ export const ComplexExprMetaEditModal: React.FC<{
             //若是清空，导致transfer左侧使用所有表达式，右侧为空 
             //exprId清空(先不为空，后为空)才执行
             if (newExprId && !v?.exprId) { // 其它字段修改，该条件也成立
-                setNewMeta(undefined)
-                getAllExpr()
-                setTargetKeys([])
+                setNewMeta(initialMeta)
                 formRef?.current?.setFieldValue("opId", undefined)
             }
             setNewExprId(v?.exprId)
 
         }}
         onFinish={async (values) => {
-            console.log("ComplexExpressionMetaEditorModal: ModalForm.onFinish: values=", values);
-
-            const list = getByIds(exprList, targetKeys, "key")
-            if (!list || list.length < 2) {
+            if (!current.selectedRecords || current.selectedRecords.length < 2) {
                 message.warning("已选表达式至少2个以上，才可进行逻辑运算")
                 return false
             } else {
-                values.metaList = list.map((e) => e.meta)
-                values.op = Cache.findOne(LogicalOpKey, values.opId, "id") //opId是form中的一个字段，已在values之中
+                if(!values.opId){
+                    message.warning("请选择逻辑运算符")
+                    return false
+                }
+                //values.metaList = current.selectedRecords.map((e) => e.meta)
+                //values.op = Cache.findOne(LogicalOpKey, values.opId, "id") //opId是form中的一个字段，已在values之中
 
-                onDone(values, newExprId)
+                newMeta.metaList = current.selectedRecords.map((e) => e.meta) as ExpressionMeta[]
+                newMeta.op = Cache.findOne(LogicalOpKey, values.opId, "id") //opId是form中的一个字段，已在values之中
+                newMeta.opId = values.opId
+                newMeta._class = values._class
+
+                console.log("ComplexExpressionMetaEditorModal: ModalForm.onFinish: onDone=", newMeta);
+                
+                onDone(newMeta, newExprId)
                 return true
             }
 
@@ -257,38 +140,7 @@ export const ComplexExprMetaEditModal: React.FC<{
         />
 
         <Form.Item label="表达式列表" required rules={[{ required: true, message: '必选' }]}>
-            <Transfer
-                dataSource={exprList}
-                titles={['候选表达式', '已选表达式']}
-                listStyle={{
-                    width: 300,
-                    height: 300,
-                }}
-                targetKeys={targetKeys}
-                onChange={(newTargetKeys: string[]) => {
-                    setTargetKeys(newTargetKeys);
-                }}
-                render={(item) => {
-                    let str
-                    if (item.type === "Complex") {
-                        str = complexExpressionMeta2String((item as ComplexExpressionRecord).meta)
-                    } else {
-                        str = basicExpressionMeta2String((item as BasicExpressionRecord).meta)
-                    }
-                    const customLabel = (
-                        <span style={{ width: '100' }}>
-                            [{item.label || "临时"}] - {str}
-                        </span>
-                    );
-
-                    return {
-                        label: customLabel, // for displayed item
-                        value: item.label || "临时", // for title and filter matching
-                    };
-                }
-                }
-                footer={renderFooter}
-            />
+            <ComplexExprTransfer domainId={domainId} meta={newMeta} onSelectedChange={(keys, records)=> {current.selectedRecords = records}}/>
         </Form.Item>
 
         <ProFormSelect
@@ -312,152 +164,4 @@ export const ComplexExprMetaEditModal: React.FC<{
 }
 
 
-/**
- * 根据id数组，从数组中获取对应的全部元素
- * @param array 
- * @param ids 
- * @param idKey 
- * @returns 
- */
-function getByIds<T>(array: T[], ids?: string[] | number[], idKey: string = "id") {
-    if (!array || array.length === 0 || !ids || ids.length === 0) return undefined
-    const ret: T[] = []
-    for (let i = 0; i < array.length; i++) {
-        inner: for (let j = 0; j < ids.length; j++) {
-            if (array[i][idKey] === ids[j]) {
-                ret.push(array[i])
-                break inner
-            }
-        }
-    }
-    return ret
-}
-/**
- * 
- * @param array 若数组中已存在，则忽略，否则push进去
- * @param id 
- * @param idKey 
- * @returns 添加成功则返回true
- */
-function pushIfNotPresent<T>(array: T[], e: T, idKey: string = "key") {
-    for (let i = 0; i < array.length; i++) {
-        if (array[i][idKey] === e[idKey]) {
-            return false
-        }
-    }
-    array.push(e)
-    return true
-}
-/**
- * 解构表达式记录中的meta，构建transfer左侧列表
- * 给表达式记录项添加md5 key，用于添加到exprList中；
- * 若是复合表达式记录项，拆解出各基本表达式，构造临时模拟记录，并给它们添加上key
- * @param allExpr 现有所有表达式记录，根据key从中获取label
- * @param e 待拆解meta的表达式
- * @param result 盛放结果  
- */
-function destructComplexExpression(allExpr?: Expression[], e?: (BasicExpressionRecord | ComplexExpressionRecord), result?: (BasicExpressionRecord | ComplexExpressionRecord)[]) {
-    const list = result || []
-    if (!e) return list
 
-    if (e.type === "Complex") {
-        if (!e.expr && e.exprStr) e.expr = JSON.parse(e.exprStr)
-        if (!e.meta && e.metaStr) e.meta = JSON.parse(e.metaStr)
-
-        e.key = md5(sortedConcat(e.expr))
-        list.push(e)
-
-        const expr = e as ComplexExpressionRecord
-        destructComplexMetaList(allExpr, expr.meta?.metaList, expr, list)
-    }
-
-    return list
-}
-function destructComplexMetaList(allExpr?: Expression[], metaList?: (BasicExpressionMeta | ComplexExpressionMeta)[], expr?: ComplexExpressionRecord, result?: (BasicExpressionRecord | ComplexExpressionRecord)[]) {
-    const list = result || []
-    if (!metaList) return list
-
-    metaList.forEach((e) => {
-        if (e._class === "Complex") {
-            const meta = e as ComplexExpressionMeta
-            const key = md5(sortedConcat(complexMeta2Expr(meta)))
-            const label = expr?.label || (allExpr ? Cache.findOneInArray(allExpr, key, "key")?.label : undefined)
-            const mockExpr: ComplexExpressionRecord = { label: label? label + "-" + list.length : "临时", meta, key, type: "Complex" }
-            list.push(mockExpr)
-
-            destructComplexMetaList(allExpr, meta.metaList, expr, result)
-        } else {
-            const meta = e as BasicExpressionMeta
-            const key = md5(sortedConcat(basicMeta2Expr(meta)))
-            const label = expr?.label || (allExpr ? Cache.findOneInArray(allExpr, key, "key")?.label : undefined)
-            const mockExpr: BasicExpressionRecord = { label: label? label + "-" + list.length : "临时", meta, key, type: "Basic" }
-            list.push(mockExpr)
-        }
-    });
-    return list
-}
-
-function getTargetKeysByExpr(expr?: (BasicExpressionRecord | ComplexExpressionRecord)) {
-    const list: string[] = []
-    if (!expr || expr.type !== "Complex") return list
-    const expr2 = expr as ComplexExpressionRecord
-    expr2.meta?.metaList?.forEach((e, i) => {
-        list.push(md5(sortedConcat(meta2Expr(e))))
-    })
-
-    return list
-}
-function getTargetKeysByMeta(meta?: ComplexExpressionMeta) {
-    const list: string[] = []
-    if (!meta || meta._class !== "Complex") return list
-
-    meta.metaList?.forEach((e, i) => {
-        list.push(md5(sortedConcat(meta2Expr(e))))
-    })
-
-    return list
-}
-/**
- * 逻辑表达式操作符选择下拉DropDwon
- * @param title 展示的名称
- * @param disabled 是否激活，当表达式列表为空时，应为true
- * @param onClick 点击选中哪个操作符
- * @returns 
- */
-const LogicalExprDropDwon: React.FC<{ title?: string, disabled?: boolean, onClick: (e: Operator) => void }> = ({ title, disabled, onClick }) => {
-    const [ops, setOps] = useState<Operator[]>([])
-    useEffect(() => {
-        cachedGet<Operator[]>(`${Host}/api/rule/composer/list/operator`, (data) => setOps(data),
-            { type: 'Logical', pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载)
-            "ops/Logical")
-    }, [])
-
-    const onClick2: MenuProps['onClick'] = ({ key }) => {
-        const e = Cache.findOneInArray(ops, key, "code")
-        if (e) onClick(e)
-        else console.log("clicked key=" + key + ", but not found in ops=", ops)
-    };
-
-    // return <Select disabled={disabled} options={ops?.map((e) => ({
-    //   label:  e.label,
-    //   value: e.code
-    // }))}/>
-
-
-    return <Dropdown.Button
-        menu={{
-            items: ops?.map((e) => ({
-                label: e.label,
-                key: e.code,
-            })), onClick: onClick2
-        }}
-        buttonsRender={([leftButton, rightButton]) => [
-            <Tooltip title="已选表达式经过哪种逻辑运算，添加到左侧候选表" key="leftButton">
-                {leftButton}
-            </Tooltip>,
-            React.cloneElement(rightButton as React.ReactElement<any, string>),
-        ]}
-    >
-        {title}
-    </Dropdown.Button>
-}

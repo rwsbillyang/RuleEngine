@@ -60,7 +60,7 @@ export const complexExprRecord2String = (expr?: ComplexExpressionRecord)=>{
 export const basicExpressionMeta2String = (meta?: BasicExpressionMeta)=>{
     if(!meta || meta._class === "Complex") return "暂无"
     const oprand = [meta.other, meta.start, meta.end, meta.set, meta.e, meta.num]
-    .filter(e=>!!e)
+    .filter(e=> e !== undefined)
     .map((e)=> valueMeta2String(e))
     .join(", ")
 
@@ -100,11 +100,11 @@ export const complexExpressionMeta2String = (meta?: ComplexExpressionMeta)=>{
 export const valueMeta2String = (valueMeta?: ValueMeta) => {
     if(!valueMeta) return ""
     if(valueMeta.valueType  === 'Param'){
-        return "变量"+ valueMeta.param?.label + ": "+ valueMeta.param?.mapKey
+        return "变量" + ": " + valueMeta.param?.label + "("+ valueMeta.param?.mapKey + ")"
     }else if(valueMeta.valueType  === 'Constant'){
-        return "常量" + ": "+ jsonValue2String(valueMeta.jsonValue)     
+        return "常量" + ": " + jsonValue2String(valueMeta.jsonValue)     
     }else if(valueMeta.valueType  === 'JsonValue'){
-        return "值" + ": "+ jsonValue2String(valueMeta.jsonValue)    
+        return "值" + ": " + jsonValue2String(valueMeta.jsonValue)    
     }else{
         console.warn("should not come here, wrong valueMeta.valueType =" + valueMeta.valueType )
         return "wrong valueMeta.valueType!!!"
