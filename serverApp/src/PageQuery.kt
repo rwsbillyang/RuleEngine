@@ -21,7 +21,6 @@ package com.github.rwsbillyang.rule.composer
 import com.github.rwsbillyang.ktorKit.apiBox.IUmiPaginationParams
 import com.github.rwsbillyang.ktorKit.apiBox.Sort
 import com.github.rwsbillyang.ktorKit.db.SqlPagination
-import com.github.rwsbillyang.ruleEngine.core.expression.OpType
 import io.ktor.resources.*
 import kotlinx.serialization.Serializable
 import org.komapper.core.dsl.Meta
@@ -118,6 +117,7 @@ class ParameterTypeQueryParams(
     override val umi: String? = null,
     val label: String? = null,
     val isSys: Boolean? = null,
+    val domainId: Int? = null,
     val isBasic: Boolean? = null
 ) : IUmiPaginationParams {
     override fun toSqlPagination(): SqlPagination {
@@ -143,10 +143,14 @@ class ParameterTypeQueryParams(
         } else null
         val w2: WhereDeclaration? = isSys?.let { { meta.isSys eq it } }
         val w3: WhereDeclaration? = isBasic?.let { { meta.isBasic eq it } }
-
+        val w4: WhereDeclaration? = if(domainId == null) null else {
+            val self: WhereDeclaration = { meta.domainId eq domainId }
+            val defaultAll: WhereDeclaration =  { meta.domainId.isNull() } //若指定了domainId，也包括那些没指定的domainId的常量
+            self.or(defaultAll)
+        }
         //pageSize为-1时表示该查询条件下的全部数据
         return SqlPagination(sort, pagination.pageSize, (pagination.current - 1) * pagination.pageSize)
-            .addWhere(w1, w2, w3, lastW)
+            .addWhere(w1, w2, w3,w4, lastW)
     }
 }
 
@@ -202,7 +206,8 @@ class OperatorQueryParams(
     override val umi: String? = null,
     val label: String? = null,
     val isSys: Boolean? = null,
-    val type: OpType? = null,
+    val type: String? = null,
+    val domainId: Int? = null,
     val ids: String? = null //,分隔的id， 即根据operator.id列表查询
 ) : IUmiPaginationParams {
     override fun toSqlPagination(): SqlPagination {
@@ -229,9 +234,16 @@ class OperatorQueryParams(
         val w2: WhereDeclaration? = isSys?.let { { meta.isSys eq it } }
         val w3: WhereDeclaration? = ids?.let { { meta.id inList it.split(",").map { it.toInt() } } }
         val w4: WhereDeclaration? = type?.let{ { meta.type eq it}}
+
+        val w5: WhereDeclaration? = if(domainId == null) null else {
+            val self: WhereDeclaration = { meta.domainId eq domainId }
+            val defaultAll: WhereDeclaration =  { meta.domainId.isNull() } //若指定了domainId，也包括那些没指定的domainId的常量
+            self.or(defaultAll)
+        }
+
         //pageSize为-1时表示该查询条件下的全部数据
         return SqlPagination(sort, pagination.pageSize, (pagination.current - 1) * pagination.pageSize)
-            .addWhere(w3, w1, w2, w4, lastW)
+            .addWhere(w3, w1, w2, w4, w5, lastW)
     }
 }
 

@@ -22,20 +22,33 @@ export interface DomainQueryParams extends BasePageQuery {
 export interface Operator extends LabeldBean {
     id: number,
     code: string,
-    isSys: boolean
-    remark?: string
+    isSys: boolean,
+    remark?: string,
+    type: 'Basic'| "Collection" | 'Logical' | 'Cutomize',
+    
+    //以下为操作数配置，需要的操作数则设置为true, 前端根据它是否展示对应的输入控件
+    other: boolean
+    start: boolean
+    end: boolean
+    collection: boolean
+    e: boolean
+    num: boolean
+
+    domain?: Domain//来自后端，用于展示列表项
+    domainId?: number//select选择时设置，提交给后端
 }
 export interface OperatorQueryParams extends BasePageQuery {
     label?: string
     isSys?: boolean
-    type?: 'Basic'| "Collection" | 'Logical' // OpType
+    type?: 'Basic'| "Collection" | 'Logical' | 'Cutomize'// OpType
     ids?: string //,分隔的id ， 即根据operator.id列表查询
+    domainId?: number
 }
 
     
 
 
-export const AllParamTypeKey = "paramAll"
+export const AllParamTypeKey = "paramTypeAll"
 /**
  * 类型，如数值、字符串、日期、布尔, 数组，集合等
  * @param value 参数变量类型
@@ -45,13 +58,17 @@ export interface ParamType extends LabeldBean {
     supportOpIds: string,
     supportOps?: Operator[], //,分隔的operator id
     isSys: boolean,
-    isBasic: boolean//基本类型
+    isBasic: boolean,//基本类型
+
+    domain?: Domain//来自后端，用于展示列表项
+    domainId?: number//select选择时设置，提交给后端
 }
 export interface ParamTypeQueryParams extends BasePageQuery {
     label?: string
     isSys?: boolean
     isBasic?: boolean
     typeId?: number
+    domainId?: number
 }
 
 

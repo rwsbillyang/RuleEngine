@@ -21,7 +21,6 @@ package com.github.rwsbillyang.rule.composer
 
 
 import com.github.rwsbillyang.ruleEngine.core.expression.LogicalExpr
-import com.github.rwsbillyang.ruleEngine.core.expression.OpType
 import kotlinx.serialization.*
 import org.komapper.annotation.*
 import org.komapper.core.dsl.Meta
@@ -44,9 +43,13 @@ data class ParamType(
     @KomapperId @KomapperAutoIncrement
     val id: Int? = null,
 
+    val domainId: Int? = null,//自定义记录可以有domainId
+    @KomapperIgnore var domain: Domain? = null, //domainId 前端列表中需要使用该信息
+
     @KomapperIgnore var supportOps: List<Operator>? = null //supportOpIds
 ){
     fun toBean(service: BaseCrudService){
+        domain = domainId?.let{service.findOne(Meta.domain, {Meta.domain.id eq it}, "domain/${it}")}
         supportOps = supportOpIds.split(",").mapNotNull{service.findOne(Meta.operator, {Meta.operator.id eq it.toInt()}, "op/${it}")}
     }
 }
@@ -63,11 +66,39 @@ data class Operator(
     val label: String,
     val code: String,
     val remark: String? = null, //备注
-    val type: OpType,
+    val type: String,
     val isSys: Boolean = true,
+
+    //以下为操作数配置，需要的操作数则设置为true, 前端根据它是否展示对应的输入控件
+    val other: Boolean = false,
+    val start: Boolean = false,
+    val end: Boolean = false,
+    val collection: Boolean = false, //set是数据库关键字
+    val e: Boolean = false,
+    val num: Boolean = false,
+
+    val domainId: Int? = null,//自定义记录可以有domainId
+    @KomapperIgnore var domain: Domain? = null, //domainId 前端列表中需要使用该信息
+
     @KomapperId @KomapperAutoIncrement
     val id: Int? = null
-)
+){
+    companion object{
+        const val Basic = "Basic"
+        const val Collection = "Collection"
+        const val Logical = "Logical"
+        const val Customize = "Customize"
+    }
+    fun toBean(service: BaseCrudService){
+        domain = domainId?.let{service.findOne(Meta.domain, {Meta.domain.id eq it}, "domain/${it}")}
+    }
+}
+///**
+// * 操作符类型
+// * */
+//enum class OpType{
+//    Basic, Collection, Logical, Customize
+//}
 
 /**
  * 值常量

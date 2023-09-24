@@ -22,12 +22,20 @@ export interface MyProTableProps<T extends BaseRecord, Q extends BasePageQuery> 
   listTransform?: (list: T[]) => T[] //对列表数据进行变换
  
   delApi?: string, // 不提供则无删除按钮，删除Api， 如"/api/ad/admin/del" ，将自动再最后拼接id，最后拼接为："/api/ad/admin/del/{id}"
-  actions?:  ProColumns //操作Action，不提供的话根据editConfig和delApi决定是否编辑和删除按钮
+  disableDel?: (e: T) => boolean //提供了且返回true，则关闭该项删除功能
+
+  //没有明确禁止，且有任意saveApi、delApi则添加actions
+  actions?:  ProColumns //自定义操作Action
+  disableActions?:  boolean //提供且为true，则明确要求关闭actions
 
   initialValues?: Partial<T> //新增时的给定初始值，用于传递给MySchemaFormEditor
   layoutType?: 'ModalForm' | 'DrawerForm'//editor中的layout类型，用于传递给MySchemaFormEditor
+  
   editForm?: 'ModalForm' | 'DrawerForm' | ((e?: Partial<T>) => string | 'ModalForm' | 'DrawerForm' | undefined)
   saveApi?: string, //若有新增&编辑保存功能，需提供saveApi
+  disableEdit?: (e: T) => boolean //提供了并且返回true则可编辑，则该项不可编辑
+  disableAdd?:  boolean //在有saveApi时，仍可关闭新增，只需提供了并且为true，当没提供saveApi也没有新增功能
+  
   transformBeforeEdit?: (data?: Partial<T>) => Partial<T> | undefined//编辑某行数据时，编辑前对其进行变换。注意：未对table中的列表数据进行变换
   transformBeforeSave?: (data: T) => T //提提交保存前对提交的数据进行修改变换
   idKey?: string //primary key, _id for mongoDB doc, id for sql record
@@ -45,7 +53,7 @@ export interface EditProps<T extends BaseRecord, Q extends BasePageQuery> {
   style: 'Button' | 'Link',
   isAdd: boolean,
   record?: Partial<T>,
-  columns?: ProColumns[],
+  columns?: ProColumns<T>[] | ProFormColumnsType<T>[],
   //formColumns?: ProFormColumnsType<T>[] //特殊情形下，使用单独的配置
 }
 

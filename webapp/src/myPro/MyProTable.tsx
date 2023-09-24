@@ -17,10 +17,13 @@ import { RouteContext, RouteContextType } from '@ant-design/pro-layout';
 
 //给currentQuery中的初始值设置到columns中去，以让searchForm有正确的初始值
 //顺带添加一些actions操作
-function applyinitalQuery<Q extends BasePageQuery = BasePageQuery>(actions: ProColumns, saveApi?: string, delApi?: string, columns?: ProColumns[], query?: Q) {
+function applyinitalQuery<T extends BaseRecord, Q extends BasePageQuery = BasePageQuery>(actions: ProColumns, props: MyProTableProps<T, Q>, 
+  columns?: ProColumns<T>[], query?: Q) {
   //const supportEdit = props.editForm && typeof props.editForm === "function" && props.editForm()
+  const {saveApi, delApi,  disableActions} = props
 
-  if ((saveApi || delApi) && columns && columns.length > 0) {
+  //没有明确禁止，且有任意saveApi、delApi则添加actions
+  if ((!disableActions && (saveApi || delApi)) && columns && columns.length > 0) {
     if (!contains(columns, actions, (e1, e2) => e1.title === e2.title)) {
       columns.push(actions)
     }
@@ -134,10 +137,11 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
       const title = value.title ? value.title : ""
       //console.log("RouteContextType", value)
 
-      //若提供了自定义的toolBarRender则优先使用自定义的
-      const myToolBarRender = props.toolBarRender ? props.toolBarRender : () => [
+      //若提供了自定义的toolBarRender则优先使用自定义的,
+      //没提供，则检查是否明确关闭了新增功能或没提供saveApi
+      const myToolBarRender = props.toolBarRender ? props.toolBarRender :( (props.disableAdd || !props.saveApi) ? undefined: () => [
         <EditorHub title={title} tableProps={props} style='Button' isAdd={true} record={props.initialValues} columns={props.columns} />
-      ]
+      ] )
 
       //编辑、删除等按钮
       const actions: ProColumns = props.actions ? props.actions : {
@@ -145,15 +149,16 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
         valueType: 'option',
         dataIndex: 'actions',
         render: (text, row) => [
-          // EditorHub('Link', false, row, props.columns, props.editConfig), //报错，undefined of length
-          <EditorHub title={title} tableProps={props} style='Link' isAdd={false} record={row} columns={props.columns} key="edit" />,// //编辑某行数据时，编辑前对其进行变换
-          props.delApi ? <a onClick={() => deleteOne(row, props.delApi + "/" + row[(props.idKey || UseCacheConfig.defaultIdentiyKey || "id")], undefined, props.listApi, props.cacheKey, props.idKey)} key="delete" >删除</a> : undefined,
+           //不存在saveApi，或 disableEdit返回true，则没编辑按钮
+          (!props.saveApi || (props.disableEdit && props.disableEdit(row))) ? undefined: <EditorHub title={title} tableProps={props} style='Link' isAdd={false} record={row} columns={props.columns} key="edit" />,// EditorHub('Link', false, row, props.columns, props.editConfig), //报错，undefined of length
+          //不存在delApi，或 disableDel返回true，则没删除按钮
+          (!props.delApi || (props.disableDel && props.disableDel(row)))? undefined : <a onClick={() => deleteOne(row, props.delApi + "/" + row[(props.idKey || UseCacheConfig.defaultIdentiyKey || "id")], undefined, props.listApi, props.cacheKey, props.idKey)} key="delete" >删除</a> ,
         ].filter((e) => !!e)
       }
 
       //避免applyinitalQuery添加actions时重复不断添加
      // const columns = useMemo(() => { return applyinitalQuery(actions, props.saveApi, props.delApi, props.columns, props.initialQuery) }, [])
-      const columns = applyinitalQuery(actions, props.saveApi, props.delApi, props.columns, props.initialQuery)
+      const columns = applyinitalQuery(actions, props, props.columns, props.initialQuery)
 
       return <div>
         <ProTable<T, Q>
@@ -262,7 +267,7 @@ function EditorHub<T extends BaseRecord, Q extends BasePageQuery>(props: EditPro
 
 
 //'Form', 'ModalForm', 'DrawerForm', 'LightFilter', 'QueryFilter', 'StepsForm', 'StepForm', 'Embed',
-function MySchemaFormEditor<T extends BaseRecord, Q extends BasePageQuery>(props: EditProps<T, Q>) {
+export function MySchemaFormEditor<T extends BaseRecord, Q extends BasePageQuery>(props: EditProps<T, Q>) {
   // const { message } = App.useApp();
   const layout = props.tableProps.layoutType || 'ModalForm'
   const columns = props.tableProps.formColumns || (props.columns? (props.columns as any) : undefined)

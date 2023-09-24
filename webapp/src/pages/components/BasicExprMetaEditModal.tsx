@@ -282,7 +282,7 @@ export const BasicExprMetaEditModal: React.FC<{
           const expression: Expression | undefined = Cache.findOne(ExpressionKeyPrefix + domainId, newExprId, "id")
           const meta = expression?.metaStr ? JSON.parse(expression?.metaStr) : undefined
 
-          operandConfig = checkMetaAvailable(meta.param?.paramType || meta.paramType, meta?.op)
+          operandConfig = checkMetaAvailable(meta?.op)
           operandConfig.param = meta?.param
           operandConfig.paramType = meta?.paramType
           operandConfig.op = meta?.op
@@ -325,7 +325,7 @@ export const BasicExprMetaEditModal: React.FC<{
           if (!operandConfig.other) delete newMeta.other
           if (!operandConfig.start) delete newMeta.start
           if (!operandConfig.end) delete newMeta.end
-          if (!operandConfig.set) delete newMeta.set
+          if (!operandConfig.collection) delete newMeta.set
           if (!operandConfig.e) delete newMeta.e
           if (!operandConfig.num) delete newMeta.num
 
@@ -341,7 +341,7 @@ export const BasicExprMetaEditModal: React.FC<{
 
           {operandConfig.end && <ValueMetaEditor name="end" constantQueryParams={getConstantQueryParams2({ useSelf: true }, domainId, operandConfig.param, operandConfig.paramType)} label="终止" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={false} value={newMeta.end} onChange={(v) => { setNewMeta({ ...newMeta, end: v }) }} />}
 
-          {operandConfig.set && <ValueMetaEditor name="set" constantQueryParams={getConstantQueryParams2({ toSetType: true }, domainId, operandConfig.param, operandConfig.paramType)} label="集合" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={true} value={newMeta.set} onChange={(v) => { setNewMeta({ ...newMeta, set: v }) }} />}
+          {operandConfig.collection && <ValueMetaEditor name="set" constantQueryParams={getConstantQueryParams2({ toSetType: true }, domainId, operandConfig.param, operandConfig.paramType)} label="集合" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={true} value={newMeta.set} onChange={(v) => { setNewMeta({ ...newMeta, set: v }) }} />}
 
           {operandConfig.e && <ValueMetaEditor name="e" constantQueryParams={getConstantQueryParams2({ toBasicType: true }, domainId, operandConfig.param, operandConfig.paramType)} label="某项" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={false} value={newMeta.e} onChange={(v) => { setNewMeta({ ...newMeta, e: v }) }} />}
 
@@ -450,7 +450,7 @@ interface OperandConfig {
   start?: boolean,
   end?: boolean,
   e?: boolean,
-  set?: boolean,
+  collection?: boolean,
   num?: boolean,
   multiple?: boolean,
   param?: Param,
@@ -507,7 +507,7 @@ const getValueMapParam = (props: {
         if (!op) op = opInMeta
       }
 
-      config = checkMetaAvailable(paramType, op)
+      config = checkMetaAvailable(op)
       //console.log(c)
 
       config.multiple = multiple
@@ -551,7 +551,7 @@ const getValueMapParam = (props: {
       if (!op) op = opInMeta
     }
 
-    config = checkMetaAvailable(param.paramType, op)
+    config = checkMetaAvailable(op)
 
     config.multiple = multiple
     config.param = param
@@ -560,40 +560,55 @@ const getValueMapParam = (props: {
   return config
 }
 
-export const checkMetaAvailable = (paramType?: ParamType, op?: Operator) => {
+
+const checkMetaAvailable = (op?: Operator) => {
   const config: OperandConfig = {}
-  if (!paramType || !op) return config
-  if (paramType.code === 'Bool') {
-    config.other = true
-    return config
-  }
-  const opCode = op.code
-  //console.log("opCode="+opCode)
-  if (paramType.isBasic) {
-    if (contains(["eq", "ne", "lt", "lte", "gt", "gte"], opCode, (e1, e2) => e1 === e2))
-      config.other = true
-    else if (opCode === 'between' || opCode === 'notBetween') {
-      config.start = true
-      config.end = true
-    } else if (opCode === 'in' || opCode === 'nin')
-      config.set = true
-    else {
-      console.warn("basic Should NOT come here: opCode=" + opCode)
-    }
-  } else {
-    if (opCode === 'contains' || opCode === 'notContains')
-      config.e = true
-    else if (opCode === 'eq' || opCode === 'containsAll' || opCode === 'anyIn' || opCode === 'allIn' || opCode === 'allNotIn') {
-      config.other = true
-    } else if (opCode === 'numberIn' || opCode === 'gteNumberIn' || opCode === 'lteNumberIn') {
-      config.other = true
-      config.num = true
-    } else {
-      console.warn("set Should NOT come here: opCode=" + opCode)
-    }
-  }
+  if (!op) return config
+  
+  config.other = op.other
+  config.start = op.start
+  config.end = op.end
+  config.collection = op.collection
+  config.e = op.e
+  config.num = op.num
+
   return config
 }
+
+// const checkMetaAvailable = (paramType?: ParamType, op?: Operator) => {
+//   const config: OperandConfig = {}
+//   if (!paramType || !op) return config
+//   if (paramType.code === 'Bool') {
+//     config.other = true
+//     return config
+//   }
+//   const opCode = op.code
+//   //console.log("opCode="+opCode)
+//   if (paramType.isBasic) {
+//     if (contains(["eq", "ne", "lt", "lte", "gt", "gte"], opCode, (e1, e2) => e1 === e2))
+//       config.other = true
+//     else if (opCode === 'between' || opCode === 'notBetween') {
+//       config.start = true
+//       config.end = true
+//     } else if (opCode === 'in' || opCode === 'nin')
+//       config.collection = true
+//     else {
+//       console.warn("basic Should NOT come here: opCode=" + opCode)
+//     }
+//   } else {
+//     if (opCode === 'contains' || opCode === 'notContains')
+//       config.e = true
+//     else if (opCode === 'eq' || opCode === 'containsAll' || opCode === 'anyIn' || opCode === 'allIn' || opCode === 'allNotIn') {
+//       config.other = true
+//     } else if (opCode === 'numberIn' || opCode === 'gteNumberIn' || opCode === 'lteNumberIn') {
+//       config.other = true
+//       config.num = true
+//     } else {
+//       console.warn("set Should NOT come here: opCode=" + opCode)
+//     }
+//   }
+//   return config
+// }
 
 
 /**
