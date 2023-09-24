@@ -4,7 +4,7 @@ import React from "react"
 
 import { MyProTable, MySchemaFormEditor, deleteOne } from "@/myPro/MyProTable"
 import { ProColumns } from "@ant-design/pro-table"
-import { AllDomainKey, Domain, DomainQueryParams, Operator, OperatorQueryParams } from "../DataType"
+import { AllDomainKey, Domain, DomainQueryParams, Operator, OperatorQueryParams, ParamType, ParamTypeQueryParams } from "../DataType"
 import { defaultProps, mustFill } from "../moduleTableProps"
 import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps"
 import { UseCacheConfig } from "@rwsbillyang/usecache"
@@ -63,48 +63,143 @@ export const OperatorTable: React.FC = () => {
       formItemProps: mustFill
     },
     {
-      title: '操作数配置',
-      tooltip: '是否拥有该操作数',
-      valueType: 'group',
-      formItemProps: mustFill,
+      valueType: "group",
       columns: [
         {
-          title: '某值',
-          tooltip: '与某个值比较',
-          valueType: 'switch',
+          title: '操作数other',
+          tooltip: '比较操作时，是否有other；由自定义扩展运行库中的自定义数据类型做支持的操作运算决定',
           dataIndex: 'other',
+          valueType: 'switch',
         },
         {
-          title: '起始值',
-          tooltip: '如范围比较时的起始值',
-          valueType: 'switch',
+          valueType: 'dependency',
+          name: ['other'],
+          columns: ({ other }) => other? [{
+            title: 'other类型',
+            tooltip: 'other数据类型，用于选择对应的常量或变量',
+            dataIndex: 'otherTypeId',
+            request: () => asyncSelectProps2Request<ParamType, ParamTypeQueryParams>({
+              key: "paramType/sys",//列表页中是全部加载，此处也是全部加载
+              url: `${Host}/api/rule/composer/list/paramType`,
+              query: { isSys: true, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+              convertFunc: (item) => { return { label: item.label, value: item.id } }
+            })
+          }] : [],
+        },
+      ]
+    },
+    {
+      valueType: "group",
+      columns: [
+        {
+          title: '起始值start',
+          tooltip: '范围比较时，需要起始值start；由自定义扩展运行库中的自定义数据类型做支持的操作运算决定',
           dataIndex: 'start',
+          valueType: 'switch',
         },
         {
-          title: '终止值',
-          tooltip: '如范围比较时的终止值',
-          valueType: 'switch',
+          valueType: 'dependency',
+          name: ['start'],
+          columns: ({ start }) => start? [{
+            title: '起始值start类型',
+            tooltip: '范围比较时的起始值start数据类型，用于选择对应的常量或变量',
+            dataIndex: 'startTypeId',
+            request: () => asyncSelectProps2Request<ParamType, ParamTypeQueryParams>({
+              key: "paramType/basic",//列表页中是全部加载，此处也是全部加载
+              url: `${Host}/api/rule/composer/list/paramType`,
+              query: { isBasic: true, isSys: true, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+              convertFunc: (item) => { return { label: item.label, value: item.id } }
+            })
+          }] :  [],
+        }, 
+      ]
+    },
+    {
+      valueType: "group",
+      columns: [ 
+        {
+          title: '终止值end',
+          tooltip: '范围比较时，需要终止值end；由自定义扩展运行库中的自定义数据类型做支持的操作运算决定',
           dataIndex: 'end',
-        },
-        {
-          title: '集合容器',
-          tooltip: '如是否在某个集合容器中',
           valueType: 'switch',
-          dataIndex: 'collection',
         },
         {
-          title: '某元素',
-          tooltip: '如集合容器是否包含某元素',
+          valueType: 'dependency',
+          name: ['end'],
+          columns: ({ end }) => end? [{
+            title: '终止值end类型',
+            tooltip: '范围比较时的终止值end数据类型，用于选择对应的常量或变量',
+            dataIndex: 'endTypeId',
+            request: () => asyncSelectProps2Request<ParamType, ParamTypeQueryParams>({
+              key: "paramType/basic",//列表页中是全部加载，此处也是全部加载
+              url: `${Host}/api/rule/composer/list/paramType`,
+              query: { isBasic: true,isSys: true, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+              convertFunc: (item) => { return { label: item.label, value: item.id } }
+            })
+          }] :  [],
+        },
+      ]
+    },
+    {
+      valueType: "group",
+      columns: [
+        {
+          title: '集合容器set',
+          tooltip: '操作数比较操作时，是否存在于集合容器set；由自定义扩展运行库中的自定义数据类型做支持的操作运算决定',
+          dataIndex: 'collection',
+          valueType: 'switch',
+        },
+        {
+          valueType: 'dependency',
+          name: ['collection'],
+          columns: ({ collection }) => collection? [{
+            title: '集合容器set类型',
+            tooltip: '集合容器set数据类型，用于选择对应的常量或变量',
+            dataIndex: 'collectionTypeId',
+            request: () => asyncSelectProps2Request<ParamType, ParamTypeQueryParams>({
+              key: "paramType/collection",//列表页中是全部加载，此处也是全部加载
+              url: `${Host}/api/rule/composer/list/paramType`,
+              query: { isBasic: false, isSys: true, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+              convertFunc: (item) => { return { label: item.label, value: item.id } }
+            })
+          }] :  [],
+        },
+      ]
+    },
+
+    {
+      valueType: "group",
+      columns: [
+        {
+          title: '元素e',
+          tooltip: '比较操作时, 是否包含某元素e；由自定义扩展运行库中的自定义数据类型做支持的操作运算决定',
           valueType: 'switch',
           dataIndex: 'e',
         },
         {
-          title: '交集个数',
-          tooltip: '如集合交集元素个数',
-          valueType: 'switch',
-          dataIndex: 'num',
+          valueType: 'dependency',
+          name: ['e'],
+          columns: ({ e }) => e? [{
+            title: '元素e类型',
+            tooltip: '元素e数据类型，用于选择对应的常量或变量',
+            dataIndex: 'eTypeId',
+            request: () => asyncSelectProps2Request<ParamType, ParamTypeQueryParams>({
+              key: "paramType/basic",//列表页中是全部加载，此处也是全部加载
+              url: `${Host}/api/rule/composer/list/paramType`,
+              query: { isBasic: true, isSys: true, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+              convertFunc: (item) => { return { label: item.label, value: item.id } }
+            })
+          }] :  [],
         },
       ]
+    },
+    
+
+    {
+      title: '交集个数num',
+      tooltip: '交集比较时，若需比较相交后个数；由自定义扩展运行库中的自定义数据类型做支持的操作运算决定',
+      valueType: 'switch',
+      dataIndex: 'num',
     },
     {
       title: '备注',

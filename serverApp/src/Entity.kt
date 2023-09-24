@@ -70,12 +70,18 @@ data class Operator(
     val isSys: Boolean = true,
 
     //以下为操作数配置，需要的操作数则设置为true, 前端根据它是否展示对应的输入控件
-    val other: Boolean = false,
-    val start: Boolean = false,
-    val end: Boolean = false,
-    val collection: Boolean = false, //set是数据库关键字
-    val e: Boolean = false,
+    val other: Boolean= false, //如果空则表示前端不可见；
+    val start: Boolean= false,//如果空则表示前端不可见；
+    val end: Boolean= false,//如果空则表示前端不可见；
+    val collection: Boolean= false,//set是数据库关键字
+    val e: Boolean= false, //如果空则表示前端不可见；
     val num: Boolean = false,
+
+    val otherTypeId: Int? = null, //如果非空，表示输入时所可供选择的数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
+    val startTypeId: Int? = null,//如果非空，表示输入时所可供选择的基本数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
+    val endTypeId: Int? = null,//如果非空，表示输入时所可供选择的基本数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
+    val collectionTypeId: Int? = null,//如果非空，表示输入时所可供选择的集合容器数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
+    val eTypeId: Int? = null, //如果非空，表示输入时所可供选择的基本数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
 
     val domainId: Int? = null,//自定义记录可以有domainId
     @KomapperIgnore var domain: Domain? = null, //domainId 前端列表中需要使用该信息

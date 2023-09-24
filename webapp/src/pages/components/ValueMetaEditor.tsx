@@ -26,17 +26,18 @@ export const ValueMetaEditor: React.FC<{
     paramType?: ParamType,
     multiple: boolean,
     domainId?: number,
-    name: string,
     label: string,
     disabled?: boolean, //如果明确指定为true则disable所有
     constantQueryParams: ConstantQueryParams,
     value?: ValueMeta,
     onChange: (v: ValueMeta) => void
-}> = ({ multiple, paramType, domainId, value, name, label, onChange, disabled, constantQueryParams }) => {
+}> = ({ multiple, paramType, domainId, value, label, onChange, disabled, constantQueryParams }) => {
     const [paramOptions, setParamOptions] = useState<DefaultOptionType[]>()
     const [constantOptions, setConstantOptions] = useState<CascaderOption[]>()
     const [paramLoading, setParamLoading] = useState(false)
     const [constantLoading, setConstantLoading] = useState(false)
+
+    console.log("ValueMetaEditor, paramType=",paramType)
 
     const paramCategoryAsyncSelectProps: MyAsyncSelectProps<ParamCategory, ParamCategoryQueryParams> = {
         key: "paramCategory/domain/" + domainId + "/type/" + paramType?.id,

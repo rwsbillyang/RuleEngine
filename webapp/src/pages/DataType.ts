@@ -27,12 +27,18 @@ export interface Operator extends LabeldBean {
     type: 'Basic'| "Collection" | 'Logical' | 'Cutomize',
     
     //以下为操作数配置，需要的操作数则设置为true, 前端根据它是否展示对应的输入控件
-    other: boolean
+    other: boolean 
     start: boolean
     end: boolean
-    collection: boolean
-    e: boolean
+    collection: boolean//set是数据库关键字
+    e: boolean 
     num: boolean
+
+    otherTypeId?: number//如果非空，表示输入时所可供选择的数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
+    startTypeId?: number//如果非空，表示输入时所可供选择的基本数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
+    endTypeId?: number//如果非空，表示输入时所可供选择的基本数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
+    collectionTypeId?: number//如果非空，表示输入时所可供选择的集合容器数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
+    eTypeId?: number //如果非空，表示输入时所可供选择的基本数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
 
     domain?: Domain//来自后端，用于展示列表项
     domainId?: number//select选择时设置，提交给后端

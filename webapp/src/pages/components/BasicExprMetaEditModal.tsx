@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { ModalForm, ProFormCascader, ProFormDependency, ProFormInstance, ProFormSelect, ProFormText } from "@ant-design/pro-form";
 import { AllParamTypeKey, BasicExpressionMeta, ConstantQueryParams, Expression, ExpressionQueryParams, Operator, OperatorQueryParams, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, ParamTypeQueryParams } from "../DataType";
 
-import { TreeCache, Cache, contains } from "@rwsbillyang/usecache"
+import { TreeCache, Cache } from "@rwsbillyang/usecache"
 import { asyncSelectProps2Request } from "@/myPro/MyProTableProps";
 import { EnableParamCategory, Host } from "@/Config";
 import { ValueMetaEditor } from "./ValueMetaEditor";
@@ -251,21 +251,21 @@ export const BasicExprMetaEditModal: React.FC<{
             if (paramId) {
               if (EnableParamCategory) {
                 if (paramId && paramId.length > 1) {
-                  return asyncGetOpOptions({categoryId: paramId[0], paramId: paramId[1], domainId, paramInMeta: newMeta.param, paramTypeInMeta: newMeta.paramType})
+                  return asyncGetOpOptions({ categoryId: paramId[0], paramId: paramId[1], domainId, paramInMeta: newMeta.param, paramTypeInMeta: newMeta.paramType })
                 } else {
                   console.warn("EnableParamCategory but only invalid paramId:", paramId)
-                  return asyncGetOpOptions({paramId: paramId[0], domainId, paramInMeta: newMeta.param, paramTypeInMeta: newMeta.paramType})
+                  return asyncGetOpOptions({ paramId: paramId[0], domainId, paramInMeta: newMeta.param, paramTypeInMeta: newMeta.paramType })
                 }
               } else {
-                return asyncGetOpOptions({paramId, domainId, paramInMeta: newMeta.param, paramTypeInMeta: newMeta.paramType})
+                return asyncGetOpOptions({ paramId, domainId, paramInMeta: newMeta.param, paramTypeInMeta: newMeta.paramType })
               }
             } else {
               //const paramTypeId = params.paramTypeId
               if (paramTypeId === undefined) {
                 console.log("reset? not choose paramId or paramTypeId")
-                return asyncGetOpOptions({ domainId, paramTypeInMeta: newMeta.paramType, paramInMeta: newMeta.param})
+                return asyncGetOpOptions({ domainId, paramTypeInMeta: newMeta.paramType, paramInMeta: newMeta.param })
               } else {
-                return asyncGetOpOptions({ paramTypeId, domainId, paramTypeInMeta: newMeta.paramType, paramInMeta: newMeta.param})
+                return asyncGetOpOptions({ paramTypeId, domainId, paramTypeInMeta: newMeta.paramType, paramInMeta: newMeta.param })
               }
             }
           }}
@@ -333,19 +333,23 @@ export const BasicExprMetaEditModal: React.FC<{
 
         //setOpTooltip(newMeta.op?.remark)
         //console.log(newMeta)
+        const pType = operandConfig.param?.paramType || operandConfig.paramType
+        if(!pType){
+          return  <div> 请先选择变量或数据类型，将根据数据类型加载对应变量或常量</div> 
+        } 
 
         return operandConfig.err ? <div> {operandConfig.err} </div> : <>
-          {operandConfig.other && <ValueMetaEditor name="other" constantQueryParams={getConstantQueryParams2({ useSelf: true }, domainId, operandConfig.param, operandConfig.paramType)} label="值" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={operandConfig.multiple === true} value={newMeta.other} onChange={(v) => { setNewMeta({ ...newMeta, other: v }) }} />}
+          {operandConfig.other && <ValueMetaEditor constantQueryParams={getConstantQueryParams2({ useSelf: true }, domainId, operandConfig.param, operandConfig.paramType, operandConfig.op, 'otherTypeId')} label="操作数other" disabled={!!exprId} paramType={type2SysType(pType, operandConfig.op, 'otherTypeId')} domainId={domainId} multiple={operandConfig.multiple === true} value={newMeta.other} onChange={(v) => { setNewMeta({ ...newMeta, other: v }) }} />}
 
-          {operandConfig.start && <ValueMetaEditor name="start" constantQueryParams={getConstantQueryParams2({ useSelf: true }, domainId, operandConfig.param, operandConfig.paramType)} label="起始" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={false} value={newMeta.start} onChange={(v) => { setNewMeta({ ...newMeta, start: v }) }} />}
+          {operandConfig.start && <ValueMetaEditor constantQueryParams={getConstantQueryParams2({ useSelf: true }, domainId, operandConfig.param, operandConfig.paramType, operandConfig.op, 'startTypeId')} label="起始start" disabled={!!exprId} paramType={type2SysType(pType, operandConfig.op, 'startTypeId')} domainId={domainId} multiple={false} value={newMeta.start} onChange={(v) => { setNewMeta({ ...newMeta, start: v }) }} />}
 
-          {operandConfig.end && <ValueMetaEditor name="end" constantQueryParams={getConstantQueryParams2({ useSelf: true }, domainId, operandConfig.param, operandConfig.paramType)} label="终止" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={false} value={newMeta.end} onChange={(v) => { setNewMeta({ ...newMeta, end: v }) }} />}
+          {operandConfig.end && <ValueMetaEditor constantQueryParams={getConstantQueryParams2({ useSelf: true }, domainId, operandConfig.param, operandConfig.paramType, operandConfig.op, 'endTypeId')} label="终止end" disabled={!!exprId} paramType={type2SysType(pType, operandConfig.op, 'endTypeId')} domainId={domainId} multiple={false} value={newMeta.end} onChange={(v) => { setNewMeta({ ...newMeta, end: v }) }} />}
 
-          {operandConfig.collection && <ValueMetaEditor name="set" constantQueryParams={getConstantQueryParams2({ toSetType: true }, domainId, operandConfig.param, operandConfig.paramType)} label="集合" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={true} value={newMeta.set} onChange={(v) => { setNewMeta({ ...newMeta, set: v }) }} />}
+          {operandConfig.collection && <ValueMetaEditor constantQueryParams={getConstantQueryParams2({ toSetType: true }, domainId, operandConfig.param, operandConfig.paramType, operandConfig.op, 'collectionTypeId')} label="集合set" disabled={!!exprId} paramType={type2SysType(pType, operandConfig.op, 'collectionTypeId')} domainId={domainId} multiple={true} value={newMeta.set} onChange={(v) => { setNewMeta({ ...newMeta, set: v }) }} />}
 
-          {operandConfig.e && <ValueMetaEditor name="e" constantQueryParams={getConstantQueryParams2({ toBasicType: true }, domainId, operandConfig.param, operandConfig.paramType)} label="某项" disabled={!!exprId} paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={false} value={newMeta.e} onChange={(v) => { setNewMeta({ ...newMeta, e: v }) }} />}
+          {operandConfig.e && <ValueMetaEditor constantQueryParams={getConstantQueryParams2({ toBasicType: true }, domainId, operandConfig.param, operandConfig.paramType, operandConfig.op, 'eTypeId')} label="某项e" disabled={!!exprId} paramType={type2SysType(pType, operandConfig.op, 'eTypeId')} domainId={domainId} multiple={false} value={newMeta.e} onChange={(v) => { setNewMeta({ ...newMeta, e: v }) }} />}
 
-          {operandConfig.num && <ValueMetaEditor name="num" constantQueryParams={getConstantQueryParams2({ paramType: ["Int", "Long"] }, domainId, operandConfig.param, operandConfig.paramType)} disabled={!!exprId} label="数量" paramType={operandConfig.param?.paramType || operandConfig.paramType} domainId={domainId} multiple={false} value={newMeta.num} onChange={(v) => { setNewMeta({ ...newMeta, num: v }) }} />}
+          {operandConfig.num && <ValueMetaEditor constantQueryParams={getConstantQueryParams2({ paramType: ["Int", "Long"] }, domainId, operandConfig.param, operandConfig.paramType)} disabled={!!exprId} label="数量num" paramType={Cache.findOne(AllParamTypeKey, "Int", "code")} domainId={domainId} multiple={false} value={newMeta.num} onChange={(v) => { setNewMeta({ ...newMeta, num: v }) }} />}
         </>
       }}
     </ProFormDependency>
@@ -564,7 +568,7 @@ const getValueMapParam = (props: {
 const checkMetaAvailable = (op?: Operator) => {
   const config: OperandConfig = {}
   if (!op) return config
-  
+
   config.other = op.other
   config.start = op.start
   config.end = op.end
@@ -626,18 +630,116 @@ export interface ParamTypeConfig {
 
 
 /**
+ * 不再区分toSetType、toBasicType、useSelf，统一使用其对应的所有基本类型以及Set类型，从中单选、多选或全选
+ * @param config 
+ * @param domainId 
+ * @param param 
+ * @param paramType 
+ * @param op 自定义类型时需要获取其中的配置
+ * @param operatorKey 参见Operator中的 other, start, end ,set, e, num
+ * @returns 
+ */
+const getConstantQueryParams2 = (
+  config: ParamTypeConfig,
+  domainId?: number,
+  param?: Param,
+  paramType?: ParamType,
+  op?: Operator,
+  operatorKey?: string) => {
+  const queryParams: ConstantQueryParams = { domainId: domainId, pagination: { pageSize: -1, sKey: "id", sort: 1 } }//pageSize: -1为全部加载
+
+  if (param) {
+    if (param.valueScopeIds && param.valueScopeIds.length > 0) {
+      queryParams.ids = param.valueScopeIds
+      return queryParams
+    }
+  }
+  if (config.paramType && config.paramType.length > 0) {
+    queryParams.typeIds = config.paramType.map((e) => typeCode2Id(e)).filter((e) => e !== undefined).join(",")
+    return queryParams
+  }
+  const type = param?.paramType || paramType
+  if (!type) {
+    console.warn("no paramType or param?.paramType")
+    return queryParams
+  }
+
+  queryParams.typeIds = type2Both(type, op, operatorKey)
+
+  console.log("ConstantQueryParams2=" + JSON.stringify(queryParams))
+  return queryParams
+}
+
+/**
+ * 根据ParamType或operator，得到对应的typeIds（基本类型、以及集合类型），然后用于查询常量ConstantQueryParams.typeids
+ * @param type 
+ * @param op 
+ * @param operatorKey 
+ * @returns 
+ */
+const type2Both = (type?: ParamType, op?: Operator, operatorKey?: string) => {
+
+  if (!type) {
+    console.warn("no paramType or param?.paramType")
+    return undefined
+  }
+
+  let typeId
+  if (type.isSys) {//系统类型
+    //除了指定的值域和类型外，其它的都是有基本类型（包括枚举）和Set类型, 可以单选、多选和全选
+    typeId = type.id
+  } else {//若是自定义类型，则使用操作数中自定义的类型
+    console.log("type is customize, use paramType in operator, type is " + type.code)
+    if (!op || !operatorKey) {
+      //所选现有变量，或变量mapKey以及变量类型，是自定义类型，需要通过其操作数Operator中定义的类型选择
+      console.warn("paramType is customize, should provide operator and key")
+      return undefined
+    } else {
+      console.log("operatorKey=" +operatorKey+ ",opertor= " , op)
+      typeId = op[operatorKey]
+    }
+  }
+  if(!typeId){
+    console.warn("no typeId")
+    return undefined
+  }
+
+  const basicTypeId = getBasicTypeId(typeId) || typeId
+  const setTypeId = typeCode2Id(type.code.replaceAll("Set", "").replaceAll("Enum", "") + "Set")
+  const typeIds = [basicTypeId, setTypeId].filter(e => e !== undefined)
+  if (typeIds && typeIds.length > 0)
+    return typeIds.join(",")
+  else
+    return undefined
+}
+const type2SysType = (type: ParamType, op?: Operator, operatorKey?: string) => {
+  if (type.isSys) {//系统类型
+   return type
+  } else {//若是自定义类型，则使用操作数中自定义的类型
+    if (!op || !operatorKey) {
+      //所选现有变量，或变量mapKey以及变量类型，是自定义类型，需要通过其操作数Operator中定义的类型选择
+      console.warn("2 paramType is customize, should provide operator and key")
+      return undefined
+    } else {
+      const basicTypeId = getBasicTypeId(op[operatorKey]) || op[operatorKey]
+      return Cache.findOne(AllParamTypeKey, basicTypeId, "id")
+    }
+  }
+}
+
+/**
  * 在构建基本表达式时，为参数变量param选择常量时，会有不同
- * 
+ *
  * 变量：可以是任何类型
  * 而other、start、end、set、e、num等操作数选择常量时：
  * 若变量有值域，则仅使用其值域常量（即只有其对应枚举类型）
- * 
+ *
  * 若没有，则根据param的类型以及other、start、end、set、e、num等情形做相应变换
  * 对于num永远使用指定的Int和Long类型
  * 如何变换则由ParamTypeConfig指定
- * 
- * 
- * @param param 
+ *
+ *
+ * @param param
  * @param paramTypeCode 如果不提供将使用param的类型，因为有的比较符要求操作数类型与自己并不一致，如集合是否包含某项，某变量是否在集合中，交集数量等
  * @returns 返回ConstantQueryParams，其中包含了domainId，pagination, 以及ids或typeIds等字段
  */
@@ -678,38 +780,3 @@ export interface ParamTypeConfig {
 //   console.log("ConstantQueryParams=" + JSON.stringify(queryParams))
 //   return queryParams
 // }
-/**
- * 不再区分toSetType、toBasicType、useSelf，统一使用其对应的所有基本类型以及Set类型，从中单选、多选或全选
- * @param config 
- * @param domainId 
- * @param param 
- * @param paramType 
- * @returns 
- */
-const getConstantQueryParams2 = (config: ParamTypeConfig, domainId?: number, param?: Param, paramType?: ParamType) => {
-  const queryParams: ConstantQueryParams = { domainId: domainId, pagination: { pageSize: -1, sKey: "id", sort: 1 } }//pageSize: -1为全部加载
-
-  if (param) {
-    if (param.valueScopeIds && param.valueScopeIds.length > 0) {
-      queryParams.ids = param.valueScopeIds
-      return queryParams
-    }
-  }
-  if (config.paramType && config.paramType.length > 0) {
-    queryParams.typeIds = config.paramType.map((e) => typeCode2Id(e)).filter((e) => e !== undefined).join(",")
-    return queryParams
-  }
-  const type = param?.paramType || paramType
-  if (!type) {
-    console.warn("no paramType or param?.paramType")
-    return queryParams
-  }
-
-  //除了指定的值域和类型外，其它的都是有基本类型（包括枚举）和Set类型, 可以单选、多选和全选
-  const basicTypeId = getBasicTypeId(type.id) || type.id
-  const setTypeId = typeCode2Id(type.code.replaceAll("Set", "").replaceAll("Enum", "") + "Set")
-  queryParams.typeIds = [basicTypeId, setTypeId].filter(e => e !== undefined).join(",")
-
-  //console.log("ConstantQueryParams2=" + JSON.stringify(queryParams))
-  return queryParams
-}
