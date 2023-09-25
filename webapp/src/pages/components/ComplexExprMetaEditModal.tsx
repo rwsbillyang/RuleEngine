@@ -81,6 +81,7 @@ export const ComplexExprMetaEditModal: React.FC<{
         title={title || "编辑复合表达式"}
         trigger={<a >{triggerName || "编辑"}</a>}
         autoFocusFirstInput
+        omitNil={false} //去掉将不能清除数据，因为需要undfined来清除掉旧数据
         modalProps={{
             destroyOnClose: false,
         }}
