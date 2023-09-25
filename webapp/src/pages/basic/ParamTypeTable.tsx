@@ -16,12 +16,12 @@ import { Host } from "@/Config"
 export const ParamTypeTable: React.FC = () => {
   const name = "paramType"
 
-  const initialQuery = { pagination: { pageSize: -1, sKey: "id", sort: 1 } } //pageSize=-1 means all data
+  const initialQuery = { pagination: { pageSize: -1, sKey: "id", sort: -1 } } //pageSize=-1 means all data
 
   //列表字段及内置记录的form编辑 配置
   const sysColumns: ProColumns<ParamType>[] = [
     {
-      title: '内部代码',
+      title: '内部编码',
       dataIndex: 'code',
       readonly: true,
       hideInSearch: true
@@ -71,8 +71,9 @@ export const ParamTypeTable: React.FC = () => {
       })
     },
     {
-      title: '内部代码',
+      title: '内部编码',
       dataIndex: 'code',
+      tooltip: "须与扩展库SerialName一致；一经用于创建规则或表达式，便不可修改",
       hideInSearch: true,
       formItemProps: mustFill,
       fieldProps: { placeholder: "唯一值，推荐用英文字母" }

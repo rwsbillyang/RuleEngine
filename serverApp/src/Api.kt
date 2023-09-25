@@ -257,6 +257,7 @@ fun Routing.composerApi() {
 
 
         //初始化数据库： http://localhost:18000/api/rule/composer/initDb
+        //truncate table `t_param_type`;  truncate table `t_operator`;
         get("/initDb"){
             call.respondBoxOK(crudController.initDictDataInDb())
         }

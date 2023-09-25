@@ -313,7 +313,7 @@ export function saveOne<T extends BaseRecord>(
   values: T,
   oldValues?: Partial<T>,
   saveApi?: string,
-  transformBeforeSave?: (data: T) => T,
+  transformBeforeSave?: (data: T) => T | undefined,
   onSaveOK?: (data) => void, //若提供了onSaveOK，可不提供后面的信息（用于更新缓存）
   isAdd?: boolean,
   listApi?: string,
@@ -356,6 +356,9 @@ export function saveOne<T extends BaseRecord>(
 
 
   const transformedData = transformBeforeSave ? transformBeforeSave(newValues) : newValues//提交数据前对数据进行变换
+  if(!transformedData){//返回undefined时，意味着转换校验有错误，不再进行下去
+    return false
+  }
   // if (MyProConfig.EnableLog) {
   //   console.log("after transformed, values=", transformedData);
   // }

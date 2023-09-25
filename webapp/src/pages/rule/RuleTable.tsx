@@ -128,9 +128,9 @@ export const rubleTableProps = {
         }
 
         //保存它们对应的string信息
-        delete e.meta
-        //delete e.tagList
-        delete e.expr
+        //delete e.meta
+ 
+       // delete e.expr
 
         return e
     },

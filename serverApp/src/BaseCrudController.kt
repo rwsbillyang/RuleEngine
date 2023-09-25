@@ -32,6 +32,7 @@ import kotlinx.serialization.encodeToString
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.komapper.core.dsl.Meta
+import org.komapper.core.dsl.QueryDsl
 import org.komapper.core.dsl.expression.WhereDeclaration
 import org.slf4j.LoggerFactory
 
@@ -243,7 +244,20 @@ class BaseCrudController : KoinComponent {
         return count
     }
 
+    /**
+     * 清空类型和操作符表，并从id=1开始添加
+     * */
     fun initDictDataInDb(): String {
+        //truncate table `t_param_type`;  truncate table `t_operator`;
+        //bugfix：未生效
+//        QueryDsl.executeScript("""
+//            truncate table `t_param_type`;
+//""".trimIndent());
+//        QueryDsl.executeScript("""
+//            truncate table `t_operator`;
+//""".trimIndent());
+
+
         val map = mutableMapOf<String, Operator>()
         //将系统内置支持的操作符写入数据库，并构建map
         EnumOp.values()

@@ -55,6 +55,15 @@ data class ParamType(
 }
 
 /**
+ * 操作数配置
+ * */
+@Serializable
+class OperandConfig(
+    val enable: Boolean,
+    val valueScopeIds: String?, //enable激活后与typedId必须至少一个非空
+    val typedId: Int?
+)
+/**
  * 操作符, 如>,>=, <, <=, !=, ==, in, between
  * @param name 操作符
  * @param isSys 若是系统内置不可编辑
@@ -77,11 +86,8 @@ data class Operator(
     val e: Boolean= false, //如果空则表示前端不可见；
     val num: Boolean = false,
 
-    val otherTypeId: Int? = null, //如果非空，表示输入时所可供选择的数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
-    val startTypeId: Int? = null,//如果非空，表示输入时所可供选择的基本数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
-    val endTypeId: Int? = null,//如果非空，表示输入时所可供选择的基本数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
-    val collectionTypeId: Int? = null,//如果非空，表示输入时所可供选择的集合容器数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
-    val eTypeId: Int? = null, //如果非空，表示输入时所可供选择的基本数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
+    //自定义操作符的操作数所使用的常量类型或值域（常量id列表）
+    val operandCfgStr: String? = null,
 
     val domainId: Int? = null,//自定义记录可以有domainId
     @KomapperIgnore var domain: Domain? = null, //domainId 前端列表中需要使用该信息

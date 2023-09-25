@@ -13,6 +13,19 @@ export interface DomainQueryParams extends BasePageQuery {
 }
 
 
+//选中自定义操作符后，加载常量，使用值域或者类型
+export interface OperandConstantQueryParam{
+    typeId?: number //来自选定的数据类型
+    constantIds?: number[] //来自某些常量
+}
+export interface OperandFromCfg{
+    other?:OperandConstantQueryParam
+    start?:OperandConstantQueryParam
+    end?:OperandConstantQueryParam
+    collection?:OperandConstantQueryParam
+    e?:OperandConstantQueryParam
+    //num?:OperandConstantQueryParam
+}
 
 /**
  * 操作符, 如>,>=, <, <=, !=, ==, in, between
@@ -24,8 +37,11 @@ export interface Operator extends LabeldBean {
     code: string,
     isSys: boolean,
     remark?: string,
-    type: 'Basic'| "Collection" | 'Logical' | 'Cutomize',
-    
+    type: 'Basic'| "Collection" | 'Logical' | 'Customize',
+   
+    domain?: Domain//来自后端，用于展示列表项
+    domainId?: number//select选择时设置，提交给后端
+
     //以下为操作数配置，需要的操作数则设置为true, 前端根据它是否展示对应的输入控件
     other: boolean 
     start: boolean
@@ -34,19 +50,30 @@ export interface Operator extends LabeldBean {
     e: boolean 
     num: boolean
 
+
+    operandCfgStr?: string //数据库中实际存储的配置信息
+   
+    //临时字段 由转换operandCfgStr而来
+    operandCfg?: OperandFromCfg
+
+    //临时字段，用于收集form的输入值
     otherTypeId?: number//如果非空，表示输入时所可供选择的数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
     startTypeId?: number//如果非空，表示输入时所可供选择的基本数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
     endTypeId?: number//如果非空，表示输入时所可供选择的基本数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
     collectionTypeId?: number//如果非空，表示输入时所可供选择的集合容器数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
     eTypeId?: number //如果非空，表示输入时所可供选择的基本数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
 
-    domain?: Domain//来自后端，用于展示列表项
-    domainId?: number//select选择时设置，提交给后端
+    //用于值域, 临时字段，用于收集form的输入值
+    otherConstantIds?: number[] //临时保存的值
+    startConstantIds?: number[] //临时保存的值
+    endConstantIds?: number[] //临时保存的值
+    collectionConstantIds?: number[] //临时保存的值
+    eConstantIds?: number[] //临时保存的值
 }
 export interface OperatorQueryParams extends BasePageQuery {
     label?: string
     isSys?: boolean
-    type?: 'Basic'| "Collection" | 'Logical' | 'Cutomize'// OpType
+    type?: 'Basic'| "Collection" | 'Logical' | 'Customize'// OpType
     ids?: string //,分隔的id ， 即根据operator.id列表查询
     domainId?: number
 }

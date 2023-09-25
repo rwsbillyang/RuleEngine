@@ -22,17 +22,18 @@ package com.github.rwsbillyang.rule.composer
 import com.github.rwsbillyang.ktorKit.cache.VoidCache
 import com.github.rwsbillyang.ktorKit.db.AbstractSqlService
 import com.github.rwsbillyang.ktorKit.db.SqlDataSource
-import com.github.rwsbillyang.rule.runtime.IntExpression
-import com.github.rwsbillyang.rule.runtime.LogicalExpr
-import com.github.rwsbillyang.rule.runtime.EvalRule
-import com.github.rwsbillyang.rule.runtime.ResultTreeCollector
-import com.github.rwsbillyang.rule.runtime.RuleEngine
+import com.github.rwsbillyang.rule.runtime.*
 
 import com.github.rwsbillyang.yinyang.core.Gender
 import com.github.rwsbillyang.yinyang.core.Zhi
 import com.github.rwsbillyang.yinyang.ziwei.LunarLeapMonthAdjustMode
 import com.github.rwsbillyang.yinyang.ziwei.ZwPanData
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
 
 import org.komapper.core.dsl.Meta
 import java.time.LocalDateTime
@@ -185,4 +186,52 @@ fun testSerialize(){
     val json = "{\"_class\":\"Int\",\"key\":\"pos|紫微\",\"op\":\"in\",\"set\":{\"valueType\":\"Constant\",\"value\":[0,6]}}"
     val expr:LogicalExpr = MySerializeJson.decodeFromString(json)
     System.out.println("testSerialize:" + (expr is IntExpression))
+
+    val json2 = "{\"_class\":\"GongStarsExpr\",\"key\":\"pos|紫微\",\"op\":\"isVip\"}"
+    val expr2:LogicalExpr = MySerializeJson.decodeFromString(json2)
+    System.out.println("testSerialize:" + (expr2 is GongStarsExpr))
+}
+
+
+
+val ruleExtExprSerializersModule = SerializersModule {
+    polymorphic(LogicalExpr::class){
+        subclass(GongStarsExpr::class)
+    }
+}
+
+
+/**
+ * 自定义自己的表达式
+ * */
+@Serializable
+@SerialName("GongStarsExpr")
+class GongStarsExpr(
+    val key: String,
+    val op: String,
+    //val value: User? == null // Any_value_type_can_be_serialized. eg: User
+): LogicalExpr{
+    override fun eval(dataPicker: (String) -> Any?) = when(op){
+        "isVip" -> {
+            //val v0 = map[key] as User? // Any_value_type_can_be_serialized?
+            //v0.isVip()
+            println("isVip?")
+            false
+        }
+        "olderThan" -> {
+            //val v0 = map[key] as User? // Any_value_type_can_be_serialized?
+            //if(v0 == null || value == null) false else v0.age >= value.age
+            println("olderThan?")
+            false
+        }
+        "above" -> {
+            //val v0 = map[key] as User? // Any_value_type_can_be_serialized?
+            //if(v0 == null || value == null) false else v0.age >= value
+            println("above?")
+            false
+        }
+        else -> {
+            throw Exception("GongStarsExpr not support operator: $op")
+        }
+    }
 }

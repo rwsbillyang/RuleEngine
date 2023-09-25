@@ -3,3 +3,6 @@ rootProject.name = "RuleComposer"
 
 include ":runtime"
 project(':runtime').projectDir = file("$rootDir/../runtime")
+
+include ":yinyang"
+project(':yinyang').projectDir = file("$rootDir/../yinyang")

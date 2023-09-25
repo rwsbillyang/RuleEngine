@@ -37,8 +37,9 @@ export const ValueMetaEditor: React.FC<{
     const [paramLoading, setParamLoading] = useState(false)
     const [constantLoading, setConstantLoading] = useState(false)
 
-    console.log("ValueMetaEditor, paramType=",paramType)
+   // console.log("ValueMetaEditor, paramType=",paramType)
 
+    //变量加载只是与paramType同类型的变量
     const paramCategoryAsyncSelectProps: MyAsyncSelectProps<ParamCategory, ParamCategoryQueryParams> = {
         key: "paramCategory/domain/" + domainId + "/type/" + paramType?.id,
         url: `${Host}/api/rule/composer/list/paramCategory`,
@@ -51,7 +52,8 @@ export const ValueMetaEditor: React.FC<{
         query: { domainId: domainId, typeId: paramType?.id, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
         convertFunc: (item) => { return { label: item.label, value: item.id } }
     }
-
+    
+    //常量加载，可能是同类型，更可能是值域，作为参数由constantQueryParams传递过来
     const constantAsyncSelectProps: MyAsyncSelectProps<Constant, ConstantQueryParams> = {
         key: "constant/t/" + constantQueryParams?.typeIds+"/d/"+domainId + "/ids/"+constantQueryParams.ids, //ConstantQueryParams中的参数各种变化，不仅仅是paramType?.id一种
         url: `${Host}/api/rule/composer/list/constant`,

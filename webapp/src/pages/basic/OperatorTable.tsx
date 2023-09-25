@@ -4,12 +4,15 @@ import React from "react"
 
 import { MyProTable, MySchemaFormEditor, deleteOne } from "@/myPro/MyProTable"
 import { ProColumns } from "@ant-design/pro-table"
-import { AllDomainKey, Domain, DomainQueryParams, Operator, OperatorQueryParams, ParamType, ParamTypeQueryParams } from "../DataType"
+import { Cache } from '@rwsbillyang/usecache'
+import { AllDomainKey, Constant, ConstantQueryParams, Domain, DomainQueryParams, OperandFromCfg, Operator, OperatorQueryParams, ParamType, ParamTypeQueryParams } from "../DataType"
 import { defaultProps, mustFill } from "../moduleTableProps"
 import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps"
 import { UseCacheConfig } from "@rwsbillyang/usecache"
 import { ProFormColumnsType } from "@ant-design/pro-form"
 import { Host } from "@/Config"
+import { getBasicTypeId, typeCode2Id } from "../utils"
+import { message } from "antd"
 
 
 
@@ -18,12 +21,12 @@ import { Host } from "@/Config"
 export const OperatorTable: React.FC = () => {
   const name = "operator"
 
-  const initialQuery = { pagination: { pageSize: -1, sKey: "id", sort: 1 } } //pageSize=-1 means all data
+  const initialQuery = { pagination: { pageSize: -1, sKey: "id", sort: -1 } } //pageSize=-1 means all data
 
   //列表字段及内置记录的form编辑 配置
   const sysColumns: ProColumns<Operator>[] = [
     {
-      title: '内部代码',
+      title: '内部编码',
       dataIndex: 'code',
       readonly: true,
       hideInSearch: true
@@ -38,7 +41,7 @@ export const OperatorTable: React.FC = () => {
       dataIndex: 'type',
       valueType: "select",
       hideInForm: true,
-      valueEnum: { "Basic": "基本", "Collection": "容器", "Logical": "逻辑运算", 'Cutomize': '自定义' }
+      valueEnum: { "Basic": "基本", "Collection": "容器", "Logical": "逻辑运算", 'Customize': '自定义' }
     },
     {
       title: '备注',
@@ -52,9 +55,10 @@ export const OperatorTable: React.FC = () => {
   //添加自定义数据时的form字段配置
   const customColumns: ProFormColumnsType<Operator>[] = [
     {
-      title: '内部代码',
+      title: '内部编码',
       dataIndex: 'code',
-      fieldProps: { placeholder: "唯一值，推荐用英文字母" },
+      tooltip: "自定义表达式的运算符；一经用于创建规则或表达式，便不可修改",
+      fieldProps: { placeholder: "唯一值，推荐用英文字母； " },
       formItemProps: mustFill
     },
     {
@@ -75,7 +79,7 @@ export const OperatorTable: React.FC = () => {
           valueType: 'dependency',
           name: ['other'],
           columns: ({ other }) => other? [{
-            title: 'other类型',
+            title: '类型',
             tooltip: 'other数据类型，用于选择对应的常量或变量',
             dataIndex: 'otherTypeId',
             request: () => asyncSelectProps2Request<ParamType, ParamTypeQueryParams>({
@@ -84,7 +88,28 @@ export const OperatorTable: React.FC = () => {
               query: { isSys: true, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
               convertFunc: (item) => { return { label: item.label, value: item.id } }
             })
-          }] : [],
+          },
+          {
+            title: '值域',
+            tooltip: "值来自哪些常量",
+            key: 'otherConstantIds',
+            dependencies: ['otherTypeId'], 
+            fieldProps: { allowClear: true, mode: "multiple" },
+            request: (params) => {
+              const typeId = params.otherTypeId
+              const paramType: ParamType = Cache.findOne("paramType/sys", typeId, "id")
+              let basicTypeId = getBasicTypeId(typeId)
+              const setTypeId = paramType? typeCode2Id(paramType.code.replaceAll("Set", "").replaceAll("Enum", "") + "Set") : undefined
+              const typeIds = [basicTypeId, setTypeId].filter(e=>!!e).join(",")
+              return asyncSelectProps2Request<Constant, ConstantQueryParams>({
+                key: "constant/typeIds/" + typeIds,
+                url: `${Host}/api/rule/composer/list/constant`,
+                query: { typeIds: typeIds, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+                convertFunc: (item) => { return { label: item.label, value: item.id } }
+              }, params)
+            }
+          },
+        ] : [],
         },
       ]
     },
@@ -110,7 +135,28 @@ export const OperatorTable: React.FC = () => {
               query: { isBasic: true, isSys: true, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
               convertFunc: (item) => { return { label: item.label, value: item.id } }
             })
-          }] :  [],
+          },
+          {
+            title: '值域',
+            tooltip: "值来自哪些常量",
+            key: 'startConstantIds',
+            dependencies: ['startTypeId'], 
+            fieldProps: { allowClear: true, mode: "multiple" },
+            request: (params) => {
+              const typeId = params.startTypeId
+              const paramType: ParamType = Cache.findOne("paramType/basic", typeId, "id")
+              let basicTypeId = getBasicTypeId(typeId)
+              const setTypeId = paramType? typeCode2Id(paramType.code.replaceAll("Set", "").replaceAll("Enum", "") + "Set") : undefined
+              const typeIds = [basicTypeId, setTypeId].filter(e=>!!e).join(",")
+              return asyncSelectProps2Request<Constant, ConstantQueryParams>({
+                key: "constant/typeIds/" + typeIds,
+                url: `${Host}/api/rule/composer/list/constant`,
+                query: { typeIds: typeIds, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+                convertFunc: (item) => { return { label: item.label, value: item.id } }
+              }, params)
+            }
+          },
+        ] :  [],
         }, 
       ]
     },
@@ -136,7 +182,28 @@ export const OperatorTable: React.FC = () => {
               query: { isBasic: true,isSys: true, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
               convertFunc: (item) => { return { label: item.label, value: item.id } }
             })
-          }] :  [],
+          },
+          {
+            title: '值域',
+            tooltip: "值来自哪些常量",
+            key: 'endConstantIds',
+            dependencies: ['endTypeId'], 
+            fieldProps: { allowClear: true, mode: "multiple" },
+            request: (params) => {
+              const typeId = params.endTypeId
+              const paramType: ParamType = Cache.findOne("paramType/basic", typeId, "id")
+              let basicTypeId = getBasicTypeId(typeId)
+              const setTypeId = paramType? typeCode2Id(paramType.code.replaceAll("Set", "").replaceAll("Enum", "") + "Set") : undefined
+              const typeIds = [basicTypeId, setTypeId].filter(e=>!!e).join(",")
+              return asyncSelectProps2Request<Constant, ConstantQueryParams>({
+                key: "constant/typeIds/" + typeIds,
+                url: `${Host}/api/rule/composer/list/constant`,
+                query: { typeIds: typeIds, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+                convertFunc: (item) => { return { label: item.label, value: item.id } }
+              }, params)
+            }
+          },
+        ] :  [],
         },
       ]
     },
@@ -162,7 +229,28 @@ export const OperatorTable: React.FC = () => {
               query: { isBasic: false, isSys: true, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
               convertFunc: (item) => { return { label: item.label, value: item.id } }
             })
-          }] :  [],
+          },
+          {
+            title: '值域',
+            tooltip: "值来自哪些常量",
+            key: 'collectionConstantIds',
+            dependencies: ['collectionTypeId'], 
+            fieldProps: { allowClear: true, mode: "multiple" },
+            request: (params) => {
+              const typeId = params.collectionTypeId
+              const paramType: ParamType = Cache.findOne("paramType/collection", typeId, "id")
+              let basicTypeId = getBasicTypeId(typeId)
+              const setTypeId = paramType? typeCode2Id(paramType.code.replaceAll("Set", "").replaceAll("Enum", "") + "Set") : undefined
+              const typeIds = [basicTypeId, setTypeId].filter(e=>!!e).join(",")
+              return asyncSelectProps2Request<Constant, ConstantQueryParams>({
+                key: "constant/typeIds/" + typeIds,
+                url: `${Host}/api/rule/composer/list/constant`,
+                query: { typeIds: typeIds, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+                convertFunc: (item) => { return { label: item.label, value: item.id } }
+              }, params)
+            }
+          },
+        ] :  [],
         },
       ]
     },
@@ -189,7 +277,28 @@ export const OperatorTable: React.FC = () => {
               query: { isBasic: true, isSys: true, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
               convertFunc: (item) => { return { label: item.label, value: item.id } }
             })
-          }] :  [],
+          },
+          {
+            title: '值域',
+            tooltip: "值来自哪些常量",
+            key: 'collectionConstantIds',
+            dependencies: ['eTypeId'], 
+            fieldProps: { allowClear: true, mode: "multiple" },
+            request: (params) => {
+              const typeId = params.eTypeId
+              const paramType: ParamType = Cache.findOne("paramType/basic", typeId, "id")
+              let basicTypeId = getBasicTypeId(typeId)
+              const setTypeId = paramType? typeCode2Id(paramType.code.replaceAll("Set", "").replaceAll("Enum", "") + "Set") : undefined
+              const typeIds = [basicTypeId, setTypeId].filter(e=>!!e).join(",")
+              return asyncSelectProps2Request<Constant, ConstantQueryParams>({
+                key: "constant/typeIds/" + typeIds,
+                url: `${Host}/api/rule/composer/list/constant`,
+                query: { typeIds: typeIds, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+                convertFunc: (item) => { return { label: item.label, value: item.id } }
+              }, params)
+            }
+          },
+        ] :  [],
         },
       ]
     },
@@ -221,12 +330,106 @@ export const OperatorTable: React.FC = () => {
     }
   ]
 
-  const initialValue: Partial<Operator> = { isSys: false, type: 'Cutomize' }
+
+
+  //提交保存前数据转换 将各配置字段中的值，保存到operandCfgStr
+  const transformBeforeSave = (e: Operator) => {
+    //console.log("transformBeforeSave Constant=", e)
+    if(e.isSys) return e
+    
+    const cfg: OperandFromCfg = {}
+    let flag = false
+    if(e.other){
+      if(!e.otherTypeId && !e.otherConstantIds){
+        message.warning("操作数other，没有配置类型或值域")
+        return undefined
+      }
+      cfg.other = {typeId: e.otherTypeId, constantIds: e.otherConstantIds}
+      flag = true
+    }
+    if(e.start){
+      if(!e.startTypeId && !e.startConstantIds){
+        message.warning("操作数start，没有配置类型或值域")
+        return undefined
+      }
+      cfg.start = {typeId: e.startTypeId, constantIds: e.startConstantIds}
+      flag = true
+    }
+    if(e.end){
+      if(!e.endTypeId && !e.endConstantIds){
+        message.warning("操作数end，没有配置类型或值域")
+        return undefined
+      }
+      cfg.end = {typeId: e.endTypeId, constantIds: e.endConstantIds}
+      flag = true
+    }
+    if(e.collection){
+      if(!e.collectionTypeId && !e.collectionConstantIds){
+        message.warning("操作数set，没有配置类型或值域")
+        return undefined
+      }
+      cfg.collection = {typeId: e.collectionTypeId, constantIds: e.collectionConstantIds}
+      flag = true
+    }
+    if(e.e){
+      if(!e.eTypeId && !e.eConstantIds){
+        message.warning("操作数e，没有配置类型或值域")
+        return undefined
+      }
+      cfg.e = {typeId: e.eTypeId, constantIds: e.eConstantIds}
+      flag = true
+    }
+    
+    if(!flag){
+      message.warning("没有配置操作数e")
+        return undefined
+    }
+    e.operandCfgStr = JSON.stringify(cfg)
+
+    return e
+  }
+
+ //将operandCfgStr中的值分给各个配置字段
+  const transformBeforeEdit = (e?: Partial<Operator>) => {
+    if (!e) return e
+    if(e.isSys) return e
+    
+    if (e.operandCfgStr) {
+      const operandCfg = JSON.parse(e.operandCfgStr)
+
+      if(operandCfg.other){
+        e.otherTypeId = operandCfg.other.typeId
+        e.otherConstantIds = operandCfg.other.constantIds
+      }
+      if(operandCfg.start){
+        e.startTypeId = operandCfg.start.typeId
+        e.startConstantIds = operandCfg.start.constantIds
+      }
+      if(operandCfg.end){
+        e.endTypeId = operandCfg.end.typeId
+        e.endConstantIds = operandCfg.end.constantIds
+      }
+      if(operandCfg.collection){
+        e.collectionTypeId = operandCfg.collection.typeId
+        e.collectionConstantIds = operandCfg.collection.constantIds
+      }
+      if(operandCfg.e){
+        e.eTypeId = operandCfg.e.typeId
+        e.eConstantIds = operandCfg.e.constantIds
+      }
+    }
+    
+    return e
+  }
+
+  const initialValue: Partial<Operator> = { isSys: false, type: 'Customize' }
   const props: MyProTableProps<Operator, OperatorQueryParams> = {
     ...defaultProps(name),
     needLoadMore: false,
     initialValues: initialValue,
     disableDel: (e) => e.isSys,
+    transformBeforeSave, 
+    transformBeforeEdit
     //disableEdit: (e) => e.isSys,
     //editForm: (e) => e?.isSys === false ? 'ModalForm' : undefined
   }

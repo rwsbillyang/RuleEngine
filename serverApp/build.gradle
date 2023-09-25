@@ -167,7 +167,7 @@ dependencies {
     ksp("org.komapper:komapper-processor")
 
     implementation project(":runtime")
-
+    //compileOnly "com.github.rwsbillyang:rule.runtime:1.0.0"
 
     compileOnly "com.github.rwsbillyang:yinyang:1.0.0"
     //implementation "com.github.rwsbillyang:yinyang:1.0.0"
