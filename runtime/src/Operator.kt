@@ -57,7 +57,7 @@ enum class EnumCollectionOp (val label: String,
                              val e: Boolean = false,
                              val num: Boolean = false,
                              val remark: String? = null){
-    eq("等于", true, remark = "集合所包含元素相同"),
+    onlyContains("只包含（等于）", true, remark = "集合所包含元素相同"),
     contains("包含某元素", e = true, remark ="值集合包含某个元素：前者包含后者"),
     notContains("不包含某元素", e = true,  remark ="值集合不包含某个元素：前者不包含后者"),
     containsAll("包含全部", true, remark ="值集合包含所有元素：前者包含所有后者，即后者是前者子集"),

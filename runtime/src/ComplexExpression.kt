@@ -33,7 +33,7 @@ import kotlinx.serialization.UseContextualSerialization
 class ComplexExpression(
     val op: String,
     val exprs: List<LogicalExpr>
-): LogicalExpr() {
+): LogicalExpr {
     override fun eval(dataPicker: (String) -> Any?): Boolean{
         return when(EnumLogicalOp.valueOf(op)){
             EnumLogicalOp.and -> exprs.all { it.eval(dataPicker) }

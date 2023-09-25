@@ -25,34 +25,24 @@ package com.github.rwsbillyang.rule.runtime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseContextualSerialization
+import kotlinx.serialization.modules.*
 import java.time.LocalDateTime
 
-/**
- *
- * Typescript中的写法更简单：
-export interface Expr{
-    _class: string, //后端需要做序列化
+
+
+//@Serializable
+//sealed class LogicalExpr{
+//    abstract fun eval(dataPicker: (String) -> Any?): Boolean
+//}
+
+//@Serializable
+//abstract class LogicalExpr{
+//    abstract fun eval(dataPicker: (String) -> Any?): Boolean
+//}
+interface LogicalExpr{
+    fun eval(dataPicker: (String) -> Any?): Boolean
 }
 
-export interface BasicExpression extends Expr{
-    key: string//值为: BasicExpressionMeta.param.mapKey
-    op: string //Operator.code
-    other?: boolean | string | number | string[] | number[]
-    start?: string | number//key所在变量范围比较
-    end?: string | number//key所在变量范围比较
-    set?: string[] | number[]//key所在变量是否存在于set中
-    e?:  string | number //key所在变量集中是否包含e
-    num?: number //key所在变量集与other交集元素个事 与num比较
-}
-export interface ComplexExpression  extends Expr{
-    op: string
-    sub: BasicExpression[]
-}
- * */
-@Serializable
-sealed class LogicalExpr{
-    abstract fun eval(dataPicker: (String) -> Any?): Boolean
-}
 
 //在sealed class与具体子类之间，多加了一个类层次，导致反序列化时报错：
 //JsonDecodingException: Polymorphic serializer was not found for class discriminator
@@ -90,7 +80,7 @@ class BoolExpression(
     val key: String,
     val op: String,
     val other: OpValue<Boolean>
-): LogicalExpr() {
+): LogicalExpr {
     override fun eval(dataPicker: (String) -> Any?) 
     = BoolType.op(op, dataPicker(key) as Boolean?, other.real(dataPicker))
 }
@@ -104,7 +94,7 @@ class IntExpression(
     val start: OpValue<Int>? = null,//key所在变量范围比较
     val end: OpValue<Int>? = null,//key所在变量范围比较
     val set: OpValue<Set<Int>>? = null//key所在变量是否存在于set中
-): LogicalExpr() {
+): LogicalExpr {
     override fun eval(dataPicker: (String) -> Any?) =
         IntType.op(
             op, dataPicker(key) as Int?,
@@ -123,7 +113,7 @@ class LongExpression(
     val start: OpValue<Long>? = null,
     val end: OpValue<Long>? = null,
     val set: OpValue<Set<Long>>? = null
-): LogicalExpr() {
+): LogicalExpr {
     override fun eval(dataPicker: (String) -> Any?) = LongType.op(
         op, dataPicker(key) as Long?,
         other?.real(dataPicker), start?.real(dataPicker), end?.real(dataPicker), set?.real(dataPicker)
@@ -139,7 +129,7 @@ class DoubleExpression(
     val start: OpValue<Double>? = null,
     val end: OpValue<Double>? = null,
     val set: OpValue<Set<Double>>? = null
-): LogicalExpr() {
+): LogicalExpr {
     override fun eval(dataPicker: (String) -> Any?) = DoubleType.op(
         op,
         dataPicker(key) as Double?,
@@ -160,7 +150,7 @@ class StringExpression(
     val start: OpValue<String>? = null,
     val end: OpValue<String>? = null,
     val set: OpValue<Set<String>>? = null
-): LogicalExpr() {
+): LogicalExpr {
     override fun eval(dataPicker: (String) -> Any?) = StringType.op(
         op,
         dataPicker(key) as String?,
@@ -182,7 +172,7 @@ class DatetimeExpression(
     val start: OpValue<LocalDateTime>? = null,
     val end: OpValue<LocalDateTime>? = null,
     val set: OpValue<Set<LocalDateTime>>? = null
-): LogicalExpr() {
+): LogicalExpr {
     override fun eval(dataPicker: (String) -> Any?) = DateTimeType.op(
         op,
         dataPicker(key) as LocalDateTime?,
@@ -201,7 +191,7 @@ class IntSetExpression(
     val other: OpValue<Set<Int>>? = null,
     val e: OpValue<Int>? = null,//key所在变量集中是否包含e
     val num: OpValue<Int>? = null //key所在变量集与other交集元素个事 与num比较
-): LogicalExpr() {
+): LogicalExpr {
     override fun eval(dataPicker: (String) -> Any?) = IntSetType.op(op,  dataPicker(key) as Set<Int>?, other?.real(dataPicker), e?.real(dataPicker), num?.real(dataPicker))
 }
 
@@ -213,7 +203,7 @@ class LongSetExpression(
     val other: OpValue<Set<Long>>? = null,
     val e: OpValue<Long>? = null,//key所在变量集中是否包含e
     val num: OpValue<Int>? = null //key所在变量集与other交集元素个事 与num比较
-): LogicalExpr() {
+): LogicalExpr {
     override fun eval(dataPicker: (String) -> Any?) = LongSetType.op(op,  dataPicker(key) as Set<Long>?, other?.real(dataPicker), e?.real(dataPicker), num?.real(dataPicker))
 }
 
@@ -225,7 +215,7 @@ class DoubleSetExpression(
     val other: OpValue<Set<Double>>? = null,
     val e: OpValue<Double>? = null,//key所在变量集中是否包含e
     val num: OpValue<Int>? = null //key所在变量集与other交集元素个事 与num比较
-): LogicalExpr() {
+): LogicalExpr {
     override fun eval(dataPicker: (String) -> Any?) = DoubleSetType.op(op, dataPicker(key) as Set<Double>?, other?.real(dataPicker), e?.real(dataPicker), num?.real(dataPicker))
 }
 
@@ -237,7 +227,7 @@ class StringSetExpression(
     val other: OpValue<Set<String>>? = null,
     val e: OpValue<String>? = null,//key所在变量集中是否包含e
     val num: OpValue<Int>? = null //key所在变量集与other交集元素个事 与num比较
-): LogicalExpr() {
+): LogicalExpr {
     override fun eval(dataPicker: (String) -> Any?) = StringSetType.op(op,  dataPicker(key) as Set<String>?, other?.real(dataPicker), e?.real(dataPicker), num?.real(dataPicker))
 }
 
@@ -249,6 +239,25 @@ class DateTimeSetExpression(
     val other: OpValue<Set<LocalDateTime>>? = null,
     val e: OpValue<LocalDateTime>? = null,//key所在变量集中是否包含e
     val num: OpValue<Int>? = null //key所在变量集与other交集元素个事 与num比较
-): LogicalExpr() {
+): LogicalExpr {
     override fun eval(dataPicker: (String) -> Any?) = DateTimeSetType.op(op,  dataPicker(key) as Set<LocalDateTime>?, other?.real(dataPicker), e?.real(dataPicker), num?.real(dataPicker))
+}
+
+
+val ruleRuntimeExprSerializersModule = SerializersModule {
+    polymorphic(LogicalExpr::class){
+        subclass(BoolExpression::class)
+        subclass(IntExpression::class)
+        subclass(LongExpression::class)
+        subclass(DoubleExpression::class)
+        subclass(StringExpression::class)
+        subclass(DatetimeExpression::class)
+        subclass(IntSetExpression::class)
+        subclass(LongSetExpression::class)
+        subclass(DoubleSetExpression::class)
+        subclass(StringSetExpression::class)
+        subclass(DateTimeSetExpression::class)
+        subclass(ComplexExpression::class)
+        subclass(MyExtendExpression::class)
+    }
 }

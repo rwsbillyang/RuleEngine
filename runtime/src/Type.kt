@@ -61,7 +61,7 @@ abstract class BaseType<T>: IType<T> {
 abstract class CollectionType<Container: Collection<T>, T>: IType<T> {
     override fun supportOperators() = EnumCollectionOp.values().map { it.name }
     fun op(op: String, v0: Container?, other: Container? = null, e: T? = null, num: Int? = null) = when(EnumCollectionOp.valueOf(op)){
-        EnumCollectionOp.eq -> if(v0.isNullOrEmpty() && other.isNullOrEmpty()) true
+        EnumCollectionOp.onlyContains -> if(v0.isNullOrEmpty() && other.isNullOrEmpty()) true
         else if(v0 != null && other != null) v0.size == other.size && v0.intersect(other).size == v0.size
         else false
         EnumCollectionOp.contains -> if(v0.isNullOrEmpty() || e == null) false else v0.contains(e)
