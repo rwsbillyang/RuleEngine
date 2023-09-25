@@ -22,11 +22,11 @@ package com.github.rwsbillyang.rule.composer
 import com.github.rwsbillyang.ktorKit.cache.VoidCache
 import com.github.rwsbillyang.ktorKit.db.AbstractSqlService
 import com.github.rwsbillyang.ktorKit.db.SqlDataSource
-import com.github.rwsbillyang.ruleEngine.core.expression.IntExpression
-import com.github.rwsbillyang.ruleEngine.core.expression.LogicalExpr
-import com.github.rwsbillyang.ruleEngine.core.rule.EvalRule
-import com.github.rwsbillyang.ruleEngine.core.rule.ResultTreeCollector
-import com.github.rwsbillyang.ruleEngine.core.rule.RuleEngine
+import com.github.rwsbillyang.rule.runtime.IntExpression
+import com.github.rwsbillyang.rule.runtime.LogicalExpr
+import com.github.rwsbillyang.rule.runtime.EvalRule
+import com.github.rwsbillyang.rule.runtime.ResultTreeCollector
+import com.github.rwsbillyang.rule.runtime.RuleEngine
 
 import com.github.rwsbillyang.yinyang.core.Gender
 import com.github.rwsbillyang.yinyang.core.Zhi

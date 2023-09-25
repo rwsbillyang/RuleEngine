@@ -1,7 +1,7 @@
 /*
  * Copyright © 2023 rwsbillyang@qq.com
  *
- * Written by rwsbillyang@qq.com at Beijing Time: 2023-08-28 20:32
+ * Written by rwsbillyang@qq.com at Beijing Time: 2023-09-25 09:01
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.ruleEngine.core.rule
+package com.github.rwsbillyang.rule.runtime
 
 
 class TreeNode<T>(
@@ -44,7 +44,7 @@ class ResultTreeCollector<T>(
     fun collect(currentRule: EvalRule, parentRule: EvalRule?){
         val pair = nodeDataPicker(currentRule)
         val childKey = pair.first
-        val currentNode = resultMap[childKey]?:TreeNode(pair.second)
+        val currentNode = resultMap[childKey]?: TreeNode(pair.second)
         resultMap[childKey] = currentNode
 
         if(parentRule == null)
@@ -54,7 +54,7 @@ class ResultTreeCollector<T>(
         }else{
             val pair2 = nodeDataPicker(parentRule)
             val parentKey = pair2.first
-            val parentNode = resultMap[parentKey]?:TreeNode(pair2.second)
+            val parentNode = resultMap[parentKey]?: TreeNode(pair2.second)
             resultMap[parentKey] = parentNode
             parentNode.children.add(childKey)
             currentNode.parents.add(parentKey)

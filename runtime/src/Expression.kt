@@ -1,7 +1,7 @@
 /*
  * Copyright © 2023 rwsbillyang@qq.com
  *
- * Written by rwsbillyang@qq.com at Beijing Time: 2023-07-10 12:57
+ * Written by rwsbillyang@qq.com at Beijing Time: 2023-09-25 09:01
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 //@file:UseSerializers(LocalDateTime::class)
 @file:UseContextualSerialization(LocalDateTime::class)
 
-package com.github.rwsbillyang.ruleEngine.core.expression
+package com.github.rwsbillyang.rule.runtime
 
 
 import kotlinx.serialization.SerialName
@@ -98,16 +98,18 @@ class BoolExpression(
 @Serializable
 @SerialName(IType.Type_Int)
 class IntExpression(
-     val key: String,
-     val op: String,
+    val key: String,
+    val op: String,
     val other: OpValue<Int>? = null,
     val start: OpValue<Int>? = null,//key所在变量范围比较
     val end: OpValue<Int>? = null,//key所在变量范围比较
     val set: OpValue<Set<Int>>? = null//key所在变量是否存在于set中
 ): LogicalExpr() {
     override fun eval(dataPicker: (String) -> Any?) =
-            IntType.op(op, dataPicker(key) as Int?,
-               other?.real(dataPicker), start?.real(dataPicker), end?.real(dataPicker), set?.real(dataPicker))
+        IntType.op(
+            op, dataPicker(key) as Int?,
+            other?.real(dataPicker), start?.real(dataPicker), end?.real(dataPicker), set?.real(dataPicker)
+        )
 
 }
 
@@ -122,8 +124,10 @@ class LongExpression(
     val end: OpValue<Long>? = null,
     val set: OpValue<Set<Long>>? = null
 ): LogicalExpr() {
-    override fun eval(dataPicker: (String) -> Any?) = LongType.op(op, dataPicker(key) as Long?,
-        other?.real(dataPicker), start?.real(dataPicker), end?.real(dataPicker), set?.real(dataPicker))
+    override fun eval(dataPicker: (String) -> Any?) = LongType.op(
+        op, dataPicker(key) as Long?,
+        other?.real(dataPicker), start?.real(dataPicker), end?.real(dataPicker), set?.real(dataPicker)
+    )
 }
 
 @Serializable
@@ -136,7 +140,14 @@ class DoubleExpression(
     val end: OpValue<Double>? = null,
     val set: OpValue<Set<Double>>? = null
 ): LogicalExpr() {
-    override fun eval(dataPicker: (String) -> Any?) = DoubleType.op(op, dataPicker(key) as Double?,  other?.real(dataPicker), start?.real(dataPicker), end?.real(dataPicker), set?.real(dataPicker))
+    override fun eval(dataPicker: (String) -> Any?) = DoubleType.op(
+        op,
+        dataPicker(key) as Double?,
+        other?.real(dataPicker),
+        start?.real(dataPicker),
+        end?.real(dataPicker),
+        set?.real(dataPicker)
+    )
 }
 
 
@@ -150,7 +161,14 @@ class StringExpression(
     val end: OpValue<String>? = null,
     val set: OpValue<Set<String>>? = null
 ): LogicalExpr() {
-    override fun eval(dataPicker: (String) -> Any?) = StringType.op(op, dataPicker(key) as String?,  other?.real(dataPicker), start?.real(dataPicker), end?.real(dataPicker), set?.real(dataPicker))
+    override fun eval(dataPicker: (String) -> Any?) = StringType.op(
+        op,
+        dataPicker(key) as String?,
+        other?.real(dataPicker),
+        start?.real(dataPicker),
+        end?.real(dataPicker),
+        set?.real(dataPicker)
+    )
 }
 
 
@@ -165,7 +183,14 @@ class DatetimeExpression(
     val end: OpValue<LocalDateTime>? = null,
     val set: OpValue<Set<LocalDateTime>>? = null
 ): LogicalExpr() {
-    override fun eval(dataPicker: (String) -> Any?) = DateTimeType.op(op, dataPicker(key) as LocalDateTime?,  other?.real(dataPicker), start?.real(dataPicker), end?.real(dataPicker), set?.real(dataPicker))
+    override fun eval(dataPicker: (String) -> Any?) = DateTimeType.op(
+        op,
+        dataPicker(key) as LocalDateTime?,
+        other?.real(dataPicker),
+        start?.real(dataPicker),
+        end?.real(dataPicker),
+        set?.real(dataPicker)
+    )
 }
 
 @Serializable

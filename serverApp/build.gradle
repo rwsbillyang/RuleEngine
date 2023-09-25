@@ -166,7 +166,7 @@ dependencies {
     implementation("org.komapper:komapper-dialect-mysql-jdbc:$komapperVersion")
     ksp("org.komapper:komapper-processor")
 
-    implementation project(":core")
+    implementation project(":runtime")
 
 
     compileOnly "com.github.rwsbillyang:yinyang:1.0.0"

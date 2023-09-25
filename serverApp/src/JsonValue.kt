@@ -20,7 +20,7 @@
 @file:UseContextualSerialization(LocalDateTime::class)
 package com.github.rwsbillyang.rule.composer
 
-import com.github.rwsbillyang.ruleEngine.core.expression.IType
+import com.github.rwsbillyang.rule.runtime.IType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseContextualSerialization

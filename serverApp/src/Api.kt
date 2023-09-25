@@ -33,7 +33,7 @@ import io.ktor.server.routing.get
 import kotlinx.serialization.encodeToString
 import org.koin.dsl.module
 import org.koin.ktor.ext.inject
-import org.komapper.core.dsl.Meta
+
 
 val bizModule = AppModule(
     listOf(

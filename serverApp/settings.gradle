@@ -1,5 +1,5 @@
 rootProject.name = "RuleComposer"
 
 
-include ":core"
-project(':core').projectDir = file("$rootDir/../core")
+include ":runtime"
+project(':runtime').projectDir = file("$rootDir/../runtime")

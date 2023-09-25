@@ -1,7 +1,7 @@
 /*
  * Copyright © 2023 rwsbillyang@qq.com
  *
- * Written by rwsbillyang@qq.com at Beijing Time: 2023-08-25 15:38
+ * Written by rwsbillyang@qq.com at Beijing Time: 2023-09-25 09:01
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.ruleEngine.core.rule
+package com.github.rwsbillyang.rule.runtime
 
 
 

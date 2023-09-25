@@ -1,7 +1,7 @@
 /*
  * Copyright © 2023 rwsbillyang@qq.com
  *
- * Written by rwsbillyang@qq.com at Beijing Time: 2023-07-13 12:35
+ * Written by rwsbillyang@qq.com at Beijing Time: 2023-09-25 09:01
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.ruleEngine.core.expression
+package com.github.rwsbillyang.rule.runtime
 
 import java.time.LocalDateTime
 
@@ -53,12 +53,12 @@ interface IType<T>
     }
 }
 
-abstract class BaseType<T>: IType<T>{
+abstract class BaseType<T>: IType<T> {
     override fun supportOperators() = EnumOp.values().map { it.name }
     abstract fun op(op: String, v0: T?, other: T? = null, start: T? = null, end: T? = null, set: Set<T>? = null): Boolean
 }
 
-abstract class CollectionType<Container: Collection<T>, T>: IType<T>{
+abstract class CollectionType<Container: Collection<T>, T>: IType<T> {
     override fun supportOperators() = EnumCollectionOp.values().map { it.name }
     fun op(op: String, v0: Container?, other: Container? = null, e: T? = null, num: Int? = null) = when(EnumCollectionOp.valueOf(op)){
         EnumCollectionOp.eq -> if(v0.isNullOrEmpty() && other.isNullOrEmpty()) true

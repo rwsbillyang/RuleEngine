@@ -1,7 +1,7 @@
 /*
  * Copyright © 2023 rwsbillyang@qq.com
  *
- * Written by rwsbillyang@qq.com at Beijing Time: 2023-05-31 11:57
+ * Written by rwsbillyang@qq.com at Beijing Time: 2023-09-25 09:01
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,7 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.ruleEngine.core.rule
-
-import com.github.rwsbillyang.ruleEngine.core.expression.LogicalExpr
-
+package com.github.rwsbillyang.rule.runtime
 
 
 /**
@@ -53,12 +50,12 @@ class EvalRule(
          if(logicalExpr != null){
              if(logicalExpr.eval(dataProvider)){
                  collector?.collect(this, parentRule)
-                 (action?.let { RuleEngine.getAction(it) }?:RuleEngine.defaultAction)?.let { it(this, parentRule) }
+                 (action?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultAction)?.let { it(this, parentRule) }
                  evalChildren(dataProvider, loadChildrenFunc, toEvalRule, collector)
 
                  return true
              }else{
-                 (elseAction?.let { RuleEngine.getAction(it) }?:RuleEngine.defaultElseAction)?.let { it(this, parentRule) }
+                 (elseAction?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultElseAction)?.let { it(this, parentRule) }
                  return false
              }
          }else{

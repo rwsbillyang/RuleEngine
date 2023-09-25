@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.ruleEngine.core
+package com.github.rwsbillyang.rule.runtime
 
 
 abstract class InferenceEngine<INPUT_DATA, OUTPUT_RESULT> {

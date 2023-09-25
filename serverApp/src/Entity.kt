@@ -20,7 +20,7 @@ package com.github.rwsbillyang.rule.composer
 
 
 
-import com.github.rwsbillyang.ruleEngine.core.expression.LogicalExpr
+import com.github.rwsbillyang.rule.runtime.LogicalExpr
 import kotlinx.serialization.*
 import org.komapper.annotation.*
 import org.komapper.core.dsl.Meta

@@ -24,7 +24,7 @@ import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.ktorKit.apiBox.IUmiPaginationParams
 import com.github.rwsbillyang.ktorKit.db.andWhere
 
-import com.github.rwsbillyang.ruleEngine.core.expression.*
+import com.github.rwsbillyang.rule.runtime.*
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
