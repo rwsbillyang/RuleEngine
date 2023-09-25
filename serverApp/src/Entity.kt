@@ -65,8 +65,8 @@ data class ParamType(
 data class Operator(
     val label: String,
     val code: String,
-    val remark: String? = null, //备注
     val type: String,
+    val remark: String? = null, //备注
     val isSys: Boolean = true,
 
     //以下为操作数配置，需要的操作数则设置为true, 前端根据它是否展示对应的输入控件
