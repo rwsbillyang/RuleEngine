@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Form,  message } from 'antd';
 
 import { Cache } from "@rwsbillyang/usecache"
-import { ComplexExpressionMeta,  Expression, ExpressionMeta, ExpressionQueryParams, ExpressionRecord, Operator, OperatorQueryParams } from '../DataType';
+import { ComplexExpressionMeta,  Expression, ExpressionMeta, ExpressionQueryParams, ExpressionRecord, Opcode, OpcodeQueryParams } from '../DataType';
 
 import { Host } from '@/Config';
 import { ModalForm, ProFormInstance, ProFormSelect, ProFormText } from '@ant-design/pro-form';
@@ -151,9 +151,9 @@ export const ComplexExprMetaEditModal: React.FC<{
             label="逻辑运算符"
             rules={[{ required: true, message: '必选' }]}
 
-            request={(params) => asyncSelectProps2Request<Operator, OperatorQueryParams>({ //params为注入的dependencies字段值： {isEnum: true}
+            request={(params) => asyncSelectProps2Request<Opcode, OpcodeQueryParams>({ //params为注入的dependencies字段值： {isEnum: true}
                 key: LogicalOpKey,//不提供key，则不缓存，每次均从远程请求
-                url: `${Host}/api/rule/composer/list/operator`,
+                url: `${Host}/api/rule/composer/list/opcode`,
                 query: { type: "Logical", pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
                 convertFunc: (item) => {
                     return { label: item.label + "(" + item.code + ")", value: item.id }

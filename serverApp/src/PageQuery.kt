@@ -200,18 +200,18 @@ class ValueConstantQueryParams(
 }
 
 
-@Resource("/operator")
+@Resource("/opcode")
 @Serializable
-class OperatorQueryParams(
+class OpcodeQueryParams(
     override val umi: String? = null,
     val label: String? = null,
     val isSys: Boolean? = null,
     val type: String? = null,
     val domainId: Int? = null,
-    val ids: String? = null //,分隔的id， 即根据operator.id列表查询
+    val ids: String? = null //,分隔的id， 即根据opcode.id列表查询
 ) : IUmiPaginationParams {
     override fun toSqlPagination(): SqlPagination {
-        val meta = Meta.operator
+        val meta = Meta.opcode
         val lastId = pagination.lastId
         var lastW: WhereDeclaration? = null
         val sort: SortExpression

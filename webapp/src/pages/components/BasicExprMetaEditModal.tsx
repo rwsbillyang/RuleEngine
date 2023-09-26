@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ModalForm, ProFormCascader, ProFormDependency, ProFormInstance, ProFormSelect, ProFormText } from "@ant-design/pro-form";
-import { AllParamTypeKey, BasicExpressionMeta, ConstantQueryParams, Expression, ExpressionQueryParams, OperandConstantQueryParam, Operator, OperatorQueryParams, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, ParamTypeQueryParams } from "../DataType";
+import { AllParamTypeKey, BasicExpressionMeta, ConstantQueryParams, Expression, ExpressionQueryParams, OperandConstantQueryParam, Opcode, OpcodeQueryParams, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, ParamTypeQueryParams } from "../DataType";
 
 import { TreeCache, Cache, contains } from "@rwsbillyang/usecache"
 import { asyncSelectProps2Request } from "@/myPro/MyProTableProps";
@@ -392,7 +392,7 @@ export const BasicExprMetaEditModal: React.FC<{
  * @param domainId cacheKey中加载param时需要
  * @param paramTypeId 依据paramTypeId（即paramType））加载操作符 与paramId&categoryId 二选一
  * @param paramTypeInMeta 来自meta，而不是从缓存中搜索 目的是利用上meta中现有的，而不是从新加载的缓存中寻找
- * @returns 返回operator列表
+ * @returns 返回Opcode列表
  */
 const asyncGetOpOptions = (
   props: {
@@ -414,9 +414,9 @@ const asyncGetOpOptions = (
         console.log("get supportOps from paramType.supportOps")
         return new Promise(resolve => resolve(supportOps.map((item) => { return { label: item.label + "(" + item.code + ")", value: item.id } })))
       } else {
-        return asyncSelectProps2Request<Operator, OperatorQueryParams>({ //params为注入的dependencies字段值： {isEnum: true}
+        return asyncSelectProps2Request<Opcode, OpcodeQueryParams>({ //params为注入的dependencies字段值： {isEnum: true}
           key: OpKeyPrefix + paramTypeId,//不提供key，则不缓存，每次均从远程请求
-          url: `${Host}/api/rule/composer/list/operator`,
+          url: `${Host}/api/rule/composer/list/opcode`,
           query: { ids: paramType.supportOpIds, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
           convertFunc: (item) => {
             return { label: item.label + "(" + item.code + ")", value: item.id }
@@ -460,9 +460,9 @@ const asyncGetOpOptions = (
     console.log("get supportOps from param.paramType.supportOps")
     return new Promise(resolve => resolve(supportOps.map((item) => { return { label: item.label + "(" + item.code + ")", value: item.id } })))
   } else {
-    return asyncSelectProps2Request<Operator, OperatorQueryParams>({ //params为注入的dependencies字段值： {isEnum: true}
+    return asyncSelectProps2Request<Opcode, OpcodeQueryParams>({ //params为注入的dependencies字段值： {isEnum: true}
       key: OpKeyPrefix + param.paramType.id,//不提供key，则不缓存，每次均从远程请求
-      url: `${Host}/api/rule/composer/list/operator`,
+      url: `${Host}/api/rule/composer/list/opcode`,
       query: { ids: param.paramType.supportOpIds, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
       convertFunc: (item) => {
         return { label: item.label + "(" + item.code + ")", value: item.id }
@@ -483,27 +483,27 @@ interface OperandConfig {
   multiple?: boolean,
   param?: Param,
   paramType?: ParamType,
-  op?: Operator
+  op?: Opcode
 }
 
 
 /**
- * 获取操作数配置OperandConfig，如other，set, start,end, e, num等是否可见，以及更新后的param或paramType， operator
+ * 获取操作数配置OperandConfig，如other，set, start,end, e, num等是否可见，以及更新后的param或paramType， Opcode
  * param或paramType根据其id从缓存中查找，若找不到，则使用meta中提供
  * 
- * 使用paramType和operator返回other，set, start,end, e, num等是否可见，顺便返回更新后的paramType和operator以及paramType
+ * 使用paramType和Opcode返回other，set, start,end, e, num等是否可见，顺便返回更新后的paramType和Opcode以及paramType
  * 
  * @param domainId cacheKey中加载param时需要
  * @param categoryId 变量分类，treecache中需要
  * @param paramId 依据paramId（即param）加载操作符
  * @param paramInMeta 来自meta，当使用categoryId/paramId从缓存中获取Param失败时使用
- * @param opId 用于获取更新的operator
- * @param opInMeta 来自meta，当使用opId从缓存中获取operator失败时使用
+ * @param opId 用于获取更新的Opcode
+ * @param opInMeta 来自meta，当使用opId从缓存中获取Opcode失败时使用
  * @param paramTypeId 依据paramTypeId（即paramType））加载操作符 与paramId&categoryId 二选一
  * @param paramTypeInMeta 来自meta，当使用paramTypeId从缓存中获取Param失败时使用
  * 
- * 最终使用paramType和operator返回other，set, start,end, e, num等是否可见，顺便返回更新后的paramType和operator以及paramType
- * @returns 返回operator列表
+ * 最终使用paramType和Opcode返回other，set, start,end, e, num等是否可见，顺便返回更新后的paramType和Opcode以及paramType
+ * @returns 返回Opcode列表
  */
 const getValueMapParam = (props: {
   domainId?: number,
@@ -513,7 +513,7 @@ const getValueMapParam = (props: {
   paramInMeta?: Param,
 
   opId?: number,
-  opInMeta?: Operator
+  opInMeta?: Opcode
 
   paramTypeId?: number,
   paramTypeInMeta?: ParamType,
@@ -528,7 +528,7 @@ const getValueMapParam = (props: {
       const code = paramType.code
       const multiple = code.indexOf("Set") > 0
 
-      let op: Operator | undefined
+      let op: Opcode | undefined
       if (opId) {
         op = paramType.supportOps ? Cache.findOneInArray(paramType.supportOps, opId, "id") : undefined
         if (!op) op = Cache.findOne(OpKeyPrefix + paramType.id, opId, "id")
@@ -573,7 +573,7 @@ const getValueMapParam = (props: {
     const code = param.paramType.code
     const multiple = code.indexOf("Set") > 0
 
-    let op: Operator | undefined
+    let op: Opcode | undefined
     if (opId) {
       op = param.paramType.supportOps ? Cache.findOneInArray(param.paramType.supportOps, opId, "id") : undefined
       if (!op) op = Cache.findOne(OpKeyPrefix + param.paramType.id, opId, "id")
@@ -590,7 +590,7 @@ const getValueMapParam = (props: {
 }
 
 
-const checkMetaAvailable = (op?: Operator) => {
+const checkMetaAvailable = (op?: Opcode) => {
   const config: OperandConfig = {}
   if (!op) return config
 
@@ -620,7 +620,7 @@ const checkMetaAvailable = (op?: Operator) => {
  * @param paramType 若使用mapKey的方式使用变量，则根据其类型 优先级第4
  * 
  * @param op 自定义类型和操作符时需要获取其中的配置 优先级第3
- * @param operatorKey 参见Operator中的 other, start, end ,set, e, num
+ * @param OpcodeKey 参见Opcode中的 other, start, end ,set, e, num
  * @returns 
  */
 const getConstantQueryParams = (
@@ -628,10 +628,10 @@ const getConstantQueryParams = (
     paramTypeCodes?: string[],
     param?: Param,
     paramType?: ParamType,
-    op?: Operator,
-    operatorKey?: 'other' | 'start' | 'end' | 'collection' | 'e'
+    op?: Opcode,
+    operandKey?: 'other' | 'start' | 'end' | 'collection' | 'e'
   ) => {
-  //const { domainId, paramTypeCodes, param, paramType, op, operatorKey } = props
+  //const { domainId, paramTypeCodes, param, paramType, op, opcodeKey } = props
   const constantQueryParams: ConstantQueryParams = { domainId: domainId, pagination: { pageSize: -1, sKey: "id", sort: 1 } }//pageSize: -1为全部加载
 
   //指定的数据类型 优先级最高
@@ -656,7 +656,7 @@ const getConstantQueryParams = (
     return constantQueryParams
   }
 
-  const p = type2Both(type, op, operatorKey)
+  const p = type2Both(type, op, operandKey)
   constantQueryParams.typeIds = p?.typeIds
   constantQueryParams.ids = p?.constantsIds
 
@@ -665,13 +665,13 @@ const getConstantQueryParams = (
 }
 
 /**
- * 根据ParamType或operator，得到对应的typeIds（基本类型、以及集合类型），然后用于查询常量ConstantQueryParams.typeids
+ * 根据ParamType或Opcode，得到对应的typeIds（基本类型、以及集合类型），然后用于查询常量ConstantQueryParams.typeids
  * @param type 
  * @param op 
- * @param operatorKey 
+ * @param operandKey 
  * @returns 
  */
-const type2Both = (type?: ParamType, op?: Operator, operandKey?: string) => {
+const type2Both = (type?: ParamType, op?: Opcode, operandKey?: string) => {
 
   if (!type) {
     console.warn("no paramType or param?.paramType")
@@ -684,17 +684,17 @@ const type2Both = (type?: ParamType, op?: Operator, operandKey?: string) => {
     //除了指定的值域和类型外，其它的都是有基本类型（包括枚举）和Set类型, 可以单选、多选和全选
     typeId = type.id
   } else {//若是自定义类型，则使用操作数中自定义的类型
-    console.log("type is customize, use paramType in operator, type is " + type.code)
+    console.log("type is customize, use paramType in Opcode, type is " + type.code)
     if (!op || !operandKey) {
-      console.warn("paramType is customize, should provide operator or key")
+      console.warn("paramType is customize, should provide Opcode or key")
       return undefined
     }
     if (op.operandCfgStr && !op.operandCfg)
       op.operandCfg = JSON.parse(op.operandCfgStr)
 
     if (!op.operandCfg) {
-      //所选现有变量，或变量mapKey以及变量类型，是自定义类型，需要通过其操作数Operator中定义的类型选择
-      console.warn("no operandCfg in operator")
+      //所选现有变量，或变量mapKey以及变量类型，是自定义类型，需要通过其操作数Opcode中定义的类型选择
+      console.warn("no operandCfg in Opcode")
       return undefined
     } else {
       console.log("operandKey=" + operandKey + ",opertor= ", op)
@@ -716,13 +716,13 @@ const type2Both = (type?: ParamType, op?: Operator, operandKey?: string) => {
     return {constantsIds: constantsIds}
 }
 
-const type2SysType = (type: ParamType, op?: Operator, operandKey?: string) => {
+const type2SysType = (type: ParamType, op?: Opcode, operandKey?: string) => {
   if (type.isSys) {//系统类型
     return type
   } else {//若是自定义类型，则使用操作数中自定义的类型
     if (!op || !operandKey) {
-      //所选现有变量，或变量mapKey以及变量类型，是自定义类型，需要通过其操作数Operator中定义的类型选择
-      console.warn("2 paramType is customize, should provide operator and key")
+      //所选现有变量，或变量mapKey以及变量类型，是自定义类型，需要通过其操作数Opcode中定义的类型选择
+      console.warn("2 paramType is customize, should provide Opcode and key")
       return undefined
     } else {
       const p: OperandConstantQueryParam | undefined = op[operandKey]
@@ -788,7 +788,7 @@ const type2SysType = (type: ParamType, op?: Operator, operandKey?: string) => {
 // }
 
 
-const checkMetaAvailableOld = (paramType?: ParamType, op?: Operator) => {
+const checkMetaAvailableOld = (paramType?: ParamType, op?: Opcode) => {
   const config: OperandConfig = {}
   if (!paramType || !op) return config
   if (paramType.code === 'Bool') {

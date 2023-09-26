@@ -4,7 +4,7 @@ import { TransferDirection, TransferListProps } from 'antd/es/transfer';
 
 import { cachedGet, Cache } from "@rwsbillyang/usecache"
 
-import { BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpressionMeta, ComplexExpressionRecord, ExpressionMeta, ExpressionRecord, Operator } from '../DataType';
+import { BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpressionMeta, ComplexExpressionRecord, ExpressionMeta, ExpressionRecord, Opcode } from '../DataType';
 import { BasicExprMetaEditModal } from './BasicExprMetaEditModal';
 import { basicExpressionMeta2String, basicMeta2Expr, complexExpressionMeta2String, complexMeta2Expr, meta2Expr, sortedConcat } from '../utils';
 
@@ -356,10 +356,10 @@ function getTargetKeysByMeta(meta?: ComplexExpressionMeta) {
 * @param onClick 点击选中哪个操作符
 * @returns 
 */
-const LogicalExprDropDwon: React.FC<{ title?: string, disabled?: boolean, onClick: (e: Operator) => void }> = ({ title, disabled, onClick }) => {
-  const [ops, setOps] = useState<Operator[]>([])
+const LogicalExprDropDwon: React.FC<{ title?: string, disabled?: boolean, onClick: (e: Opcode) => void }> = ({ title, disabled, onClick }) => {
+  const [ops, setOps] = useState<Opcode[]>([])
   useEffect(() => {
-    cachedGet<Operator[]>(`${Host}/api/rule/composer/list/operator`, (data) => setOps(data),
+    cachedGet<Opcode[]>(`${Host}/api/rule/composer/list/opcode`, (data) => setOps(data),
       { type: 'Logical', pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载)
       LogicalOpKey)
   }, [])

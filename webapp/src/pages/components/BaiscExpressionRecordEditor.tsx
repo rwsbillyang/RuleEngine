@@ -12,7 +12,7 @@ import { BasicExprMetaEditModal } from "./BasicExprMetaEditModal";
 
 
 /***
- * 选中domainId后，会决定有哪些 param 可供选择，选中paramId后决定支持哪些 operator, 选中opId后决定需要哪些填写哪些值
+ * 选中domainId后，会决定有哪些 param 可供选择，选中paramId后决定支持哪些 Opcode, 选中opId后决定需要哪些填写哪些值
  * @param isAdd
  * @param record 经transformBeforeEdit转换的值
  * @param tableProps 表格属性，其中配置用于缓存键、saveApi，提交保存时需用到，保存后更新缓存

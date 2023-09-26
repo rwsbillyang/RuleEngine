@@ -11,7 +11,7 @@ import { MyRoute } from './myPro/MyRoute'
 //import { MySimpleLayout } from './myPro/MySimpleLayout'
 import { ParamTable } from './pages/basic/ParamTable'
 import { ParamTypeTable } from './pages/basic/ParamTypeTable'
-import { OperatorTable } from './pages/basic/OperatorTable'
+import { OpcodeTable } from './pages/basic/OpcodeTable'
 import { ConstantTable } from './pages/basic/ConstantTable'
 import { DomainTable } from './pages/basic/DomainTable'
 import { BasicExpressionTable, ComplexExpressionTable } from './pages/basic/ExpressionTable'
@@ -62,8 +62,8 @@ const menuRoutes: MyRoute[] = [
       },
       {
         path: '/basic/operator',
-        name: "操作符",
-        element: lazyLoad(<OperatorTable />)
+        name: "比较码",
+        element: lazyLoad(<OpcodeTable />)
       },
       {
         path: '/basic/constant',

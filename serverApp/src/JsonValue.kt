@@ -35,7 +35,7 @@ class BasicExpressionMeta(
     val paramId: Int,
     val param: Param? = null,
     val opId: Int,
-    val op: Operator? = null,
+    val op: Opcode? = null,
     val other: ValueMeta? = null,
     val start: ValueMeta? = null,//key所在变量范围比较
     val end: ValueMeta? = null,//key所在变量范围比较
@@ -58,7 +58,7 @@ class ValueMeta(
 @Serializable
 @SerialName(IType.Type_Complex)
 class ComplexExpressionMeta(
-    val op: Operator,
+    val op: Opcode,
     val metaList: List<ExpressionMeta>
 ): ExpressionMeta()
 

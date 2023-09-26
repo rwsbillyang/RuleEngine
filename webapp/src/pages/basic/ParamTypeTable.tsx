@@ -4,7 +4,7 @@ import React from "react"
 
 import { MyProTable, MySchemaFormEditor, deleteOne } from "../../myPro/MyProTable"
 import { ProColumns } from "@ant-design/pro-table"
-import { AllDomainKey, Domain, DomainQueryParams, Operator, OperatorQueryParams, ParamType, ParamTypeQueryParams } from "../DataType"
+import { AllDomainKey, Domain, DomainQueryParams, Opcode, OpcodeQueryParams, ParamType, ParamTypeQueryParams } from "../DataType"
 import { defaultProps, mustFill } from "../moduleTableProps"
 import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps"
 import { UseCacheConfig } from "@rwsbillyang/usecache"
@@ -90,9 +90,9 @@ export const ParamTypeTable: React.FC = () => {
       fieldProps: { mode: 'multiple' },
       dependencies: ['domainId'],
       formItemProps: mustFill,
-      request: (params) => asyncSelectProps2Request<Operator, OperatorQueryParams>({
+      request: (params) => asyncSelectProps2Request<Opcode, OpcodeQueryParams>({
         key: "op/domain/" + params.domainId,
-        url: `${Host}/api/rule/composer/list/operator`,
+        url: `${Host}/api/rule/composer/list/opcode`,
         query: { pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
         convertFunc: (item) => { return { label: item.label, value: item.id } }
       })

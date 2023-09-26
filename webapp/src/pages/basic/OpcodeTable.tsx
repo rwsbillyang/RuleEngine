@@ -5,7 +5,7 @@ import React from "react"
 import { MyProTable, MySchemaFormEditor, deleteOne } from "@/myPro/MyProTable"
 import { ProColumns } from "@ant-design/pro-table"
 import { Cache } from '@rwsbillyang/usecache'
-import { AllDomainKey, Constant, ConstantQueryParams, Domain, DomainQueryParams, OperandFromCfg, Operator, OperatorQueryParams, ParamType, ParamTypeQueryParams } from "../DataType"
+import { AllDomainKey, Constant, ConstantQueryParams, Domain, DomainQueryParams, OperandFromCfg, Opcode, OpcodeQueryParams, ParamType, ParamTypeQueryParams } from "../DataType"
 import { defaultProps, mustFill } from "../moduleTableProps"
 import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps"
 import { UseCacheConfig } from "@rwsbillyang/usecache"
@@ -18,13 +18,13 @@ import { message } from "antd"
 
 
 
-export const OperatorTable: React.FC = () => {
-  const name = "operator"
+export const OpcodeTable: React.FC = () => {
+  const name = "opcode"
 
   const initialQuery = { pagination: { pageSize: -1, sKey: "id", sort: -1 } } //pageSize=-1 means all data
 
   //列表字段及内置记录的form编辑 配置
-  const sysColumns: ProColumns<Operator>[] = [
+  const sysColumns: ProColumns<Opcode>[] = [
     {
       title: '内部编码',
       dataIndex: 'code',
@@ -53,7 +53,7 @@ export const OperatorTable: React.FC = () => {
   ]
 
   //添加自定义数据时的form字段配置
-  const customColumns: ProFormColumnsType<Operator>[] = [
+  const customColumns: ProFormColumnsType<Opcode>[] = [
     {
       title: '内部编码',
       dataIndex: 'code',
@@ -333,7 +333,7 @@ export const OperatorTable: React.FC = () => {
 
 
   //提交保存前数据转换 将各配置字段中的值，保存到operandCfgStr
-  const transformBeforeSave = (e: Operator) => {
+  const transformBeforeSave = (e: Opcode) => {
     //console.log("transformBeforeSave Constant=", e)
     if(e.isSys) return e
     
@@ -390,7 +390,7 @@ export const OperatorTable: React.FC = () => {
   }
 
  //将operandCfgStr中的值分给各个配置字段
-  const transformBeforeEdit = (e?: Partial<Operator>) => {
+  const transformBeforeEdit = (e?: Partial<Opcode>) => {
     if (!e) return e
     if(e.isSys) return e
     
@@ -422,8 +422,8 @@ export const OperatorTable: React.FC = () => {
     return e
   }
 
-  const initialValue: Partial<Operator> = { isSys: false, type: 'Customize' }
-  const props: MyProTableProps<Operator, OperatorQueryParams> = {
+  const initialValue: Partial<Opcode> = { isSys: false, type: 'Customize' }
+  const props: MyProTableProps<Opcode, OpcodeQueryParams> = {
     ...defaultProps(name),
     needLoadMore: false,
     initialValues: initialValue,
@@ -441,7 +441,7 @@ export const OperatorTable: React.FC = () => {
   ]
 
   //自定义编辑 删除和编辑 针对不同元素不同的配置
-  const actions: ProColumns<Operator> = {
+  const actions: ProColumns<Opcode> = {
     title: '操作',
     valueType: 'option',
     dataIndex: 'actions',
@@ -452,7 +452,7 @@ export const OperatorTable: React.FC = () => {
   }
 
 
-  return <MyProTable<Operator, OperatorQueryParams> {...props}
+  return <MyProTable<Opcode, OpcodeQueryParams> {...props}
     initialQuery={initialQuery} columns={sysColumns}
     toolBarRender={toolBarRender} actions={actions} />
 }

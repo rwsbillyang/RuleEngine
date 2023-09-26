@@ -46,7 +46,7 @@ class BaseCrudController : KoinComponent {
         const val Name_paramCategory = "paramCategory"
         const val Name_paramType = "paramType"
         const val Name_constant = "constant"
-        const val Name_operator = "operator"
+        const val Name_opcode = "opcode"
         const val Name_expression = "expression"
         const val Name_rule = "rule"
         const val Name_ruleGroup = "ruleGroup"
@@ -99,7 +99,7 @@ class BaseCrudController : KoinComponent {
             }
             Name_paramType -> MySerializeJson.encodeToString(DataBox.ok(service.findPage(Meta.paramType, params.toSqlPagination()).onEach { it.toBean(service) }))
             Name_constant -> MySerializeJson.encodeToString(DataBox.ok(service.findPage(Meta.constant, params.toSqlPagination()).onEach { it.toBean(service) }))
-            Name_operator -> MySerializeJson.encodeToString(DataBox.ok(service.findPage(Meta.operator,params.toSqlPagination()).onEach { it.toBean(service) }))
+            Name_opcode -> MySerializeJson.encodeToString(DataBox.ok(service.findPage(Meta.opcode,params.toSqlPagination()).onEach { it.toBean(service) }))
             Name_expression -> MySerializeJson.encodeToString(DataBox.ok(service.findPage(Meta.expression, params.toSqlPagination()).onEach { it.toBean(service) }))
             Name_rule -> MySerializeJson.encodeToString(DataBox.ok(service.findPage(Meta.rule, params.toSqlPagination()).map { it.toRuleCommon(service) }))
             Name_ruleGroup -> MySerializeJson.encodeToString(DataBox.ok(service.findPage(Meta.ruleGroup, params.toSqlPagination()).map { it.toRuleCommon(service) }))
@@ -121,7 +121,7 @@ class BaseCrudController : KoinComponent {
             Name_paramCategory -> MySerializeJson.encodeToString(DataBox.ok(service.findOne(Meta.paramCategory, { Meta.paramCategory.id eq id }, "paramCategory/$id")?.apply { toBean(service) }))
             Name_paramType -> MySerializeJson.encodeToString(DataBox.ok(service.findOne(Meta.paramType, { Meta.paramType.id eq id }, "paramType/$id")?.apply { toBean(service) }))
             Name_constant -> MySerializeJson.encodeToString(DataBox.ok(service.findOne(Meta.constant, { Meta.constant.id eq id }, "constant/$id")?.apply { toBean(service) }))
-            Name_operator -> MySerializeJson.encodeToString(DataBox.ok(service.findOne(Meta.operator, { Meta.operator.id eq id }, "operator/$id")?.apply { toBean(service) }))
+            Name_opcode -> MySerializeJson.encodeToString(DataBox.ok(service.findOne(Meta.opcode, { Meta.opcode.id eq id }, "opcode/$id")?.apply { toBean(service) }))
             Name_expression -> MySerializeJson.encodeToString(DataBox.ok(service.findOne(Meta.expression, { Meta.expression.id eq id }, "expression/$id")?.apply { toBean(service) }))
             Name_rule -> MySerializeJson.encodeToString(DataBox.ok(service.findOne(Meta.rule, { Meta.rule.id eq id }, "rule/$id")?.toRuleCommon(service)))
             Name_ruleGroup -> MySerializeJson.encodeToString(DataBox.ok(service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq id }, "ruleGroup/$id")?.toRuleCommon(service)))
@@ -159,9 +159,9 @@ class BaseCrudController : KoinComponent {
             val e = call.receive<Constant>()
             MySerializeJson.encodeToString(DataBox.ok(service.save(Meta.constant, e, e.id == null, e.id?.let { "constant/${it}" }).apply { toBean(service) }))
         }
-        Name_operator -> {
-            val e = call.receive<Operator>()
-            MySerializeJson.encodeToString(DataBox.ok(service.save(Meta.operator, e, e.id == null, e.id?.let { "operator/${it}" }).apply { toBean(service) }))
+        Name_opcode -> {
+            val e = call.receive<Opcode>()
+            MySerializeJson.encodeToString(DataBox.ok(service.save(Meta.opcode, e, e.id == null, e.id?.let { "opcode/${it}" }).apply { toBean(service) }))
         }
         Name_expression -> {
             val e = call.receive<Expression>()//.apply { toEntity() }
@@ -196,7 +196,7 @@ class BaseCrudController : KoinComponent {
             Name_paramCategory -> service.delete(Meta.paramCategory, { Meta.paramCategory.id eq id }, "paramCategory/$id")
             Name_paramType -> service.delete(Meta.paramType, { Meta.paramType.id eq id }, "paramType/$id")
             Name_constant -> service.delete(Meta.constant, { Meta.constant.id eq id }, "constant/$id")
-            Name_operator -> service.delete(Meta.operator, { Meta.operator.id eq id }, "operator/$id")
+            Name_opcode -> service.delete(Meta.opcode, { Meta.opcode.id eq id }, "opcode/$id")
             Name_expression -> service.delete(Meta.expression, { Meta.expression.id eq id }, "expression/$id")
             Name_rule -> service.delete(Meta.rule, { Meta.rule.id eq id }, "rule/$id")
             //Name_ruleGroup -> service.delete(Meta.ruleGroup, { Meta.ruleGroup.id eq id }, "ruleGroup/$id")
@@ -231,7 +231,7 @@ class BaseCrudController : KoinComponent {
             Name_paramCategory -> service.delete(Meta.paramCategory, { Meta.paramCategory.id inList ids.map { it } }, null, ids.map { "paramCategory/$it" })
             Name_paramType -> service.delete(Meta.paramType, { Meta.paramType.id inList ids.map { it } }, null, ids.map { "paramType/$it" })
             Name_constant -> service.delete(Meta.constant, { Meta.constant.id inList ids.map { it } }, null, ids.map { "constant/$it" })
-            Name_operator -> service.delete(Meta.operator, { Meta.operator.id inList ids.map { it } }, null, ids.map { "operator/$it" })
+            Name_opcode -> service.delete(Meta.opcode, { Meta.opcode.id inList ids.map { it } }, null, ids.map { "opcode/$it" })
             Name_expression -> service.delete(Meta.expression, { Meta.expression.id inList ids.map { it } }, null, ids.map { "expression/$it" })
             Name_rule -> service.delete(Meta.rule, { Meta.rule.id inList ids }, null, ids.map { "rule/$it" })
             //Name_ruleGroup -> service.delete(Meta.ruleGroup, { Meta.ruleGroup.id inList ids }, null, ids.map{"ruleGroup/$it"})
@@ -258,21 +258,21 @@ class BaseCrudController : KoinComponent {
 //""".trimIndent());
 
 
-        val map = mutableMapOf<String, Operator>()
+        val map = mutableMapOf<String, Opcode>()
         //将系统内置支持的操作符写入数据库，并构建map
         EnumOp.values()
-            .map { Operator(it.label, it.name, Operator.Basic, it.remark, true, it.other, it.start, it.end, it.set, it.e, it.num) }
-            .let { service.batchSave(Meta.operator, it, true) }
+            .map { Opcode(it.label, it.name, Opcode.Basic, it.remark, true, it.other, it.start, it.end, it.set, it.e, it.num) }
+            .let { service.batchSave(Meta.opcode, it, true) }
             .forEach { map[it.code] = it }
 
         EnumCollectionOp.values()
-            .map { Operator(it.label, it.name,  Operator.Collection, it.remark,true, it.other, it.start, it.end, it.set, it.e, it.num) }
-            .let { service.batchSave(Meta.operator, it, true) }
+            .map { Opcode(it.label, it.name,  Opcode.Collection, it.remark,true, it.other, it.start, it.end, it.set, it.e, it.num) }
+            .let { service.batchSave(Meta.opcode, it, true) }
             .forEach { map[it.code] = it }
 
         EnumLogicalOp.values()
-            .map { Operator(it.label, it.name,  Operator.Logical, it.remark) }
-            .let { service.batchSave(Meta.operator, it, true) }
+            .map { Opcode(it.label, it.name,  Opcode.Logical, it.remark) }
+            .let { service.batchSave(Meta.opcode, it, true) }
             .forEach { map[it.code] = it }
 
         //构建内置数据类型并插入库

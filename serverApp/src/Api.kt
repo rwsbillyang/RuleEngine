@@ -64,8 +64,8 @@ fun Routing.composerApi() {
             get<ValueConstantQueryParams>{
                 call.respondBoxJsonText(crudController.findPage(BaseCrudController.Name_constant, it))
             }
-            get<OperatorQueryParams>{
-                call.respondBoxJsonText(crudController.findPage(BaseCrudController.Name_operator, it))
+            get<OpcodeQueryParams>{
+                call.respondBoxJsonText(crudController.findPage(BaseCrudController.Name_opcode, it))
             }
             get<ExpressionQueryParams>{
                 call.respondBoxJsonText(crudController.findPage(BaseCrudController.Name_expression, it))

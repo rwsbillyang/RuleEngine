@@ -37,7 +37,7 @@ import org.komapper.core.dsl.Meta
 data class ParamType(
     val label: String,
     val code: String,
-    val supportOpIds: String, //,分隔的operator id
+    val supportOpIds: String, //,分隔的opcode id
     val isBasic: Boolean,//基本类型
     val isSys: Boolean = true, //是否内置 当前都为true
     @KomapperId @KomapperAutoIncrement
@@ -46,22 +46,35 @@ data class ParamType(
     val domainId: Int? = null,//自定义记录可以有domainId
     @KomapperIgnore var domain: Domain? = null, //domainId 前端列表中需要使用该信息
 
-    @KomapperIgnore var supportOps: List<Operator>? = null //supportOpIds
+    @KomapperIgnore var supportOps: List<Opcode>? = null //supportOpIds
 ){
     fun toBean(service: BaseCrudService){
         domain = domainId?.let{service.findOne(Meta.domain, {Meta.domain.id eq it}, "domain/${it}")}
-        supportOps = supportOpIds.split(",").mapNotNull{service.findOne(Meta.operator, {Meta.operator.id eq it.toInt()}, "op/${it}")}
+        supportOps = supportOpIds.split(",").mapNotNull{service.findOne(Meta.opcode, {Meta.opcode.id eq it.toInt()}, "op/${it}")}
     }
 }
 
 /**
- * 操作数配置
+ * 一个逻辑表达式构成因素：表达式类型（变量类型决定）、变量（mapKey或记录库中添加的变量记录）、操作码、若干操作数构成
+ * 不同的操作码会有不同的操作数，OperandConfig正是操作数的配置
+ * 系统内置操作码预先生成，不可修改
+ *
+ * @param enable 是否激活
+ * @param name 操作数名称，如other、start、end、set、e、num等
+ * @param label 创建表达式或规则时，输入时操作数时的提示标签
+ * @param tooltip 创建表达式或规则时，输入时操作数时的提示帮助提示
+ * @param typedId 操作数数据类型，null表示与变量类型一致；用于创建表达式或规则时，选择输入框过滤常量或变量
+ * @param valueScopeIds 操作数值域，用于创建表达式或规则时，选择输入框过滤常量
+ *
  * */
 @Serializable
 class OperandConfig(
     val enable: Boolean,
+    val key: String,
+    val label: String,
+    val typedId: Int?,//null表示与变量类型一致
     val valueScopeIds: String?, //enable激活后与typedId必须至少一个非空
-    val typedId: Int?
+    val tooltip: String?
 )
 /**
  * 操作符, 如>,>=, <, <=, !=, ==, in, between
@@ -70,15 +83,16 @@ class OperandConfig(
  */
 @Serializable
 @KomapperEntity
-@KomapperTable("t_operator")
-data class Operator(
+@KomapperTable("t_opcode")
+data class Opcode(
     val label: String,
-    val code: String,
+    val code: String, //opcode
     val type: String,
     val remark: String? = null, //备注
     val isSys: Boolean = true,
 
     //以下为操作数配置，需要的操作数则设置为true, 前端根据它是否展示对应的输入控件
+
     val other: Boolean= false, //如果空则表示前端不可见；
     val start: Boolean= false,//如果空则表示前端不可见；
     val end: Boolean= false,//如果空则表示前端不可见；
@@ -88,6 +102,7 @@ data class Operator(
 
     //自定义操作符的操作数所使用的常量类型或值域（常量id列表）
     val operandCfgStr: String? = null,
+    @KomapperIgnore val operandCfg: List<OperandConfig>? = null,
 
     val domainId: Int? = null,//自定义记录可以有domainId
     @KomapperIgnore var domain: Domain? = null, //domainId 前端列表中需要使用该信息

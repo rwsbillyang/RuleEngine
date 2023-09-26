@@ -32,7 +32,7 @@ export interface OperandFromCfg{
  * @param op 操作符
  * @param types 适用变量类型
  */
-export interface Operator extends LabeldBean {
+export interface Opcode extends LabeldBean {
     id: number,
     code: string,
     isSys: boolean,
@@ -70,11 +70,11 @@ export interface Operator extends LabeldBean {
     collectionConstantIds?: number[] //临时保存的值
     eConstantIds?: number[] //临时保存的值
 }
-export interface OperatorQueryParams extends BasePageQuery {
+export interface OpcodeQueryParams extends BasePageQuery {
     label?: string
     isSys?: boolean
     type?: 'Basic'| "Collection" | 'Logical' | 'Customize'// OpType
-    ids?: string //,分隔的id ， 即根据operator.id列表查询
+    ids?: string //,分隔的id ， 即根据Opcode.id列表查询
     domainId?: number
 }
 
@@ -89,7 +89,7 @@ export const AllParamTypeKey = "paramTypeAll"
 export interface ParamType extends LabeldBean {
     code: string,
     supportOpIds: string,
-    supportOps?: Operator[], //,分隔的operator id
+    supportOps?: Opcode[], //,分隔的Opcode id
     isSys: boolean,
     isBasic: boolean,//基本类型
 
@@ -225,7 +225,7 @@ export type ExpressionRecord = BasicExpressionRecord | ComplexExpressionRecord
 interface ExpressionMetaBase{
     _class: string, //'Bool' | 'Int' | 'Double' | 'Long' | 'String' ....
     opId?: number,
-    op?: Operator,
+    op?: Opcode,
 }
 
 export interface BasicExpressionMeta extends ExpressionMetaBase{
@@ -285,7 +285,7 @@ export interface OpValue {
 
 export interface Expr {
     _class: string, //后端需要做序列化
-    op: string //Operator.code
+    op: string //Opcode.code
 }
 
 export interface BasicExpression extends Expr {

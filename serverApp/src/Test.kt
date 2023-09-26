@@ -231,7 +231,7 @@ class GongStarsExpr(
             false
         }
         else -> {
-            throw Exception("GongStarsExpr not support operator: $op")
+            throw Exception("GongStarsExpr not support opcode: $op")
         }
     }
 }
