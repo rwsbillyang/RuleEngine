@@ -60,21 +60,53 @@ abstract class BaseType<T>: IType<T> {
 
 abstract class CollectionType<Container: Collection<T>, T>: IType<T> {
     override fun supportOperators() = EnumCollectionOp.values().map { it.name }
-    fun op(op: String, v0: Container?, other: Container? = null, e: T? = null, num: Int? = null) = when(EnumCollectionOp.valueOf(op)){
-        EnumCollectionOp.onlyContains -> if(v0.isNullOrEmpty() && other.isNullOrEmpty()) true
-        else if(v0 != null && other != null) v0.size == other.size && v0.intersect(other).size == v0.size
-        else false
-        EnumCollectionOp.contains -> if(v0.isNullOrEmpty() || e == null) false else v0.contains(e)
-        EnumCollectionOp.notContains -> if(v0.isNullOrEmpty() || e == null) false else !v0.contains(e)
-        EnumCollectionOp.containsAll -> if(v0.isNullOrEmpty() || other.isNullOrEmpty()) false else v0.containsAll(other)
-        EnumCollectionOp.anyIn ->  if(v0.isNullOrEmpty() || other.isNullOrEmpty()) false else v0.intersect(other).isNotEmpty()
-        EnumCollectionOp.numberIn ->  if(v0.isNullOrEmpty() || other.isNullOrEmpty() || num == null) false else  v0.intersect(other).size == num
-        EnumCollectionOp.gteNumberIn ->  if(v0.isNullOrEmpty() || other.isNullOrEmpty() || num == null) false else  v0.intersect(other).size >= num
-        EnumCollectionOp.lteNumberIn ->  if(v0.isNullOrEmpty() || other.isNullOrEmpty() || num == null) false else  v0.intersect(other).size <= num
-        EnumCollectionOp.allIn ->  if(v0.isNullOrEmpty() || other.isNullOrEmpty()) false else other.containsAll(v0)
-        EnumCollectionOp.allNotIn ->  if(v0.isNullOrEmpty() || other.isNullOrEmpty()) false else !other.containsAll(v0)
-         
-        //else -> throw Exception("IntSetType not support operator: $op")
+    fun op(op: String, v0: Container?, other: Container? = null, e: T? = null, num: Int? = null):Boolean{
+        if (v0 == null) throw Exception("${code}Type.${op}: no v0")
+        return when(EnumCollectionOp.valueOf(op)){
+            EnumCollectionOp.onlyContains ->  {
+                if (other == null) throw Exception("${code}Type.${op}: no other")
+                v0.size == other.size && v0.intersect(other).size == v0.size
+            }
+            EnumCollectionOp.contains -> {
+                if (other == null) throw Exception("${code}Type.${op}: no other")
+                 v0.contains(e)
+            }
+            EnumCollectionOp.notContains -> {
+                if (other == null) throw Exception("${code}Type.${op}: no other")
+                !v0.contains(e)
+            }
+            EnumCollectionOp.containsAll -> {
+                if (other == null) throw Exception("${code}Type.${op}: no other")
+                v0.containsAll(other)
+            }
+            EnumCollectionOp.anyIn ->  {
+                if (other == null) throw Exception("${code}Type.${op}: no other")
+                v0.intersect(other).isNotEmpty()
+            }
+            EnumCollectionOp.numberIn ->  {
+                if (other == null) throw Exception("${code}Type.${op}: no other")
+                if(num == null)throw Exception("${code}Type.${op}: no num")
+                v0.intersect(other).size == num
+            }
+            EnumCollectionOp.gteNumberIn -> {
+                if (other == null) throw Exception("${code}Type.${op}: no other")
+                if(num == null)throw Exception("${code}Type.${op}: no num")
+                v0.intersect(other).size >= num
+            }
+            EnumCollectionOp.lteNumberIn ->  {
+                if (other == null) throw Exception("${code}Type.${op}: no other")
+                if(num == null)throw Exception("${code}Type.${op}: no num")
+                v0.intersect(other).size <= num
+            }
+            EnumCollectionOp.allIn ->  {
+                if (other == null) throw Exception("${code}Type.${op}: no other")
+                other.containsAll(v0)
+            }
+            EnumCollectionOp.allNotIn ->  {
+                if (other == null) throw Exception("${code}Type.${op}: no other")
+                !other.containsAll(v0)
+            }
+        }
     }
 }
 
@@ -83,6 +115,7 @@ object BoolType: BaseType<Boolean>(){
     override val code = IType.Type_Bool
     override fun supportOperators() = listOf(EnumOp.eq.name)
     override fun op(op: String, v0: Boolean?, other: Boolean?, start: Boolean?, end: Boolean?, set: Set<Boolean>?):Boolean{
+        if(v0 == null) throw Exception("BoolType: no v0")
         return when(EnumOp.valueOf(op)){
             EnumOp.eq -> v0 == other
             else -> throw Exception("BoolType not support operator: $op")
@@ -93,98 +126,265 @@ object BoolType: BaseType<Boolean>(){
 object IntType: BaseType<Int>() {
     override val label = "整数"
     override val code = IType.Type_Int
-    override fun op(op: String, v0: Int?, other: Int?, start: Int?, end: Int?, set: Set<Int>?) = when (EnumOp.valueOf(op)) {
-            EnumOp.eq -> v0 == other
-            EnumOp.ne -> v0 != other
-            EnumOp.gt -> if (v0 == null || other == null) false else v0 > other
-            EnumOp.gte -> if (v0 == null || other == null) false else v0 >= other
-            EnumOp.lt -> if (v0 == null || other == null) false else v0 < other
-            EnumOp.lte -> if (v0 == null || other == null) false else v0 <= other
-            EnumOp.between -> if (v0 == null || start == null || end == null) false else v0 >= start && v0 <= end
-            EnumOp.notBetween -> if (v0 == null || start == null || end == null) false else v0 < start || v0 > end
-            EnumOp.`in` -> if (v0 == null || set == null) false else set.contains(v0)//单个元素存在于集合中
-            EnumOp.nin -> if (v0 == null || set == null) false else !set.contains(v0)//单个元素不存在于集合中
-
-            //else -> throw Exception("IntType not support operator: $op")
+    override fun op(op: String, v0: Int?, other: Int?, start: Int?, end: Int?, set: Set<Int>?): Boolean{
+        if (v0 == null) throw Exception("${code}Type.${op}: no v0")
+        return when (EnumOp.valueOf(op)) {
+            EnumOp.eq -> {
+                if (other == null) throw Exception("${code}Type.eq: no other")
+                v0 == other
+            }
+            EnumOp.ne -> {
+                if (other == null) throw Exception("${code}Type.ne: no other")
+                v0 != other
+            }
+            EnumOp.gt -> {
+                if (other == null) throw Exception("${code}Type.gt: no other")
+                v0 > other
+            }
+            EnumOp.gte -> {
+                if (other == null) throw Exception("${code}Type.gte: no other")
+                v0 >= other
+            }
+            EnumOp.lt -> {
+                if (other == null) throw Exception("${code}Type.lt: no other")
+                v0 < other
+            }
+            EnumOp.lte -> {
+                if (other == null) throw Exception("${code}Type.lte: no other")
+                v0 <= other
+            }
+            EnumOp.between -> {
+                if (start == null) throw Exception("${code}Type.between: no start")
+                if (end == null) throw Exception("${code}Type.between: no end")
+                v0 >= start && v0 <= end
+            }
+            EnumOp.notBetween -> {
+                if (start == null) throw Exception("${code}Type.notBetween: no start")
+                if (end == null) throw Exception("${code}Type.notBetween: no end")
+                v0 < start || v0 > end
+            }
+            EnumOp.`in` -> {
+                if (set == null) throw Exception("${code}Type.in: no set")
+                set.contains(v0)//单个元素存在于集合中
+            }
+            EnumOp.nin -> {
+                if (set == null) throw Exception("${code}Type.nin: no set")
+                !set.contains(v0)//单个元素不存在于集合中
+            }
         }
+    }
 }
 
 
 object DoubleType: BaseType<Double>() {
     override val label = "小数"
     override val code = IType.Type_Double
-    override fun op(op: String, v0: Double?, other:Double?, start: Double?, end: Double?, set: Set<Double>?) = when (EnumOp.valueOf(op)) {
-        EnumOp.eq -> v0 == other
-        EnumOp.ne -> v0 != other
-        EnumOp.gt -> if (v0 == null || other == null) false else v0 > other
-        EnumOp.gte -> if (v0 == null || other == null) false else v0 >= other
-        EnumOp.lt -> if (v0 == null || other == null) false else v0 < other
-        EnumOp.lte -> if (v0 == null || other == null) false else v0 <= other
-        EnumOp.between -> if (v0 == null || start == null || end == null) false else v0 >= start && v0 <= end
-        EnumOp.notBetween -> if (v0 == null || start == null || end == null) false else v0 < start || v0 > end
-        EnumOp.`in` -> if (v0 == null || set == null) false else set.contains(v0)//单个元素存在于集合中
-        EnumOp.nin -> if (v0 == null || set == null) false else !set.contains(v0)//单个元素不存在于集合中
-
-        //else -> throw Exception("DoubleType not support operator: $op")
+    override fun op(op: String, v0: Double?, other: Double?, start: Double?, end: Double?, set: Set<Double>?): Boolean{
+        if (v0 == null) throw Exception("${code}Type.${op}: no v0")
+        return when (EnumOp.valueOf(op)) {
+            EnumOp.eq -> {
+                if (other == null) throw Exception("${code}Type.eq: no other")
+                v0 == other
+            }
+            EnumOp.ne -> {
+                if (other == null) throw Exception("${code}Type.ne: no other")
+                v0 != other
+            }
+            EnumOp.gt -> {
+                if (other == null) throw Exception("${code}Type.gt: no other")
+                v0 > other
+            }
+            EnumOp.gte -> {
+                if (other == null) throw Exception("${code}Type.gte: no other")
+                v0 >= other
+            }
+            EnumOp.lt -> {
+                if (other == null) throw Exception("${code}Type.lt: no other")
+                v0 < other
+            }
+            EnumOp.lte -> {
+                if (other == null) throw Exception("${code}Type.lte: no other")
+                v0 <= other
+            }
+            EnumOp.between -> {
+                if (start == null) throw Exception("${code}Type.between: no start")
+                if (end == null) throw Exception("${code}Type.between: no end")
+                v0 >= start && v0 <= end
+            }
+            EnumOp.notBetween -> {
+                if (start == null) throw Exception("${code}Type.notBetween: no start")
+                if (end == null) throw Exception("${code}Type.notBetween: no end")
+                v0 < start || v0 > end
+            }
+            EnumOp.`in` -> {
+                if (set == null) throw Exception("${code}Type.in: no set")
+                set.contains(v0)//单个元素存在于集合中
+            }
+            EnumOp.nin -> {
+                if (set == null) throw Exception("${code}Type.nin: no set")
+                !set.contains(v0)//单个元素不存在于集合中
+            }
+        }
     }
 }
 
 object LongType: BaseType<Long>() {
     override val label = "长整数"
     override val code = IType.Type_Long
-    override fun op(op: String, v0: Long?, other:Long?, start: Long?, end: Long?, set: Set<Long>?) = when (EnumOp.valueOf(op)) {
-        EnumOp.eq -> v0 == other
-        EnumOp.ne -> v0 != other
-        EnumOp.gt -> if (v0 == null || other == null) false else v0 > other
-        EnumOp.gte -> if (v0 == null || other == null) false else v0 >= other
-        EnumOp.lt -> if (v0 == null || other == null) false else v0 < other
-        EnumOp.lte -> if (v0 == null || other == null) false else v0 <= other
-        EnumOp.between -> if (v0 == null || start == null || end == null) false else v0 >= start && v0 <= end
-        EnumOp.notBetween -> if (v0 == null || start == null || end == null) false else v0 < start || v0 > end
-        EnumOp.`in` -> if (v0 == null || set == null) false else set.contains(v0)//单个元素存在于集合中
-        EnumOp.nin -> if (v0 == null || set == null) false else !set.contains(v0)//单个元素不存在于集合中
-
-        //else -> throw Exception("LongType not support operator: $op")
+    override fun op(op: String, v0: Long?, other:Long?, start: Long?, end: Long?, set: Set<Long>?): Boolean{
+        if (v0 == null) throw Exception("${code}Type.${op}: no v0")
+        return when (EnumOp.valueOf(op)) {
+            EnumOp.eq -> {
+                if (other == null) throw Exception("${code}Type.eq: no other")
+                v0 == other
+            }
+            EnumOp.ne -> {
+                if (other == null) throw Exception("${code}Type.ne: no other")
+                v0 != other
+            }
+            EnumOp.gt -> {
+                if (other == null) throw Exception("${code}Type.gt: no other")
+                v0 > other
+            }
+            EnumOp.gte -> {
+                if (other == null) throw Exception("${code}Type.gte: no other")
+                v0 >= other
+            }
+            EnumOp.lt -> {
+                if (other == null) throw Exception("${code}Type.lt: no other")
+                v0 < other
+            }
+            EnumOp.lte -> {
+                if (other == null) throw Exception("${code}Type.lte: no other")
+                v0 <= other
+            }
+            EnumOp.between -> {
+                if (start == null) throw Exception("${code}Type.between: no start")
+                if (end == null) throw Exception("${code}Type.between: no end")
+                v0 >= start && v0 <= end
+            }
+            EnumOp.notBetween -> {
+                if (start == null) throw Exception("${code}Type.notBetween: no start")
+                if (end == null) throw Exception("${code}Type.notBetween: no end")
+                v0 < start || v0 > end
+            }
+            EnumOp.`in` -> {
+                if (set == null) throw Exception("${code}Type.in: no set")
+                set.contains(v0)//单个元素存在于集合中
+            }
+            EnumOp.nin -> {
+                if (set == null) throw Exception("${code}Type.nin: no set")
+                !set.contains(v0)//单个元素不存在于集合中
+            }
+        }
     }
 }
 
 object StringType: BaseType<String>() {
     override val label = "字符串"
     override val code = IType.Type_String
-    override fun op(op: String, v0: String?, other:String?, start: String?, end: String?, set: Set<String>?) = when (EnumOp.valueOf(op)) {
-        EnumOp.eq -> v0 == other
-        EnumOp.ne -> v0 != other
-        EnumOp.gt -> if (v0 == null || other == null) false else v0 > other
-        EnumOp.gte -> if (v0 == null || other == null) false else v0 >= other
-        EnumOp.lt -> if (v0 == null || other == null) false else v0 < other
-        EnumOp.lte -> if (v0 == null || other == null) false else v0 <= other
-        EnumOp.between -> if (v0 == null || start == null || end == null) false else v0 >= start && v0 <= end
-        EnumOp.notBetween -> if (v0 == null || start == null || end == null) false else v0 < start || v0 > end
-        EnumOp.`in` -> if (v0 == null || set == null) false else set.contains(v0)//单个元素存在于集合中
-        EnumOp.nin -> if (v0 == null || set == null) false else !set.contains(v0)//单个元素不存在于集合中
-
-        //else -> throw Exception("StringType not support operator: $op")
+    override fun op(op: String, v0: String?, other:String?, start: String?, end: String?, set: Set<String>?): Boolean{
+        if (v0 == null) throw Exception("${code}Type.${op}: no v0")
+        return when (EnumOp.valueOf(op)) {
+            EnumOp.eq -> {
+                if (other == null) throw Exception("${code}Type.eq: no other")
+                v0 == other
+            }
+            EnumOp.ne -> {
+                if (other == null) throw Exception("${code}Type.ne: no other")
+                v0 != other
+            }
+            EnumOp.gt -> {
+                if (other == null) throw Exception("${code}Type.gt: no other")
+                v0 > other
+            }
+            EnumOp.gte -> {
+                if (other == null) throw Exception("${code}Type.gte: no other")
+                v0 >= other
+            }
+            EnumOp.lt -> {
+                if (other == null) throw Exception("${code}Type.lt: no other")
+                v0 < other
+            }
+            EnumOp.lte -> {
+                if (other == null) throw Exception("${code}Type.lte: no other")
+                v0 <= other
+            }
+            EnumOp.between -> {
+                if (start == null) throw Exception("${code}Type.between: no start")
+                if (end == null) throw Exception("${code}Type.between: no end")
+                v0 >= start && v0 <= end
+            }
+            EnumOp.notBetween -> {
+                if (start == null) throw Exception("${code}Type.notBetween: no start")
+                if (end == null) throw Exception("${code}Type.notBetween: no end")
+                v0 < start || v0 > end
+            }
+            EnumOp.`in` -> {
+                if (set == null) throw Exception("${code}Type.in: no set")
+                set.contains(v0)//单个元素存在于集合中
+            }
+            EnumOp.nin -> {
+                if (set == null) throw Exception("${code}Type.nin: no set")
+                !set.contains(v0)//单个元素不存在于集合中
+            }
+        }
     }
 }
+
 
 object DateTimeType: BaseType<LocalDateTime>() {
     override val label = "日期时间"
     override val code = IType.Type_Datetime
-    override fun op(op: String, v0: LocalDateTime?, other:LocalDateTime?, start: LocalDateTime?,end: LocalDateTime?, set: Set<LocalDateTime>?) = when (EnumOp.valueOf(op)) {
-        EnumOp.eq -> v0 == other
-        EnumOp.ne -> v0 != other
-        EnumOp.gt -> if (v0 == null || other == null) false else v0 > other
-        EnumOp.gte -> if (v0 == null || other == null) false else v0 >= other
-        EnumOp.lt -> if (v0 == null || other == null) false else v0 < other
-        EnumOp.lte -> if (v0 == null || other == null) false else v0 <= other
-        EnumOp.between -> if (v0 == null || other == start || end == null) false else v0 >= start && v0 <= end
-        EnumOp.notBetween -> if (v0 == null || other == start || end == null) false else v0 < start || v0 > end
-        EnumOp.`in` -> if (v0 == null || set == null) false else set.contains(v0)//单个元素存在于集合中
-        EnumOp.nin -> if (v0 == null || set == null) false else !set.contains(v0)//单个元素不存在于集合中
-
-        //else -> throw Exception("DateTimeType not support operator: $op")
+    override fun op(op: String, v0: LocalDateTime?, other:LocalDateTime?, start: LocalDateTime?,end: LocalDateTime?, set: Set<LocalDateTime>?): Boolean{
+        if (v0 == null) throw Exception("${code}Type.${op}: no v0")
+        return when (EnumOp.valueOf(op)) {
+            EnumOp.eq -> {
+                if (other == null) throw Exception("${code}Type.eq: no other")
+                v0 == other
+            }
+            EnumOp.ne -> {
+                if (other == null) throw Exception("${code}Type.ne: no other")
+                v0 != other
+            }
+            EnumOp.gt -> {
+                if (other == null) throw Exception("${code}Type.gt: no other")
+                v0 > other
+            }
+            EnumOp.gte -> {
+                if (other == null) throw Exception("${code}Type.gte: no other")
+                v0 >= other
+            }
+            EnumOp.lt -> {
+                if (other == null) throw Exception("${code}Type.lt: no other")
+                v0 < other
+            }
+            EnumOp.lte -> {
+                if (other == null) throw Exception("${code}Type.lte: no other")
+                v0 <= other
+            }
+            EnumOp.between -> {
+                if (start == null) throw Exception("${code}Type.between: no start")
+                if (end == null) throw Exception("${code}Type.between: no end")
+                v0 >= start && v0 <= end
+            }
+            EnumOp.notBetween -> {
+                if (start == null) throw Exception("${code}Type.notBetween: no start")
+                if (end == null) throw Exception("${code}Type.notBetween: no end")
+                v0 < start || v0 > end
+            }
+            EnumOp.`in` -> {
+                if (set == null) throw Exception("${code}Type.in: no set")
+                set.contains(v0)//单个元素存在于集合中
+            }
+            EnumOp.nin -> {
+                if (set == null) throw Exception("${code}Type.nin: no set")
+                !set.contains(v0)//单个元素不存在于集合中
+            }
+        }
     }
 }
+
 
 object IntSetType: CollectionType<Set<Int>, Int>() {
     override val label = "整数集合"

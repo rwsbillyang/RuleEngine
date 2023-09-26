@@ -48,14 +48,20 @@ class EvalRule(
         collector: ResultTreeCollector<T>?
     ): Boolean {
          if(logicalExpr != null){
-             if(logicalExpr.eval(dataProvider)){
-                 collector?.collect(this, parentRule)
-                 (action?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultAction)?.let { it(this, parentRule) }
-                 evalChildren(dataProvider, loadChildrenFunc, toEvalRule, collector)
+             try {
+                 val ret = logicalExpr.eval(dataProvider)
+                 if(ret){
+                     collector?.collect(this, parentRule)
+                     (action?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultAction)?.let { it(this, parentRule) }
+                     evalChildren(dataProvider, loadChildrenFunc, toEvalRule, collector)
 
-                 return true
-             }else{
-                 (elseAction?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultElseAction)?.let { it(this, parentRule) }
+                     return true
+                 }else{
+                     (elseAction?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultElseAction)?.let { it(this, parentRule) }
+                     return false
+                 }
+             }catch (e: Exception){
+                 System.err.println(e.message)
                  return false
              }
          }else{
