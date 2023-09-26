@@ -32,7 +32,7 @@ class MyExtendExpression(
     val op: String,
     //val value: User? == null // Any_value_type_can_be_serialized. eg: User
 ): LogicalExpr{
-    override fun eval(dataPicker: (String) -> Any?) = when(op){
+    override fun eval(dataProvider: (String) -> Any?) = when(op){
         "isVip" -> {
             //val v0 = map[key] as User? // Any_value_type_can_be_serialized?
             //v0.isVip()

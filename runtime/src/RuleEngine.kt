@@ -31,7 +31,7 @@ package com.github.rwsbillyang.rule.runtime
 object RuleEngine {
     /**
      * @param rootRules 当前待执行的数据库规则实体，即规则树的起点
-     * @param dataPicker 根据key获取对应的变量值
+     * @param dataProvider 根据key获取对应的变量值
      * @param loadChildrenFunc 获取当前数据库规则实体的子实体，通常从数据库中查询当前规则的子规则
      * @param toEvalRule 将数据库规则实体转换为可执行的EvalRule
      * @param collector 提供的话则收集匹配的规则，类型T为需收集的数据类型，需提供如何将数据库规则实体转换为T和唯一键值的函数

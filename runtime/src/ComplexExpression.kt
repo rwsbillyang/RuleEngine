@@ -34,11 +34,11 @@ class ComplexExpression(
     val op: String,
     val exprs: List<LogicalExpr>
 ): LogicalExpr {
-    override fun eval(dataPicker: (String) -> Any?): Boolean{
+    override fun eval(dataProvider: (String) -> Any?): Boolean{
         return when(EnumLogicalOp.valueOf(op)){
-            EnumLogicalOp.and -> exprs.all { it.eval(dataPicker) }
-            EnumLogicalOp.or -> exprs.any { it.eval(dataPicker) }
-            EnumLogicalOp.none -> !(exprs.any { it.eval(dataPicker) })
+            EnumLogicalOp.and -> exprs.all { it.eval(dataProvider) }
+            EnumLogicalOp.or -> exprs.any { it.eval(dataProvider) }
+            EnumLogicalOp.none -> !(exprs.any { it.eval(dataProvider) })
         }
     }
 }
