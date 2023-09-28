@@ -50,11 +50,10 @@ export const BasicExprMetaEditModal: React.FC<{
   const [newExprId, setNewExprId] = useState(exprId)
 
   //传递值时，必须新建一份copy，否则当新建再次打开对话框时，将仍在newMeta上修改，保存时冲掉原来的值
-  const [newMeta, setNewMeta] = useState(meta ? { ...meta } : initialMeta)
+  const [newMeta, setNewMeta] = useState(meta ? { ...meta } : {...initialMeta})
   const [opTooltip, setOpTooltip] = useState<string>()
-  //const [oprandMap, setOperandMap] = useState<Map<string, OperandConfig>>()
-  const [oprandConfigList, setOperandConfigList] = useState<OperandConfigItem[]>()
-
+  const [oprandConfigList, setOperandConfigList] = useState<OperandConfigItem[] | undefined>(operandConfigMapStr2List(meta?.op?.operandConfigMapStr)?.list)
+  
   // console.log("BasicExprMetaEditModal, meta=", meta)
   // console.log("BasicExprMetaEditModal, newMeta=", newMeta)
   const paramCfg = oprandConfigList? Cache.findOneInArray(oprandConfigList, ParamOperandConfigKey, "name") : undefined
@@ -78,14 +77,16 @@ export const BasicExprMetaEditModal: React.FC<{
 
       //子组件因为使用了useState，传入的meta不能生效，故采用发送事件方式更新
       //dispatch({ type: "updateMetaValue", payload: meta })
-      if (EnableParamCategory) {
-        formRef?.current?.setFieldValue("paramId", (meta?.paramId && meta?.param?.categoryId) ? [meta.param.categoryId, meta.paramId] : undefined)
-      } else {
-        formRef?.current?.setFieldValue("paramId", meta?.paramId)
-      }
-
+      // if (EnableParamCategory) {
+      //   formRef?.current?.setFieldValue("paramId", (meta?.paramId && meta?.param?.categoryId) ? [meta.param.categoryId, meta.paramId] : undefined)
+      // } else {
+      //   formRef?.current?.setFieldValue("paramId", meta?.paramId)
+      // }
+      formRef?.current?.setFieldValue("paramId", meta?.paramId)
+      formRef?.current?.setFieldValue("paramTypeId", meta?.paramTypeId)
+      formRef?.current?.setFieldValue("mapKey", meta?.mapKey)
+      formRef?.current?.setFieldValue("extra", meta?.extra)
       formRef?.current?.setFieldValue("opId", meta?.opId)
-
     } else {
       setOpTooltip(newMeta.op?.remark)
     }
@@ -368,6 +369,8 @@ export const BasicExprMetaEditModal: React.FC<{
   </ModalForm>
 }
 
+
+
 /**
  * 根据operandConfig生成缺省的OperandValueMeta
  * @param operandConfig 
@@ -390,6 +393,7 @@ const defaultOperandValueMeta = (operandConfig: OperandConfig) => {
   }
   return undefined
 }
+
 /**
  * 加载操作符list，首先从param或paramType中查找supportOps，没有的话再异步远程加载
  * param或paramType根据其id从缓存中查找，若找不到，则使用meta中提供
