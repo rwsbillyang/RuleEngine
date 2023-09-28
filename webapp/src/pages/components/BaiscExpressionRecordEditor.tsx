@@ -35,7 +35,7 @@ export const BaiscExpressionRecordEditor: React.FC<{
       url: `${Host}/api/rule/composer/list/paramType`,
       query: { pagination: { pageSize: -1, sKey: "id", sort: -1 } },//pageSize: -1为全部加载
       //convertFunc: (item) => { return { label: item.code, value: item.id } }
-    }).then(() => console.log("get AllParamType done"))
+    })//.then(() => console.log("get AllParamType done"))
   }, [])
 
 

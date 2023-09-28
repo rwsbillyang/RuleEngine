@@ -21,6 +21,11 @@ export const ParamTypeTable: React.FC = () => {
   //列表字段及内置记录的form编辑 配置
   const sysColumns: ProColumns<ParamType>[] = [
     {
+      dataIndex: 'index',
+      valueType: 'indexBorder',
+      width: 48,
+    },
+    {
       title: '类型码',
       dataIndex: 'code',
       readonly: true,
@@ -53,6 +58,7 @@ export const ParamTypeTable: React.FC = () => {
     //   valueType: "select",
     //   valueEnum: { false: "否", true: "是" }
     // },
+
   ]
 
   //添加自定义数据时的form字段配置

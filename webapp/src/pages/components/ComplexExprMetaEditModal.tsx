@@ -67,6 +67,7 @@ export const ComplexExprMetaEditModal: React.FC<{
                 setNewMeta(meta)
                 formRef?.current?.setFieldValue("opId", meta?.opId)
             } else {
+                //打开Rule Edit中，显示基本和复合表达式的 ”编辑“按钮时，将导致两个对话框初始化，从而执行到此处
                 console.log("shold not come here: changed exprId=" + newExprId + ", but no expression or expression.metaStr")
             }
         }

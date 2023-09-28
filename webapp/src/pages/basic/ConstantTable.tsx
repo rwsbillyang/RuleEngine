@@ -27,6 +27,11 @@ export const ConstantTable: React.FC = () => {
 
   const columns: ProColumns[] = [
     {
+      dataIndex: 'index',
+      valueType: 'indexBorder',
+      width: 48,
+    },
+    {
       title: '名称',
       dataIndex: 'label',
       formItemProps: mustFill,

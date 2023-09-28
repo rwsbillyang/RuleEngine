@@ -24,6 +24,11 @@ export const OpcodeTable: React.FC = () => {
   //列表字段及内置记录的form编辑 配置
   const sysColumns: ProColumns<Opcode>[] = [
     {
+      dataIndex: 'index',
+      valueType: 'indexBorder',
+      width: 48,
+    },
+    {
       title: '操作码',
       dataIndex: 'code',
       readonly: true,

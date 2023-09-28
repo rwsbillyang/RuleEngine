@@ -21,8 +21,10 @@ package com.github.rwsbillyang.rule.composer
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.komapper.core.dsl.Meta
+import org.slf4j.LoggerFactory
 
 class RuleTreeController : KoinComponent {
+    private val log = LoggerFactory.getLogger("RuleTreeController")
     private val service: BaseCrudService by inject()
 
     /**
