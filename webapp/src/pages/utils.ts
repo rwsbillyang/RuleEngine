@@ -85,7 +85,7 @@ export const operandConfigMapStr2List = (mapStr?: string) => {
     const obj = JSON.parse(mapStr)
     Object.keys(obj).forEach((e)=>{
         const cfg = obj[e]
-        map[e] = cfg as OperandConfig
+        map.set(e, cfg as OperandConfig)
         list.push({ ...cfg, name: e })
     })
 
@@ -118,13 +118,13 @@ export const complexExprRecord2String = (expr?: ComplexExpressionRecord)=>{
  */
 export const basicExpressionMeta2String = (meta?: BasicExpressionMeta)=>{
     if(!meta || meta._class === "Complex") return "暂无"
-    const list: {key: string, value: OperandValueMeta} [] = []
-    for (var k in meta.operandValueMap) {
-        list.push({key: k, value: meta.operandValueMap[k]})
-    }
+    const list: {key: string, value: OperandValueMeta | undefined} [] = []
+    
+    meta.operandValueMap.forEach((v,k)=>{
+        list.push({key: k, value: v})
+    })
     const oprand = list.map((e)=> operandMeta2String(e.key, e.value)).join(", ")
 
-    
     if(meta.param)
         return `${meta.param.label} '${meta.op?.label}' ${oprand}`
     else if(meta.mapKey)
@@ -161,11 +161,11 @@ export const complexExpressionMeta2String = (meta?: ComplexExpressionMeta)=>{
 export const operandMeta2String = (name: string, operandMeta?: OperandValueMeta) => {
     if(!operandMeta) return ""
     if(operandMeta.valueType  === 'Param'){
-        return name + ": " + operandMeta.param?.label + "("+ operandMeta.param?.mapKey + ")"
+        return name + "=" + operandMeta.param?.label + "("+ operandMeta.param?.mapKey + ")"
     }else if(operandMeta.valueType  === 'Constant'){
-        return name + ": " + jsonValue2String(operandMeta.jsonValue)     
+        return name + "=" + jsonValue2String(operandMeta.jsonValue)     
     }else if(operandMeta.valueType  === 'JsonValue'){
-        return name + ": " + jsonValue2String(operandMeta.jsonValue)    
+        return name + "=" + jsonValue2String(operandMeta.jsonValue)    
     }else{
         console.warn("should not come here, wrong operandMeta.valueType =" + operandMeta.valueType )
         return "wrong operandMeta.valueType!!!"
@@ -192,15 +192,12 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
         console.log("should not come here: no op")
         return undefined
     }
-    const operands: Map<String, Operand> = new Map<String, Operand>()
-    for(let k in meta.operandValueMap){
-        operands[k] = operandMeta2Operand(meta.operandValueMap[k])
-    }
+
     const expr: BasicExpression = {
         _class: "",
         key: "",
         op: meta.op.code,
-        operands:operands
+        operands: meta.operandValueMap
     }
     if(meta.param){
         expr._class = meta.param.paramType.code

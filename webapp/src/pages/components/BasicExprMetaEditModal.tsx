@@ -87,6 +87,8 @@ export const BasicExprMetaEditModal: React.FC<{
       formRef?.current?.setFieldValue("mapKey", meta?.mapKey)
       formRef?.current?.setFieldValue("extra", meta?.extra)
       formRef?.current?.setFieldValue("opId", meta?.opId)
+
+      newMeta.operandValueMap.clear()
     } else {
       setOpTooltip(newMeta.op?.remark)
     }
@@ -121,7 +123,7 @@ export const BasicExprMetaEditModal: React.FC<{
         newMeta.opId = undefined
         newMeta.paramTypeId = undefined
         newMeta.mapKey = undefined
-
+        newMeta.operandValueMap.clear()
         setOperandConfigList(undefined)
       }
       setNewExprId(v?.exprId)
@@ -135,6 +137,7 @@ export const BasicExprMetaEditModal: React.FC<{
         newMeta.opId = undefined
         newMeta.paramTypeId = undefined
         newMeta.mapKey = undefined
+        newMeta.operandValueMap.clear()
         setOperandConfigList(undefined)
       }
 
@@ -143,6 +146,7 @@ export const BasicExprMetaEditModal: React.FC<{
         formRef?.current?.setFieldValue("opId", undefined)
 
         newMeta.opId = undefined
+        newMeta.operandValueMap.clear()
         setOperandConfigList(undefined)
       }
 
@@ -156,9 +160,11 @@ export const BasicExprMetaEditModal: React.FC<{
         const op = getOpcodeById(v.opId, newMeta.param?.paramType.id || newMeta.paramType?.id, newMeta) 
         newMeta.op = op
 
+        newMeta.operandValueMap.clear()
         const list = operandConfigMapStr2List(op?.operandConfigMapStr)?.list
         list?.forEach((e) => {
-          newMeta.operandValueMap[e.name] = defaultOperandValueMeta(e)
+          const v = defaultOperandValueMeta(e)
+          if(v) newMeta.operandValueMap.set(e.name,v)
         })
         
         setOperandConfigList(list)
@@ -194,7 +200,7 @@ export const BasicExprMetaEditModal: React.FC<{
       if (oprandConfigList.length > 0) {
         for (let i=0; i< oprandConfigList.length; i++) {
           const e = oprandConfigList[i]
-          const operandMeta = newMeta.operandValueMap[e.name]
+          const operandMeta = newMeta.operandValueMap.get(e.name)
           if (e.required && (!operandMeta || (operandMeta.jsonValue?.value === undefined && !operandMeta.paramId))) {
             message.warning(e.label + ": 操作数没有值")
             return false
@@ -203,12 +209,14 @@ export const BasicExprMetaEditModal: React.FC<{
       }
       
 
-    //有值，但没有相关操作数配置，则删除该值
+      //有值，但没有相关操作数配置，则删除该值
       for (var k in newMeta.operandValueMap) {
         if (oprandConfigList.length > 0){
           const cfg = Cache.findOneInArray(oprandConfigList, k, "name")
-          if(!cfg || (cfg && !cfg.enable))
-            newMeta.operandValueMap.delete(k)
+          if(!cfg || (cfg && !cfg.enable)){
+            const ret = newMeta.operandValueMap.delete(k)
+            console.log("delete " + k + " in valueMap: "+ ret + ", hasK="+ newMeta.operandValueMap.has(k))
+          } 
         }
       }
       console.log("onDone=", newMeta)
@@ -357,9 +365,9 @@ export const BasicExprMetaEditModal: React.FC<{
             constantQueryParams={getConstantQueryParams(e, newMeta.param, newMeta.paramType, domainId)}
             domainId={domainId}
             disabled={!!exprId}
-            value={newMeta.operandValueMap[e.name]}
+            value={newMeta.operandValueMap.get(e.name)}
             onChange={(v) => {
-              newMeta.operandValueMap[e.name] = v
+              newMeta.operandValueMap.set(e.name, v)
               setNewMeta({...newMeta})
             }} />)}
         </> : <div>请选择</div>
