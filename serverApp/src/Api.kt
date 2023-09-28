@@ -40,6 +40,8 @@ val bizModule = AppModule(
         module {
             single { BaseCrudService(get()) }
             single { BaseCrudController() }
+            single { RuleTreeController() }
+
         }),
     "ruleEngineDb"
 ) {
@@ -48,7 +50,7 @@ val bizModule = AppModule(
 
 fun Routing.composerApi() {
     val crudController: BaseCrudController by inject()
-    //val erpBaseCrudService: ErpBaseCrudService by inject()
+    val ruleTreeController: RuleTreeController by inject()
 
     route("/api/rule/composer"){
         route("/list"){
@@ -165,11 +167,11 @@ fun Routing.composerApi() {
                     val text = when(name){
                         BaseCrudController.Name_rule -> {
                             val e = call.receive<Rule>()
-                            MySerializeJson.encodeToString(DataBox.ok(crudController.saveRuleInParentRule(e, parentRuleId)))
+                            MySerializeJson.encodeToString(DataBox.ok(ruleTreeController.saveRuleInParentRule(e, parentRuleId)))
                         }
                         BaseCrudController.Name_ruleGroup -> {
                             val e = call.receive<RuleGroup>()
-                            MySerializeJson.encodeToString(DataBox.ok(crudController.saveRuleGroupInParentRule(e, parentRuleId)))
+                            MySerializeJson.encodeToString(DataBox.ok(ruleTreeController.saveRuleGroupInParentRule(e, parentRuleId)))
                         }
                         else -> MySerializeJson.encodeToString(DataBox.ko<Int>("saveSubInRule: not support $name"))
                     }
@@ -190,11 +192,11 @@ fun Routing.composerApi() {
                     val text = when(name){
                         BaseCrudController.Name_rule -> {
                             val e = call.receive<Rule>()
-                            MySerializeJson.encodeToString(DataBox.ok(crudController.saveRuleInParentRuleGroup(e, parentRuleGroupId)))
+                            MySerializeJson.encodeToString(DataBox.ok(ruleTreeController.saveRuleInParentRuleGroup(e, parentRuleGroupId)))
                         }
                         BaseCrudController.Name_ruleGroup -> {
                             val e = call.receive<RuleGroup>()
-                            MySerializeJson.encodeToString(DataBox.ok(crudController.saveRuleGroupInParentRuleGroup(e, parentRuleGroupId)))
+                            MySerializeJson.encodeToString(DataBox.ok(ruleTreeController.saveRuleGroupInParentRuleGroup(e, parentRuleGroupId)))
                         }
                         else -> MySerializeJson.encodeToString(DataBox.ko<Int>("saveSubInRuleGroup: not support $name"))
                     }
@@ -215,10 +217,10 @@ fun Routing.composerApi() {
                 try {
                     val count = when(name){
                         BaseCrudController.Name_rule -> {
-                            crudController.removeRuleInParentRule(id, parentRuleId)
+                            ruleTreeController.removeRuleInParentRule(id, parentRuleId)
                         }
                         BaseCrudController.Name_ruleGroup -> {
-                            crudController.removeRuleGroupInParentRule(id, parentRuleId)
+                            ruleTreeController.removeRuleGroupInParentRule(id, parentRuleId)
                         }
                         else -> 0L
                     }
@@ -239,10 +241,10 @@ fun Routing.composerApi() {
                 try {
                     val count = when(name){
                         BaseCrudController.Name_rule -> {
-                            crudController.removeRuleInParentRuleGroup(id, parentRuleGroupId)
+                            ruleTreeController.removeRuleInParentRuleGroup(id, parentRuleGroupId)
                         }
                         BaseCrudController.Name_ruleGroup -> {
-                            crudController.removeRuleGroupInParentRuleGroup(id, parentRuleGroupId)
+                            ruleTreeController.removeRuleGroupInParentRuleGroup(id, parentRuleGroupId)
                         }
                         else -> 0L
                     }
