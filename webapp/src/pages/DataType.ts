@@ -13,20 +13,47 @@ export interface DomainQueryParams extends BasePageQuery {
 }
 
 
-//选中自定义操作符后，加载常量，使用值域或者类型
-export interface OperandConstantQueryParam{
-    typeId?: number //来自选定的数据类型
-    constantIds?: number[] //来自某些常量
+/**
+ * 一个逻辑表达式构成因素：表达式类型（变量类型决定）、变量（mapKey或记录库中添加的变量记录）、操作码、若干操作数构成
+ * 不同的操作码会有不同的操作数，OperandConfig正是操作数的配置
+ * 系统内置操作码预先生成，不可修改
+ *
+ *
+ * @param label 创建表达式或规则时，输入时操作数时的提示标签
+ * @param tooltip 创建表达式或规则时，输入时操作数时的提示帮助提示
+ * @param required 操作数是否必须填写
+ * @param multiple 用于创建表达式或规则时，选择输入框过滤常量是否多选 当typeCode是基本类型时，操作数也可能是其对应的容器类型，
+ * @param typeCode 操作数数据类型，null表示与变量类型一致；用于创建表达式或规则时，选择输入框过滤常量或变量
+ * @param contantIds 操作数值域，用于创建表达式或规则时，选择输入框过滤常量 UI中创建自定义操作码时需要指定
+ * @param selectOptions 操作数值域，不是从远程加载常量，而是指定的选择范围内选
+ * @param defaultSelect 操作数值域select默认值
+ * @param defaultOperandValueType 前端OperandValueMeta.valueType: "Param" | "Constant" | "JsonValue"
+ * @param enable 一般总是激活状态
+ *
+ * */
+export interface OperandConfig{
+    label: string,
+    tooltip?: string,
+    required: boolean,
+    multiple: boolean,
+    typeCode?: string,//操作数数据类型 null表示与变量类型一致
+    contantIds?: number[], //操作数值域 常量id数组[1,2,3]
+    selectOptions?: LabelValue[]
+    defaultSelect?: string
+    defaultOperandValueType?:  "Param" | "Constant" | "JsonValue" 
+    enable: boolean
 }
-export interface OperandFromCfg{
-    other?:OperandConstantQueryParam
-    start?:OperandConstantQueryParam
-    end?:OperandConstantQueryParam
-    collection?:OperandConstantQueryParam
-    e?:OperandConstantQueryParam
-    //num?:OperandConstantQueryParam
+/**
+ * 当OperandConfigItem的name，或者Opcode中的operandConfigMap的某一项键值为v0时，表示变量本身的配置
+ * 后端定义的OpEnum中的配置map中拖添加了v0键，或者前端操作符的配置中，若添加了v0键，则表示变量本身的配置
+ */
+export const ParamOperandConfigKey = "v0"
+/**
+ * 用于将operandConfigMap转换为列表项，name即map中键key，在form中需要该列表
+ */
+export interface OperandConfigItem extends OperandConfig{
+    name: string
 }
-
 /**
  * 操作符, 如>,>=, <, <=, !=, ==, in, between
  * @param op 操作符
@@ -37,38 +64,16 @@ export interface Opcode extends LabeldBean {
     code: string,
     isSys: boolean,
     remark?: string,
-    type: 'Basic'| "Collection" | 'Logical' | 'Customize',
+    type: 'Basic'| "Collection" | 'Logical' | 'Ext' | 'Customize',
    
     domain?: Domain//来自后端，用于展示列表项
     domainId?: number//select选择时设置，提交给后端
 
-    //以下为操作数配置，需要的操作数则设置为true, 前端根据它是否展示对应的输入控件
-    other: boolean 
-    start: boolean
-    end: boolean
-    collection: boolean//set是数据库关键字
-    e: boolean 
-    num: boolean
 
-
-    operandCfgStr?: string //数据库中实际存储的配置信息
+    operandConfigMapStr?: string //数据库中实际存储的配置信息
    
-    //临时字段 由转换operandCfgStr而来
-    operandCfg?: OperandFromCfg
-
-    //临时字段，用于收集form的输入值
-    otherTypeId?: number//如果非空，表示输入时所可供选择的数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
-    startTypeId?: number//如果非空，表示输入时所可供选择的基本数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
-    endTypeId?: number//如果非空，表示输入时所可供选择的基本数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
-    collectionTypeId?: number//如果非空，表示输入时所可供选择的集合容器数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
-    eTypeId?: number //如果非空，表示输入时所可供选择的基本数据类型，使用的ParamType.id， 即用于ParamCategoryQueryParams.typeId中的参数
-
-    //用于值域, 临时字段，用于收集form的输入值
-    otherConstantIds?: number[] //临时保存的值
-    startConstantIds?: number[] //临时保存的值
-    endConstantIds?: number[] //临时保存的值
-    collectionConstantIds?: number[] //临时保存的值
-    eConstantIds?: number[] //临时保存的值
+    //临时字段 由转换operandValueMapStr而来
+    operandConfigList?: OperandConfigItem[]
 }
 export interface OpcodeQueryParams extends BasePageQuery {
     label?: string
@@ -91,7 +96,7 @@ export interface ParamType extends LabeldBean {
     supportOpIds: string,
     supportOps?: Opcode[], //,分隔的Opcode id
     isSys: boolean,
-    isBasic: boolean,//基本类型
+    type: 'Basic'| "Collection" | 'Ext' | 'Customize',
 
     domain?: Domain//来自后端，用于展示列表项
     domainId?: number//select选择时设置，提交给后端
@@ -99,7 +104,7 @@ export interface ParamType extends LabeldBean {
 export interface ParamTypeQueryParams extends BasePageQuery {
     label?: string
     isSys?: boolean
-    isBasic?: boolean
+    type?: 'Basic'| "Collection" | 'Ext' | 'Customize'
     typeId?: number
     domainId?: number
 }
@@ -151,6 +156,7 @@ export interface ConstantQueryParams extends BasePageQuery {
  */
 export interface Param extends LabeldBean {
     mapKey: string,
+    extra?: string //附加信息 自动来自ParamCategory 或自行填写
 
     remark?: string, //备注
 
@@ -182,15 +188,16 @@ export interface ParamCategoryQueryParams extends BasePageQuery {
     setupChildren: boolean //在通过分类选择变量时设置为true
 }
 export interface ParamCategory extends LabeldBean{
+    extra?: string //附加信息
     domainId?: number, //domain.id
     domain?: Domain, 
     children?: Param[]
 }
 
+
 export interface ExpressionQueryParams extends BasePageQuery {
     label?: string
     domainId?: number
-    
     type?: 'Basic' | 'Complex'
 }
 /**
@@ -200,7 +207,7 @@ export interface ExpressionQueryParams extends BasePageQuery {
  * @param value 值
  * @param valueType 参数变量类型
  */
-export interface Expression extends LabeldBean {
+export interface BaseExpressionRecord extends LabeldBean {
     key?: string //临时构建的id值，ComplexExpressionEditor中的Transfer使用它作为id键
     
     type: 'Basic' | 'Complex'
@@ -212,40 +219,37 @@ export interface Expression extends LabeldBean {
     exprStr?: string,//json of Expression
     metaStr?: string,//json of ExpressionMeta
 }
-export interface BasicExpressionRecord extends Expression {
+export interface BasicExpressionRecord extends BaseExpressionRecord {
     expr?: BasicExpression
     meta?: BasicExpressionMeta//json of ExpressionMeta
 }
-export interface ComplexExpressionRecord extends Expression {
+export interface ComplexExpressionRecord extends BaseExpressionRecord {
     expr?: ComplexExpression
     meta?: ComplexExpressionMeta
 }
 export type ExpressionRecord = BasicExpressionRecord | ComplexExpressionRecord
+
 
 interface ExpressionMetaBase{
     _class: string, //'Bool' | 'Int' | 'Double' | 'Long' | 'String' ....
     opId?: number,
     op?: Opcode,
 }
-
 export interface BasicExpressionMeta extends ExpressionMetaBase{
     _class: string, //'Bool' | 'Int' | 'Double' | 'Long' | 'String' ....
-    //domainId?: number,
 
     paramId?: number | number[],//与mapKey&paramTypeId二选一
     param?: Param,
 
-    mapKey?: string,
     paramTypeId?: number,
     paramType?: ParamType,
+    mapKey?: string,
+    extra?: string
 
-    other?: ValueMeta
-    start?: ValueMeta//key所在变量范围比较
-    end?: ValueMeta//key所在变量范围比较
-    set?: ValueMeta//key所在变量是否存在于set中
-    e?: ValueMeta //key所在变量集中是否包含e
-    num?: ValueMeta //key所在变量集与other交集元素个事 与num比较
-    //valueMap: Map<'other'| 'start' | 'end' | 'set' | 'e' | 'num', ValueMeta>  //  [key: string]: Constant
+    opId?: number,
+    op?: Opcode,
+
+    operandValueMap: Map<string, OperandValueMeta>  //值
 }
 
 export interface ComplexExpressionMeta  extends ExpressionMetaBase{
@@ -253,6 +257,21 @@ export interface ComplexExpressionMeta  extends ExpressionMetaBase{
     metaList: (BasicExpressionMeta | ComplexExpressionMeta)[]
 }
 export type ExpressionMeta = BasicExpressionMeta | ComplexExpressionMeta
+
+
+export interface Expr {
+    _class: string, //后端需要做序列化
+    op: string //Opcode.code
+}
+export interface BasicExpression extends Expr {
+    key: string//值为: BasicExpressionMeta.param.mapKey
+    extra?: string //附加信息 协助key进行取值，如来自ParamCategory的附属分类信息
+    operands: Map<String, Operand>
+}
+export interface ComplexExpression extends Expr {
+    //op: string
+    exprs: (BasicExpression|ComplexExpression)[]
+}
 
 
 //若constantId、constant存在则使用constant值，否则使用value
@@ -264,46 +283,19 @@ export type ExpressionMeta = BasicExpressionMeta | ComplexExpressionMeta
  * @param constant 来自常量
  * @param jsonValue 手工输入的值
  */
-export interface ValueMeta {
+export interface OperandValueMeta {
     valueType?: "Param" | "Constant" | "JsonValue" | undefined
     paramId?: number | number[] //为数组时，表示EnableParamCategory = true
     param?: Param
-    constantIds?: (string | number)[] | (string | number)[][] //eg.树形select的option的value 树形单选：[1, "乙"] 以及 [4]；多选选中多个[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
+    constantIds?: string | number | (string | number)[] | (string | number)[][] //eg.树形select的option的value 树形单选：[1, "乙"] 以及 [4]；多选选中多个[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
     //constants?: Constant[]
     jsonValue?: JsonValue
 }
-
-
-export interface OpValue {
+export interface Operand {
     valueType?: "Param" | "Constant" | "JsonValue" | undefined
     key?: string // for Param type
     value?: boolean | string | number | (string | number)[]
 }
-
-
-
-
-export interface Expr {
-    _class: string, //后端需要做序列化
-    op: string //Opcode.code
-}
-
-export interface BasicExpression extends Expr {
-    key: string//值为: BasicExpressionMeta.param.mapKey
-    
-    other?: OpValue
-    start?: OpValue//key所在变量范围比较
-    end?: OpValue//key所在变量范围比较
-    set?: OpValue//key所在变量是否存在于set中
-    e?: OpValue //key所在变量集中是否包含e
-    num?: OpValue //key所在变量集与other交集元素个事 与num比较
-}
-export interface ComplexExpression extends Expr {
-    //op: string
-    exprs: (BasicExpression|ComplexExpression)[]
-}
-
-
 
  
 export interface RuleQueryParams extends BasePageQuery{

@@ -32,7 +32,7 @@ import {
   PartitionOutlined,
   ProfileOutlined
 } from '@ant-design/icons';
-import { Tooltip } from 'antd';
+import { Tooltip, message } from 'antd';
 
 
 // 实现懒加载的用Suspense包裹 定义函数
@@ -62,7 +62,7 @@ const menuRoutes: MyRoute[] = [
       },
       {
         path: '/basic/operator',
-        name: "比较码",
+        name: "操作符",
         element: lazyLoad(<OpcodeTable />)
       },
       {
@@ -158,7 +158,10 @@ const proLayoutProps: MyProLayoutProps = {
   actionsRender: (props) => {
     if (props.isMobile) return [];
     return [
-      <Tooltip title="清除缓存"><ClearOutlined key="ClearOutlined" onClick={() => Cache.evictAllCaches()} /></Tooltip>,
+      <Tooltip title="清除缓存"><ClearOutlined key="ClearOutlined" onClick={() => {
+        Cache.evictAllCaches()
+        message.info("清除完毕")
+      }} /></Tooltip>,
       <Tooltip title="中文/Engilish"><TranslationOutlined key="TranslationOutlined" /></Tooltip>,
       <Tooltip title="版本"><InfoCircleOutlined key="InfoCircleFilled" /></Tooltip>,
       <Tooltip title="GitHub"><a href="https://github.com/rwsbillyang/RuleEngine" target="_blank"><GithubFilled key="GithubFilled"/></a></Tooltip>,

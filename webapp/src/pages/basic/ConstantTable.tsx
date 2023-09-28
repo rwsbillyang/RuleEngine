@@ -51,7 +51,7 @@ export const ConstantTable: React.FC = () => {
         key: params.isEnum ? "enumParamType" : AllParamTypeKey,//不提供key，则不缓存
         url: `${Host}/api/rule/composer/list/paramType`,
         //若选择了枚举，只支持基本类型，否则为全部
-        query: { isBasic: params.isEnum ? true : undefined, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+        query: { type: params.isEnum ? 'Basic' : undefined, pagination: { pageSize: -1, sKey: "id", sort: -1 } },//pageSize: -1为全部加载
         convertFunc: (item) => { return { label: item.code, value: item.id } }
       }, params)
     },
@@ -132,7 +132,7 @@ export const ConstantTable: React.FC = () => {
         key: params.isEnum ? "enumParamType" : AllParamTypeKey,//不提供key，则不缓存
         url: `${Host}/api/rule/composer/list/paramType`,
         //若选择了枚举，只支持基本类型，否则为全部
-        query: { isBasic: params.isEnum ? true : undefined, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+        query: { type: params.isEnum ? 'Basic' : undefined, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
         convertFunc: (item) => { return { label: item.code, value: item.id } }
       }, params)
     },
@@ -207,16 +207,25 @@ const getJsonValueColumn = (isEnum?: boolean, typeInfo?: LabeledValue) => {
   const type = typeInfo?.label as string
   //https://pro-components.antdigital.dev/components/schema#valuetype-%E5%88%97%E8%A1%A8
   let vauleType: "text" | "switch" | "dateTime" | "digit" = "text"
+  let props = {}
   if (type) {
     if (type.indexOf('Bool') >= 0) {
       vauleType = "switch"
     } else if (type.indexOf('DateTime') >= 0) {
       vauleType = "dateTime"
-    } else if (type.indexOf('Int') >= 0 || type.indexOf('Long') >= 0 || type.indexOf('Double') >= 0) {
+    } else if (type.indexOf('Int') >= 0) {
       vauleType = "digit"
+      props = {  precision: 0, min: Number.MIN_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER} 
+    }else if(type.indexOf('Long') >= 0){
+      vauleType = "digit"
+      props = { precision: 0, min: Number.MIN_VALUE, max: Number.MAX_VALUE} 
+    }else if(type.indexOf('Double') >= 0){
+      vauleType = "digit"
+      props = { precision: 7 } 
     }
   }
 
+  
 
  // console.log("vauleType=" + vauleType) //+ ",typeInfo",typeInfo)
 
@@ -241,8 +250,9 @@ const getJsonValueColumn = (isEnum?: boolean, typeInfo?: LabeledValue) => {
               },
               {
                 title: '值',
+                fieldProps: props,
+                valueType:vauleType,
                 dataIndex: 'value',
-                valueType: vauleType,
                 width: 'sm',
                 formItemProps: mustFill,
               },
@@ -301,5 +311,6 @@ const getJsonValueColumn = (isEnum?: boolean, typeInfo?: LabeledValue) => {
       }
     ]
   }
+  console.log("columns", columns)
   return columns
 }

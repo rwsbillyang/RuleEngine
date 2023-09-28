@@ -10,6 +10,7 @@ import com.github.rwsbillyang.ktorKit.server.defaultInstall
 import com.github.rwsbillyang.ktorKit.server.installCORS
 import com.github.rwsbillyang.ktorKit.server.installModule
 import com.github.rwsbillyang.rule.runtime.ruleRuntimeExprSerializersModule
+//import com.github.rwsbillyang.yinyang.ziwei.rrt.zwSerializersModule
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 
@@ -31,7 +32,7 @@ val MySerializeJson = Json {
     apiJsonBuilder()
     serializersModule = SerializersModule {
         contextual(LocalDateTimeAsStringSerializer) //默认情况下enableJsonApi为true，使用的是LocalDateTimeAsLongSerializer and ObjectId64Serializer
-    } + ruleRuntimeExprSerializersModule + ruleExtExprSerializersModule
+    } + ruleRuntimeExprSerializersModule //+ zwSerializersModule
 }
 
 

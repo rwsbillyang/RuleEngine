@@ -1,44 +1,103 @@
 import { Cache } from '@rwsbillyang/usecache'
-import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpression, ComplexExpressionMeta, ComplexExpressionRecord, Expression, JsonValue, OpValue, ParamType, ValueMeta } from "./DataType"
+import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpression, ComplexExpressionMeta, ComplexExpressionRecord, BaseExpressionRecord, JsonValue, OperandConfig, OperandConfigItem, ParamType, OperandValueMeta, Operand } from "./DataType"
 
 
 /**
  * 为变量设置值域时，不仅仅基本类型可以有值域，Set集合类型也可以有对应的基本类型的值域
  * 
- * @returns 获取基本类型的id，只有Set集合类型才更换成基本类似的typeId，依赖于缓存AllParamTypeKey对应的数据
+ * @returns 获取基本类型，只有Set集合类型才更换成基本类似的typeId，依赖于缓存AllParamTypeKey对应的数据
  */
-export const getBasicTypeId = (parmTypeId?: number) => {
-    if (parmTypeId === undefined) return parmTypeId
-    let basicTypeId = parmTypeId
+export const getBasicType = (parmTypeId?: number, cacheKey: string = AllParamTypeKey) => {
+    if (parmTypeId === undefined) return undefined
 
-    const paramType: ParamType = Cache.findOne(AllParamTypeKey, parmTypeId, "id")
+    const paramType: ParamType = Cache.findOne(cacheKey, parmTypeId, "id")
     if (paramType) {
-        const end = paramType.code.indexOf("Set")
+        let end = paramType.code.indexOf("Set")
+        if(end < 0) end = paramType.code.indexOf("Enum")
         //console.log("end="+end)
-        if (end && end > 0) {
+        if (end > 0) {
             const basicTypeCode = paramType.code.slice(0, end)
-            const basicType = Cache.findOne(AllParamTypeKey, basicTypeCode, "code")
-            if (basicType) {
-                basicTypeId = basicType.id
-                //console.log("basicTypeId=" + basicTypeId + ", basicType.code="+basicType.code)
-            }
-        }
-
+            return Cache.findOne(cacheKey, basicTypeCode, "code")
+        }else 
+            return paramType
     }
-    return basicTypeId
+    return undefined
 }
+// export const getBasicTypeId = (parmTypeId?: number) => {
+//     if (parmTypeId === undefined) return parmTypeId
+//     let basicTypeId = parmTypeId
+
+//     const paramType: ParamType = Cache.findOne(AllParamTypeKey, parmTypeId, "id")
+//     if (paramType) {
+//         let end = paramType.code.indexOf("Set")
+//         if(end < 0) end = paramType.code.indexOf("Enum")
+//         //console.log("end="+end)
+//         if (end > 0) {
+//             const basicTypeCode = paramType.code.slice(0, end)
+//             const basicType = Cache.findOne(AllParamTypeKey, basicTypeCode, "code")
+//             if (basicType) {
+//                 basicTypeId = basicType.id
+//                 //console.log("basicTypeId=" + basicTypeId + ", basicType.code="+basicType.code)
+//             }
+//         }
+
+//     }
+//     return basicTypeId
+// }
+
+/**
+ * 获取基本类型和容器类型的ids字符串
+ * @param typeId 
+ * @returns 
+ */
+export const type2Both = (typeId?: number, cacheKey: string = AllParamTypeKey) => {
+    if(typeId){
+      const basicType = getBasicType(typeId)
+      if(basicType){
+        const setTypeId = typeCode2Id(basicType.code + "Set", cacheKey)
+        const typeIds = [basicType.id, setTypeId].filter(e => e !== undefined)
+        return typeIds.join(",")
+      }else{
+        return undefined
+      }
+  
+    }else
+      return undefined
+  }
 
 /**
  * 根据类型的code，查询得到其id
  * @param parmTypeCode 
  * @returns 
  */
-export const typeCode2Id = (parmTypeCode: string) => {
-    const paramType: ParamType = Cache.findOne(AllParamTypeKey, parmTypeCode, "code")
+export const typeCode2Id = (parmTypeCode: string, cacheKey: string = AllParamTypeKey) => {
+    const paramType: ParamType = Cache.findOne(cacheKey, parmTypeCode, "code")
     return paramType?.id
 }
 
-export const exprRecord2String = (expr: Expression) => expr.type === "Complex" ? 
+
+export const operandConfigMapStr2List = (mapStr?: string) => {
+    if(!mapStr) return undefined
+
+    const map: Map<string, OperandConfig> = new Map<string, OperandConfig>()
+    const list: OperandConfigItem[] = []
+
+    const obj = JSON.parse(mapStr)
+    Object.keys(obj).forEach((e)=>{
+        const cfg = obj[e]
+        map[e] = cfg as OperandConfig
+        list.push({ ...cfg, name: e })
+    })
+
+    return {map, list}
+}
+export const operandConfigMap2List = (map: Map<string, OperandConfig>) => {
+    const list: OperandConfigItem[] = []
+    map.forEach((v, k) => list.push({ ...v, name: k }))
+    return list
+}
+
+export const exprRecord2String = (expr: BaseExpressionRecord) => expr.type === "Complex" ? 
 complexExpressionMeta2String((expr as ComplexExpressionRecord).meta) 
 : basicExpressionMeta2String((expr as BasicExpressionRecord).meta)
 
@@ -59,17 +118,19 @@ export const complexExprRecord2String = (expr?: ComplexExpressionRecord)=>{
  */
 export const basicExpressionMeta2String = (meta?: BasicExpressionMeta)=>{
     if(!meta || meta._class === "Complex") return "暂无"
-    const oprand = [meta.other, meta.start, meta.end, meta.set, meta.e, meta.num]
-    .filter(e=> e !== undefined)
-    .map((e)=> valueMeta2String(e))
-    .join(", ")
+    const list: {key: string, value: OperandValueMeta} [] = []
+    for (var k in meta.operandValueMap) {
+        list.push({key: k, value: meta.operandValueMap[k]})
+    }
+    const oprand = list.map((e)=> operandMeta2String(e.key, e.value)).join(", ")
 
+    
     if(meta.param)
-        return meta.param.label + " " + meta.op?.label + oprand
+        return `${meta.param.label} '${meta.op?.label}' ${oprand}`
     else if(meta.mapKey)
-        return meta.mapKey + " " + meta.op?.label + oprand
+        return `${meta.mapKey} '${meta.op?.label}' ${oprand}`
     else 
-        return "unknown " + meta.op?.label + oprand
+        return `unknown '${meta.op?.label}' ${oprand}`
 }
 
 
@@ -85,7 +146,7 @@ export const complexExpressionMeta2String = (meta?: ComplexExpressionMeta)=>{
         if(e._class === "Complex"){
             return complexExpressionMeta2String(e as ComplexExpressionMeta)
         }else{
-            return basicExpressionMeta2String(e)
+            return basicExpressionMeta2String(e as BasicExpressionMeta)
         }
     }).join(", ")
 
@@ -93,21 +154,21 @@ export const complexExpressionMeta2String = (meta?: ComplexExpressionMeta)=>{
 }
 
 /**
- * 将ValueMeta转换为human-reading字符串
- * @param valueMeta 
+ * 将OperandValueMeta转换为human-reading字符串
+ * @param operandMeta 
  * @returns 
  */
-export const valueMeta2String = (valueMeta?: ValueMeta) => {
-    if(!valueMeta) return ""
-    if(valueMeta.valueType  === 'Param'){
-        return "变量" + ": " + valueMeta.param?.label + "("+ valueMeta.param?.mapKey + ")"
-    }else if(valueMeta.valueType  === 'Constant'){
-        return "常量" + ": " + jsonValue2String(valueMeta.jsonValue)     
-    }else if(valueMeta.valueType  === 'JsonValue'){
-        return "值" + ": " + jsonValue2String(valueMeta.jsonValue)    
+export const operandMeta2String = (name: string, operandMeta?: OperandValueMeta) => {
+    if(!operandMeta) return ""
+    if(operandMeta.valueType  === 'Param'){
+        return name + ": " + operandMeta.param?.label + "("+ operandMeta.param?.mapKey + ")"
+    }else if(operandMeta.valueType  === 'Constant'){
+        return name + ": " + jsonValue2String(operandMeta.jsonValue)     
+    }else if(operandMeta.valueType  === 'JsonValue'){
+        return name + ": " + jsonValue2String(operandMeta.jsonValue)    
     }else{
-        console.warn("should not come here, wrong valueMeta.valueType =" + valueMeta.valueType )
-        return "wrong valueMeta.valueType!!!"
+        console.warn("should not come here, wrong operandMeta.valueType =" + operandMeta.valueType )
+        return "wrong operandMeta.valueType!!!"
     }
 }
 
@@ -131,29 +192,30 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
         console.log("should not come here: no op")
         return undefined
     }
+    const operands: Map<String, Operand> = new Map<String, Operand>()
+    for(let k in meta.operandValueMap){
+        operands[k] = operandMeta2Operand(meta.operandValueMap[k])
+    }
     const expr: BasicExpression = {
         _class: "",
         key: "",
         op: meta.op.code,
-        other: valueMeta2OpValue(meta.other),
-        start: valueMeta2OpValue(meta.start),
-        end: valueMeta2OpValue(meta.end),
-        set: valueMeta2OpValue(meta.set),
-        e: valueMeta2OpValue(meta.e),
-        num: valueMeta2OpValue(meta.num)
+        operands:operands
     }
     if(meta.param){
         expr._class = meta.param.paramType.code
         expr.key = meta.param.mapKey
+        expr.extra = meta.param.extra
         return expr
     }
     if(meta.mapKey && meta.paramType){
         expr._class = meta.paramType.code
         expr.key = meta.mapKey
+        expr.extra = meta.extra
         return expr
     }
 
-    console.log("should not come here: please check meta.param, meta.mapKey/meta.paramType")
+    console.warn("should not come here: please check meta.param, meta.mapKey/meta.paramType")
     return undefined
 }
 
@@ -172,7 +234,7 @@ export const complexMeta2Expr =  (meta?: ComplexExpressionMeta) => {
         if(e._class === "Complex"){
             return complexMeta2Expr(e as ComplexExpressionMeta)
         }else{
-            return basicMeta2Expr(e)
+            return basicMeta2Expr(e as BasicExpressionMeta)
         }
     }).filter((e) => !!e)
 
@@ -189,22 +251,23 @@ export function meta2Expr(meta?: BasicExpressionMeta | ComplexExpressionMeta ){
     if(!meta) return undefined
     if(meta._class === "Complex")
         return complexMeta2Expr(meta as ComplexExpressionMeta)
-    else return basicMeta2Expr(meta)
+    else 
+        return basicMeta2Expr(meta as BasicExpressionMeta)
 }
 
 
 /**
- * 将ValueMeta转换为纯表达式中的必要字段值
- * @param valueMeta ValueMeta
+ * 将OperandValueMeta转换为纯表达式中的必要字段值
+ * @param operandMeta OperandValueMeta
  * @returns 
  */
-const valueMeta2OpValue = (valueMeta?: ValueMeta) => {
-    if (!valueMeta) return undefined
-    const opvalue:OpValue = {
-        valueType: valueMeta.valueType,
-        key: valueMeta.param?.mapKey,
-        value:(valueMeta.jsonValue && Array.isArray(valueMeta.jsonValue.value) && valueMeta.jsonValue?._class.indexOf("Enum") > 0) 
-        ? valueMeta.jsonValue?.value?.map(e=>e.value) : valueMeta.jsonValue?.value
+const operandMeta2Operand = (operandMeta?: OperandValueMeta) => {
+    if (!operandMeta) return undefined
+    const opvalue:Operand = {
+        valueType: operandMeta.valueType,
+        key: operandMeta.param?.mapKey,
+        value:(operandMeta.jsonValue && Array.isArray(operandMeta.jsonValue.value) && operandMeta.jsonValue?._class.indexOf("Enum") > 0) 
+        ? operandMeta.jsonValue?.value?.map(e=>e.value) : operandMeta.jsonValue?.value
     }
     return opvalue
 }
@@ -213,10 +276,10 @@ const valueMeta2OpValue = (valueMeta?: ValueMeta) => {
 /***
  * 有效信息，用于生成md5作为id
  */
-export const opValue2Md5Msg = (name:string, opValue?: OpValue)=>{
+export const opValue2Md5Msg = (name:string, opValue?: Operand)=>{
     if(!opValue) return ""
-    if(opValue.valueType === "Param") return `&${name}.OpValueKey=${opValue.key}`
-    else return `&${name}.OpValueValue=${opValue.value}`
+    if(opValue.valueType === "Param") return `&${name}.OperandKey=${opValue.key}`
+    else return `&${name}.OperandValue=${opValue.value}`
 }
 
 

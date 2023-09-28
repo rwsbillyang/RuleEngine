@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Form,  message } from 'antd';
 
 import { Cache } from "@rwsbillyang/usecache"
-import { ComplexExpressionMeta,  Expression, ExpressionMeta, ExpressionQueryParams, ExpressionRecord, Opcode, OpcodeQueryParams } from '../DataType';
+import { ComplexExpressionMeta,  BaseExpressionRecord, ExpressionMeta, ExpressionQueryParams, ExpressionRecord, Opcode, OpcodeQueryParams } from '../DataType';
 
 import { Host } from '@/Config';
 import { ModalForm, ProFormInstance, ProFormSelect, ProFormText } from '@ant-design/pro-form';
@@ -59,7 +59,7 @@ export const ComplexExprMetaEditModal: React.FC<{
 
     useEffect(() => {
         if (newExprId) {
-            const expression: Expression | undefined = Cache.findOne(ExpressionKeyPrefix + domainId, newExprId, "id")
+            const expression: BaseExpressionRecord | undefined = Cache.findOne(ExpressionKeyPrefix + domainId, newExprId, "id")
             const meta = expression?.metaStr ? JSON.parse(expression?.metaStr) : undefined
             //console.log("=====update newMeta by newExprId=" + newExprId, meta)
 
@@ -130,7 +130,7 @@ export const ComplexExprMetaEditModal: React.FC<{
             label="现有复合表达式"
             hidden={cannotChooseOne}
             tooltip="使用现有表达式，或新创建一个"
-            request={cannotChooseOne ? undefined : () => asyncSelectProps2Request<Expression, ExpressionQueryParams>({
+            request={cannotChooseOne ? undefined : () => asyncSelectProps2Request<BaseExpressionRecord, ExpressionQueryParams>({
                 key: ExpressionKeyPrefix + domainId, //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
                 url: `${Host}/api/rule/composer/list/expression`,
                 query: { domainId: domainId, type: "Complex", pagination: { pageSize: -1, sKey: "id", sort: 1 } }, //pageSize: -1为全部加载

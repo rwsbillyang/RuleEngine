@@ -33,7 +33,7 @@ export const BaiscExpressionRecordEditor: React.FC<{
     asyncSelectProps2Request<ParamType, ParamTypeQueryParams>({
       key: AllParamTypeKey,//不提供key，则不缓存
       url: `${Host}/api/rule/composer/list/paramType`,
-      query: { pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+      query: { pagination: { pageSize: -1, sKey: "id", sort: -1 } },//pageSize: -1为全部加载
       //convertFunc: (item) => { return { label: item.code, value: item.id } }
     }).then(() => console.log("get AllParamType done"))
   }, [])
@@ -144,12 +144,12 @@ export const BaiscExpressionRecordEditor: React.FC<{
           if (!num) delete meta.num
 
           return err ? <div> {err} </div> : <>
-            {other && <ValueMetaEditor name="other" constantQueryParams={getConstantQueryParams({ useSelf: true }, domainId, param)} label="值" param={param} domainId={domainId} multiple={multiple === true} value={meta.other} onChange={(v) => { setMeta({ ...meta, other: v }) }} />}
-            {start && <ValueMetaEditor name="start" constantQueryParams={getConstantQueryParams({ useSelf: true }, domainId, param)} label="起始" param={param} domainId={domainId} multiple={false} value={meta.start} onChange={(v) => { setMeta({ ...meta, start: v }) }} />}
-            {end && <ValueMetaEditor name="end" constantQueryParams={getConstantQueryParams({ useSelf: true }, domainId, param)} label="终止" param={param} domainId={domainId} multiple={false} value={meta.end} onChange={(v) => { setMeta({ ...meta, end: v }) }} />}
-            {set && <ValueMetaEditor name="set" constantQueryParams={getConstantQueryParams({ toSetType: true }, domainId, param)} label="集合" param={param} domainId={domainId} multiple={true} value={meta.set} onChange={(v) => { setMeta({ ...meta, set: v }) }} />}
-            {e && <ValueMetaEditor name="e" constantQueryParams={getConstantQueryParams({ toBasicType: true }, domainId, param)} label="某项" param={param} domainId={domainId} multiple={false} value={meta.e} onChange={(v) => { setMeta({ ...meta, e: v }) }} />}
-            {num && <ValueMetaEditor name="num" constantQueryParams={getConstantQueryParams({ paramType: ["Int", "Long"] }, domainId, param)} label="数量" param={param} domainId={domainId} multiple={false} value={meta.num} onChange={(v) => { setMeta({ ...meta, num: v }) }} />}
+            {other && <OperandMetaEditor name="other" constantQueryParams={getConstantQueryParams({ useSelf: true }, domainId, param)} label="值" param={param} domainId={domainId} multiple={multiple === true} value={meta.other} onChange={(v) => { setMeta({ ...meta, other: v }) }} />}
+            {start && <OperandMetaEditor name="start" constantQueryParams={getConstantQueryParams({ useSelf: true }, domainId, param)} label="起始" param={param} domainId={domainId} multiple={false} value={meta.start} onChange={(v) => { setMeta({ ...meta, start: v }) }} />}
+            {end && <OperandMetaEditor name="end" constantQueryParams={getConstantQueryParams({ useSelf: true }, domainId, param)} label="终止" param={param} domainId={domainId} multiple={false} value={meta.end} onChange={(v) => { setMeta({ ...meta, end: v }) }} />}
+            {set && <OperandMetaEditor name="set" constantQueryParams={getConstantQueryParams({ toSetType: true }, domainId, param)} label="集合" param={param} domainId={domainId} multiple={true} value={meta.set} onChange={(v) => { setMeta({ ...meta, set: v }) }} />}
+            {e && <OperandMetaEditor name="e" constantQueryParams={getConstantQueryParams({ toBasicType: true }, domainId, param)} label="某项" param={param} domainId={domainId} multiple={false} value={meta.e} onChange={(v) => { setMeta({ ...meta, e: v }) }} />}
+            {num && <OperandMetaEditor name="num" constantQueryParams={getConstantQueryParams({ paramType: ["Int", "Long"] }, domainId, param)} label="数量" param={param} domainId={domainId} multiple={false} value={meta.num} onChange={(v) => { setMeta({ ...meta, num: v }) }} />}
           </>
 
         }}

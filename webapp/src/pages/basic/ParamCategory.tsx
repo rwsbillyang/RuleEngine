@@ -33,7 +33,12 @@ export const ParamCategoryTable: React.FC = () => {
         query: { pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
         convertFunc: (item) => { return { label: item.label, value: item.id } }
       })
-    }
+    },
+    {
+      title: '附属信息',
+      tooltip: "通常用于添加分类信息，传递给其下面的变量，然后最终传递给基本表达式，用于协助mapKey区分是哪个分类下的变量",
+      dataIndex: 'extra'
+    },
   ]
   
   const props = defaultProps(name) 

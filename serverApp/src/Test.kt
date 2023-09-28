@@ -28,12 +28,10 @@ import com.github.rwsbillyang.yinyang.core.Gender
 import com.github.rwsbillyang.yinyang.core.Zhi
 import com.github.rwsbillyang.yinyang.ziwei.LunarLeapMonthAdjustMode
 import com.github.rwsbillyang.yinyang.ziwei.ZwPanData
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import com.github.rwsbillyang.yinyang.ziwei.rrt.*
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.modules.subclass
+import kotlinx.serialization.encodeToString
+
 
 import org.komapper.core.dsl.Meta
 import java.time.LocalDateTime
@@ -46,8 +44,11 @@ class MyBaseCrudService(): AbstractSqlService(VoidCache()){
 
 //若需在IDE中运行测试，需将依赖com.github.rwsbillyang:yinyang从 compileOnly 改为：implementationg
 fun main(){
-    runTest(Zhi.Zi, LocalDateTime.now())
+    val service = MyBaseCrudService()
+    //runTest(service, Zhi.Zi, LocalDateTime.now())
     //testSerialize() //sealed class 不能🈶多个层次的继承
+
+    insertExt(service)
 }
 
 fun extra2RuleCommon(extra: Any?): RuleCommon?{
@@ -62,17 +63,17 @@ fun extra2RuleCommon(extra: Any?): RuleCommon?{
     }
 }
 
-fun runTest(gongZhi: Int, dateTime: LocalDateTime){
+fun runTest(service: MyBaseCrudService,gongZhi: Int, dateTime: LocalDateTime){
 
     val zwPanData = ZwPanData.fromLocalDateTime(
         Gender.Female,
         dateTime,
         LunarLeapMonthAdjustMode.Whole)
 
-    val gongStars = zwPanData.gongYuanMap[gongZhi]!!
+    val gongStars = zwPanData.gongYuanMapByZhi[gongZhi]!!
     println("====check gongStars: ${gongStars.name}======")
 
-    val dataPicker: (key: String) -> Any? = {
+    val dataPicker: (key: String, keyExtra: String?) -> Any? = {it, keyExtra->
         if(it.startsWith("pos|")){
             val arry = it.split("|").map{it.trim()}
             if(arry.size < 2){
@@ -93,7 +94,7 @@ fun runTest(gongZhi: Int, dateTime: LocalDateTime){
         }
     }
 
-    val service = MyBaseCrudService()
+
     val loadChildrenFunc: (parent: Any?) -> List<Any>? = {
         if(it == null) null
         else when (it) {
@@ -182,56 +183,37 @@ fun runTest(gongZhi: Int, dateTime: LocalDateTime){
 //    }
 }
 
+fun insertExt(service: MyBaseCrudService){
+    val domainId = 1
+    val map = mutableMapOf<String, Opcode>()
+    //将系统内置支持的操作符写入数据库，并构建map
+    StarOpEnum.values().forEach {
+        if(map[it.name] == null){
+            map[it.name] = service.save(Meta.opcode, Opcode(it.label, it.name, Opcode.Ext, MySerializeJson.encodeToString(it.operandMap),false, domainId), true)
+        }
+    }
+
+    GongOpEnum.values().forEach {
+        if(map[it.name] == null){
+            map[it.name] = service.save(Meta.opcode, Opcode(it.label, it.name, Opcode.Ext, MySerializeJson.encodeToString(it.operandMap),false, domainId), true)
+        }
+    }
+
+    //构建内置数据类型并插入库
+    val list = listOf(
+        ParamType(StarType.label,StarType.code,StarType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Ext, false, domainId),
+        ParamType(GongType.label,GongType.code,GongType.supportOperators().mapNotNull { map[it]?.id}.joinToString(","),ParamType.Ext, false, domainId),
+    )
+    val types = service.batchSave(Meta.paramType, list, true)
+    println("types= ${MySerializeJson.encodeToString(types)}" )
+}
 fun testSerialize(){
     val json = "{\"_class\":\"Int\",\"key\":\"pos|紫微\",\"op\":\"in\",\"set\":{\"valueType\":\"Constant\",\"value\":[0,6]}}"
     val expr:LogicalExpr = MySerializeJson.decodeFromString(json)
     System.out.println("testSerialize:" + (expr is IntExpression))
 
-    val json2 = "{\"_class\":\"GongStarsExpr\",\"key\":\"pos|紫微\",\"op\":\"isVip\"}"
+    val json2 = "{\"_class\":\"GongExpr\",\"key\":\"pos|紫微\",\"op\":\"isVip\"}"
     val expr2:LogicalExpr = MySerializeJson.decodeFromString(json2)
-    System.out.println("testSerialize:" + (expr2 is GongStarsExpr))
+    System.out.println("testSerialize:" + (expr2 is GongExpr))
 }
 
-
-
-val ruleExtExprSerializersModule = SerializersModule {
-    polymorphic(LogicalExpr::class){
-        subclass(GongStarsExpr::class)
-    }
-}
-
-
-/**
- * 自定义自己的表达式
- * */
-@Serializable
-@SerialName("GongStarsExpr")
-class GongStarsExpr(
-    val key: String,
-    val op: String,
-    //val value: User? == null // Any_value_type_can_be_serialized. eg: User
-): LogicalExpr{
-    override fun eval(dataPicker: (String) -> Any?) = when(op){
-        "isVip" -> {
-            //val v0 = map[key] as User? // Any_value_type_can_be_serialized?
-            //v0.isVip()
-            println("isVip?")
-            false
-        }
-        "olderThan" -> {
-            //val v0 = map[key] as User? // Any_value_type_can_be_serialized?
-            //if(v0 == null || value == null) false else v0.age >= value.age
-            println("olderThan?")
-            false
-        }
-        "above" -> {
-            //val v0 = map[key] as User? // Any_value_type_can_be_serialized?
-            //if(v0 == null || value == null) false else v0.age >= value
-            println("above?")
-            false
-        }
-        else -> {
-            throw Exception("GongStarsExpr not support opcode: $op")
-        }
-    }
-}

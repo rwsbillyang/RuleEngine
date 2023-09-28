@@ -76,7 +76,7 @@ class BaseCrudController : KoinComponent {
                         { Meta.param.typeId eq params.typeId } } else null
                     val uncategoryParams = service.findAll(Meta.param, andWhere(w1,w2,w3)).onEach { it.toBean(service) }
                     if(uncategoryParams.isNotEmpty()){
-                        val unCategory = ParamCategory("未分类", params.domainId, -1, null, uncategoryParams)
+                        val unCategory = ParamCategory("未分类", null, params.domainId, -1, null, uncategoryParams)
                         if(list.isEmpty()){
                             listOf(unCategory)
                         }else{
@@ -248,46 +248,45 @@ class BaseCrudController : KoinComponent {
      * 清空类型和操作符表，并从id=1开始添加
      * */
     fun initDictDataInDb(): String {
-        //truncate table `t_param_type`;  truncate table `t_operator`;
-        //bugfix：未生效
-//        QueryDsl.executeScript("""
-//            truncate table `t_param_type`;
-//""".trimIndent());
-//        QueryDsl.executeScript("""
-//            truncate table `t_operator`;
-//""".trimIndent());
+        //bugfix：未生效 truncate table `t_param_type`;  truncate table `t_opcode`;
+//        QueryDsl.executeScript("truncate table `t_param_type`;");
+//        QueryDsl.executeScript("truncate table `t_opcode`;");
 
 
         val map = mutableMapOf<String, Opcode>()
         //将系统内置支持的操作符写入数据库，并构建map
-        EnumOp.values()
-            .map { Opcode(it.label, it.name, Opcode.Basic, it.remark, true, it.other, it.start, it.end, it.set, it.e, it.num) }
-            .let { service.batchSave(Meta.opcode, it, true) }
-            .forEach { map[it.code] = it }
+        EnumBasicOp.values().forEach {
+            if(map[it.name] == null){
+                map[it.name] = service.save(Meta.opcode,  Opcode(it.label, it.name, Opcode.Basic, MySerializeJson.encodeToString(it.operandMap)), true)
+            }
+        }
 
-        EnumCollectionOp.values()
-            .map { Opcode(it.label, it.name,  Opcode.Collection, it.remark,true, it.other, it.start, it.end, it.set, it.e, it.num) }
-            .let { service.batchSave(Meta.opcode, it, true) }
-            .forEach { map[it.code] = it }
 
-        EnumLogicalOp.values()
-            .map { Opcode(it.label, it.name,  Opcode.Logical, it.remark) }
-            .let { service.batchSave(Meta.opcode, it, true) }
-            .forEach { map[it.code] = it }
+        EnumCollectionOp.values().forEach {
+            if(map[it.name] == null){
+                map[it.name] = service.save(Meta.opcode,  Opcode(it.label, it.name, Opcode.Collection, MySerializeJson.encodeToString(it.operandMap)), true)
+            }
+        }
+
+        EnumLogicalOp.values().forEach {
+            if(map[it.name] == null){
+                map[it.name] = service.save(Meta.opcode, Opcode(it.label, it.name,  Opcode.Logical, remark = it.remark), true)
+            }
+        }
 
         //构建内置数据类型并插入库
         val list = listOf(
-            ParamType(StringType.label,StringType.code,StringType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","),true),
-            ParamType(IntType.label,IntType.code,IntType.supportOperators().mapNotNull { map[it]?.id}.joinToString(","),true),
-            ParamType(LongType.label,LongType.code,LongType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), true),
-            ParamType(DoubleType.label,DoubleType.code,DoubleType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), true),
-            ParamType(DateTimeType.label, DateTimeType.code, DateTimeType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), true),
-            ParamType(BoolType.label, BoolType.code, BoolType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), true),
-            ParamType(StringSetType.label, StringSetType.code, StringSetType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), false),
-            ParamType(IntSetType.label, IntSetType.code, IntSetType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), false),
-            ParamType(LongSetType.label, LongSetType.code, LongSetType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), false),
-            ParamType(DoubleSetType.label, DoubleSetType.code, DoubleSetType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), false),
-            ParamType(DateTimeSetType.label, DateTimeSetType.code, DateTimeSetType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), false),
+            ParamType(StringType.label,StringType.code,StringType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Basic),
+            ParamType(IntType.label,IntType.code,IntType.supportOperators().mapNotNull { map[it]?.id}.joinToString(","),ParamType.Basic),
+            ParamType(LongType.label,LongType.code,LongType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Basic),
+            ParamType(DoubleType.label,DoubleType.code,DoubleType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Basic),
+            ParamType(DateTimeType.label, DateTimeType.code, DateTimeType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Basic),
+            ParamType(BoolType.label, BoolType.code, BoolType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Basic),
+            ParamType(StringSetType.label, StringSetType.code, StringSetType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Collection),
+            ParamType(IntSetType.label, IntSetType.code, IntSetType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Collection),
+            ParamType(LongSetType.label, LongSetType.code, LongSetType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Collection),
+            ParamType(DoubleSetType.label, DoubleSetType.code, DoubleSetType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Collection),
+            ParamType(DateTimeSetType.label, DateTimeSetType.code, DateTimeSetType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Collection),
         )
         val types = service.batchSave(Meta.paramType, list, true)
 

@@ -118,7 +118,7 @@ class ParameterTypeQueryParams(
     val label: String? = null,
     val isSys: Boolean? = null,
     val domainId: Int? = null,
-    val isBasic: Boolean? = null
+    val type: String? = null
 ) : IUmiPaginationParams {
     override fun toSqlPagination(): SqlPagination {
         val meta = Meta.paramType
@@ -142,7 +142,7 @@ class ParameterTypeQueryParams(
             { meta.label like "%${label}%" }
         } else null
         val w2: WhereDeclaration? = isSys?.let { { meta.isSys eq it } }
-        val w3: WhereDeclaration? = isBasic?.let { { meta.isBasic eq it } }
+        val w3: WhereDeclaration? = type?.let { { meta.type eq it } }
         val w4: WhereDeclaration? = if(domainId == null) null else {
             val self: WhereDeclaration = { meta.domainId eq domainId }
             val defaultAll: WhereDeclaration =  { meta.domainId.isNull() } //若指定了domainId，也包括那些没指定的domainId的常量

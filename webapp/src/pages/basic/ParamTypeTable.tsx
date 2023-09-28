@@ -21,7 +21,7 @@ export const ParamTypeTable: React.FC = () => {
   //列表字段及内置记录的form编辑 配置
   const sysColumns: ProColumns<ParamType>[] = [
     {
-      title: '内部编码',
+      title: '类型码',
       dataIndex: 'code',
       readonly: true,
       hideInSearch: true
@@ -39,20 +39,20 @@ export const ParamTypeTable: React.FC = () => {
       renderText: (text, record) => record.supportOps?.map((e) => e.label).join(", "),
       hideInSearch: true
     },
-    {
-      title: '基本类型',
-      dataIndex: 'isBasic',
-      hideInForm: true,
-      valueType: "select",
-      valueEnum: { false: "否", true: "是" }
-    },
-    {
-      title: '是否内置',
-      dataIndex: 'isSys',
-      hideInForm: true,
-      valueType: "select",
-      valueEnum: { false: "否", true: "是" }
-    },
+    // {
+    //   title: '基本类型',
+    //   dataIndex: 'isBasic',
+    //   hideInForm: true,
+    //   valueType: "select",
+    //   valueEnum: { false: "否", true: "是" }
+    // },
+    // {
+    //   title: '是否内置',
+    //   dataIndex: 'isSys',
+    //   hideInForm: true,
+    //   valueType: "select",
+    //   valueEnum: { false: "否", true: "是" }
+    // },
   ]
 
   //添加自定义数据时的form字段配置
@@ -71,7 +71,7 @@ export const ParamTypeTable: React.FC = () => {
       })
     },
     {
-      title: '内部编码',
+      title: '类型码',
       dataIndex: 'code',
       tooltip: "须与扩展库SerialName一致；一经用于创建规则或表达式，便不可修改",
       hideInSearch: true,
@@ -119,7 +119,7 @@ export const ParamTypeTable: React.FC = () => {
     return e
   }
 
-  const initialValue: Partial<ParamType> = { isBasic: false, isSys: false }
+  const initialValue: Partial<ParamType> = { type: 'Customize', isSys: false }
   const props: MyProTableProps<ParamType, ParamTypeQueryParams> = {
     ...defaultProps(name),
     initialValues: initialValue,
