@@ -80,7 +80,7 @@ export const ParamTable: React.FC = () => {
       key: "categoryId",
       dataIndex: ['paramCategory', 'label'],
       dependencies: ['domainId'], //bugfix 注释掉此行或将hideInSearch设置为false无提示：react-dom.development.js:86 Warning: React does not recognize the `formItemProps` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `formitemprops` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
-      hideInSearch: true, //!EnableParamCategory,  dependencies与hideInSearch:false 不兼容：react-dom.development.js:86 Warning: React does not recognize the `formItemProps` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `formitemprops` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+      hideInSearch: !EnableParamCategory, //升级antd相关版本后解决： dependencies与hideInSearch:false 旧版本不兼容："@ant-design/pro-table": "^3.10.4", "antd": "^5.8.3",
       hideInForm: !EnableParamCategory,
       hideInTable: !EnableParamCategory,
       fieldProps: { allowClear: true },
