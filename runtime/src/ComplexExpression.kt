@@ -34,7 +34,7 @@ class ComplexExpression(
     val op: String,
     val exprs: List<LogicalExpr>
 ): LogicalExpr {
-    override fun eval(dataProvider: (String) -> Any?): Boolean{
+    override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?): Boolean{
         return when(EnumLogicalOp.valueOf(op)){
             EnumLogicalOp.and -> exprs.all { it.eval(dataProvider) }
             EnumLogicalOp.or -> exprs.any { it.eval(dataProvider) }

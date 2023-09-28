@@ -38,7 +38,7 @@ object RuleEngine {
      * */
     fun <T> eval(
         rootRules: List<Any>,
-        dataProvider: (key: String) -> Any?,
+        dataProvider: (key: String, keyExtra:String?) -> Any?,
         loadChildrenFunc: (parent: Any?) -> List<Any>?,
         toEvalRule: (extra: Any) -> EvalRule,
         collector: ResultTreeCollector<T>?

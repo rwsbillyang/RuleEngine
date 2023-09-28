@@ -31,19 +31,9 @@ import java.time.LocalDateTime
 
 
 //@Serializable
-//sealed class LogicalExpr{
+//sealed class LogicalExpr{ //不支持扩展，不支持多层次继承
 //    abstract fun eval(dataProvider: (String) -> Any?): Boolean
 //}
-
-//@Serializable
-//abstract class LogicalExpr{
-//    abstract fun eval(dataProvider: (String) -> Any?): Boolean
-//}
-interface LogicalExpr{
-    fun eval(dataProvider: (String) -> Any?): Boolean
-}
-
-
 //在sealed class与具体子类之间，多加了一个类层次，导致反序列化时报错：
 //JsonDecodingException: Polymorphic serializer was not found for class discriminator
 //@Serializable
@@ -54,16 +44,24 @@ interface LogicalExpr{
 //}
 
 
+//@Serializable
+//abstract class LogicalExpr{
+//    abstract fun eval(dataProvider: (String) -> Any?): Boolean
+//}
+
+interface LogicalExpr{
+    fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?): Boolean
+}
 
 @Serializable
 @SerialName(IType.Type_Bool)
 class BoolExpression(
     val key: String,
     val op: String,
-    val other: OpValue<Boolean>
+    val operands: Map<String, Operand>
 ): LogicalExpr {
-    override fun eval(dataProvider: (String) -> Any?) 
-    = BoolType.op(op, dataProvider(key) as Boolean?, other.real(dataProvider))
+    override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
+        BoolType.op(dataProvider, key, op, operands)
 }
 
 @Serializable
@@ -71,17 +69,13 @@ class BoolExpression(
 class IntExpression(
     val key: String,
     val op: String,
-    val other: OpValue<Int>? = null,
-    val start: OpValue<Int>? = null,//key所在变量范围比较
-    val end: OpValue<Int>? = null,//key所在变量范围比较
-    val set: OpValue<Set<Int>>? = null//key所在变量是否存在于set中
+    //各种other、start、end、set、e、num等固定名称和类型的操作数，
+    // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
+    // 但前提是必须在OpEnum中正确描述了配置map
+    val operands: Map<String, Operand>
 ): LogicalExpr {
-    override fun eval(dataProvider: (String) -> Any?) =
-        IntType.op(
-            op, dataProvider(key) as Int?,
-            other?.real(dataProvider), start?.real(dataProvider), end?.real(dataProvider), set?.real(dataProvider)
-        )
-
+    override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
+        IntType.op(dataProvider, key, op, operands)
 }
 
 
@@ -90,15 +84,13 @@ class IntExpression(
 class LongExpression(
     val key: String,
     val op: String,
-    val other: OpValue<Long>? = null,
-    val start: OpValue<Long>? = null,
-    val end: OpValue<Long>? = null,
-    val set: OpValue<Set<Long>>? = null
+    //各种other、start、end、set、e、num等固定名称和类型的操作数，
+    // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
+    // 但前提是必须在OpEnum中正确描述了配置map
+    val operands: Map<String, Operand>
 ): LogicalExpr {
-    override fun eval(dataProvider: (String) -> Any?) = LongType.op(
-        op, dataProvider(key) as Long?,
-        other?.real(dataProvider), start?.real(dataProvider), end?.real(dataProvider), set?.real(dataProvider)
-    )
+    override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
+        LongType.op(dataProvider, key, op, operands)
 }
 
 @Serializable
@@ -106,19 +98,13 @@ class LongExpression(
 class DoubleExpression(
     val key: String,
     val op: String,
-    val other: OpValue<Double>? = null,
-    val start: OpValue<Double>? = null,
-    val end: OpValue<Double>? = null,
-    val set: OpValue<Set<Double>>? = null
+    //各种other、start、end、set、e、num等固定名称和类型的操作数，
+    // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
+    // 但前提是必须在OpEnum中正确描述了配置map
+    val operands: Map<String, Operand>
 ): LogicalExpr {
-    override fun eval(dataProvider: (String) -> Any?) = DoubleType.op(
-        op,
-        dataProvider(key) as Double?,
-        other?.real(dataProvider),
-        start?.real(dataProvider),
-        end?.real(dataProvider),
-        set?.real(dataProvider)
-    )
+    override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
+        DoubleType.op(dataProvider, key, op, operands)
 }
 
 
@@ -127,21 +113,14 @@ class DoubleExpression(
 class StringExpression(
     val key: String,
     val op: String,
-    val other: OpValue<String>? = null,
-    val start: OpValue<String>? = null,
-    val end: OpValue<String>? = null,
-    val set: OpValue<Set<String>>? = null
+    //各种other、start、end、set、e、num等固定名称和类型的操作数，
+    // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
+    // 但前提是必须在OpEnum中正确描述了配置map
+    val operands: Map<String, Operand>
 ): LogicalExpr {
-    override fun eval(dataProvider: (String) -> Any?) = StringType.op(
-        op,
-        dataProvider(key) as String?,
-        other?.real(dataProvider),
-        start?.real(dataProvider),
-        end?.real(dataProvider),
-        set?.real(dataProvider)
-    )
+    override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
+        StringType.op(dataProvider, key, op, operands)
 }
-
 
 
 @Serializable
@@ -149,19 +128,13 @@ class StringExpression(
 class DatetimeExpression(
     val key: String,
     val op: String,
-    val other: OpValue<LocalDateTime>? = null,
-    val start: OpValue<LocalDateTime>? = null,
-    val end: OpValue<LocalDateTime>? = null,
-    val set: OpValue<Set<LocalDateTime>>? = null
+    //各种other、start、end、set、e、num等固定名称和类型的操作数，
+    // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
+    // 但前提是必须在OpEnum中正确描述了配置map
+    val operands: Map<String, Operand>
 ): LogicalExpr {
-    override fun eval(dataProvider: (String) -> Any?) = DateTimeType.op(
-        op,
-        dataProvider(key) as LocalDateTime?,
-        other?.real(dataProvider),
-        start?.real(dataProvider),
-        end?.real(dataProvider),
-        set?.real(dataProvider)
-    )
+    override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
+        DateTimeType.op(dataProvider, key, op, operands)
 }
 
 @Serializable
@@ -169,11 +142,13 @@ class DatetimeExpression(
 class IntSetExpression(
     val key: String,
     val op: String,
-    val other: OpValue<Set<Int>>? = null,
-    val e: OpValue<Int>? = null,//key所在变量集中是否包含e
-    val num: OpValue<Int>? = null //key所在变量集与other交集元素个事 与num比较
+    //各种other、start、end、set、e、num等固定名称和类型的操作数，
+    // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
+    // 但前提是必须在OpEnum中正确描述了配置map
+    val operands: Map<String, Operand>
 ): LogicalExpr {
-    override fun eval(dataProvider: (String) -> Any?) = IntSetType.op(op,  dataProvider(key) as Set<Int>?, other?.real(dataProvider), e?.real(dataProvider), num?.real(dataProvider))
+    override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
+        IntSetType.op(dataProvider, key, op, operands)
 }
 
 @Serializable
@@ -181,11 +156,13 @@ class IntSetExpression(
 class LongSetExpression(
     val key: String,
     val op: String,
-    val other: OpValue<Set<Long>>? = null,
-    val e: OpValue<Long>? = null,//key所在变量集中是否包含e
-    val num: OpValue<Int>? = null //key所在变量集与other交集元素个事 与num比较
+    //各种other、start、end、set、e、num等固定名称和类型的操作数，
+    // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
+    // 但前提是必须在OpEnum中正确描述了配置map
+    val operands: Map<String, Operand>
 ): LogicalExpr {
-    override fun eval(dataProvider: (String) -> Any?) = LongSetType.op(op,  dataProvider(key) as Set<Long>?, other?.real(dataProvider), e?.real(dataProvider), num?.real(dataProvider))
+    override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
+        LongSetType.op(dataProvider, key, op, operands)
 }
 
 @Serializable
@@ -193,11 +170,13 @@ class LongSetExpression(
 class DoubleSetExpression(
     val key: String,
     val op: String,
-    val other: OpValue<Set<Double>>? = null,
-    val e: OpValue<Double>? = null,//key所在变量集中是否包含e
-    val num: OpValue<Int>? = null //key所在变量集与other交集元素个事 与num比较
+    //各种other、start、end、set、e、num等固定名称和类型的操作数，
+    // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
+    // 但前提是必须在OpEnum中正确描述了配置map
+    val operands: Map<String, Operand>
 ): LogicalExpr {
-    override fun eval(dataProvider: (String) -> Any?) = DoubleSetType.op(op, dataProvider(key) as Set<Double>?, other?.real(dataProvider), e?.real(dataProvider), num?.real(dataProvider))
+    override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
+        DoubleSetType.op(dataProvider, key, op, operands)
 }
 
 @Serializable
@@ -205,11 +184,13 @@ class DoubleSetExpression(
 class StringSetExpression(
     val key: String,
     val op: String,
-    val other: OpValue<Set<String>>? = null,
-    val e: OpValue<String>? = null,//key所在变量集中是否包含e
-    val num: OpValue<Int>? = null //key所在变量集与other交集元素个事 与num比较
+    //各种other、start、end、set、e、num等固定名称和类型的操作数，
+    // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
+    // 但前提是必须在OpEnum中正确描述了配置map
+    val operands: Map<String, Operand>
 ): LogicalExpr {
-    override fun eval(dataProvider: (String) -> Any?) = StringSetType.op(op,  dataProvider(key) as Set<String>?, other?.real(dataProvider), e?.real(dataProvider), num?.real(dataProvider))
+    override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
+        StringSetType.op(dataProvider, key, op, operands)
 }
 
 @Serializable
@@ -217,11 +198,13 @@ class StringSetExpression(
 class DateTimeSetExpression(
     val key: String,
     val op: String,
-    val other: OpValue<Set<LocalDateTime>>? = null,
-    val e: OpValue<LocalDateTime>? = null,//key所在变量集中是否包含e
-    val num: OpValue<Int>? = null //key所在变量集与other交集元素个事 与num比较
+    //各种other、start、end、set、e、num等固定名称和类型的操作数，
+    // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
+    // 但前提是必须在OpEnum中正确描述了配置map
+    val operands: Map<String, Operand>
 ): LogicalExpr {
-    override fun eval(dataProvider: (String) -> Any?) = DateTimeSetType.op(op,  dataProvider(key) as Set<LocalDateTime>?, other?.real(dataProvider), e?.real(dataProvider), num?.real(dataProvider))
+    override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
+        DateTimeSetType.op(dataProvider, key, op, operands)
 }
 
 
@@ -239,6 +222,5 @@ val ruleRuntimeExprSerializersModule = SerializersModule {
         subclass(StringSetExpression::class)
         subclass(DateTimeSetExpression::class)
         subclass(ComplexExpression::class)
-        subclass(MyExtendExpression::class)
     }
 }

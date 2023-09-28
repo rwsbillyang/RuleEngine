@@ -41,7 +41,7 @@ class EvalRule(
      * @param collector 提供的话则收集匹配的规则
      * */
     fun <T> eval(
-        dataProvider: (key: String) -> Any?,
+        dataProvider: (key: String, keyExtra:String?) -> Any?,
         loadChildrenFunc: (parent: Any?) -> List<Any>?,
         toEvalRule: (extra: Any) -> EvalRule,
         parentRule: EvalRule?,
@@ -73,7 +73,7 @@ class EvalRule(
          }
     }
     private fun <T> evalChildren(
-        dataProvider: (key: String) -> Any?,
+        dataProvider: (key: String, keyExtra:String?) -> Any?,
         loadChildrenFunc: (parent: Any?) -> List<Any>?,
         toEvalRule: (extra: Any,) -> EvalRule,
         collector: ResultTreeCollector<T>?
