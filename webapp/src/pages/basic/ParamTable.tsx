@@ -21,35 +21,11 @@ export const ParamTable: React.FC = () => {
   const [searchParams] = useSearchParams();
   const initialQuery = { domainId: searchParams["domainId"], typeId: searchParams["typeId"], pagination: { pageSize: 20 } }
 
-  const columns: ProColumns[] = [
+  const columns: ProColumns<Param>[] = [
     {
-      title: '所属',
-      key: "domainId",
-      fieldProps: { allowClear: true },
-      dataIndex: ['domain', 'label'],
-      //search:{transform:(v)=>{return {domainId: v}}},//转换form字段值的key，默认为dataIndex确定，转换后 将使用 domainId, 选中后值为v
-      request: () => asyncSelectProps2Request<Domain, DomainQueryParams>({
-        key: AllDomainKey,//与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
-        url: `${Host}/api/rule/composer/list/domain`,
-        query: { pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
-        convertFunc: (item) => { return { label: item.label, value: item.id } }
-      })
-    },
-    {
-      title: '分类',
-      key: "categoryId",
-      dataIndex: ['paramCategory', 'label'],
-      dependencies: ['domainId'], //bugfix 注释掉此行无提示：react-dom.development.js:86 Warning: React does not recognize the `formItemProps` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `formitemprops` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
-      fieldProps: { allowClear: true },
-      hideInForm: !EnableParamCategory,
-      hideInSearch: !EnableParamCategory,
-      hideInTable: !EnableParamCategory,
-      request: (params) => asyncSelectProps2Request<ParamCategory, ParamCategoryQueryParams>({
-        key: "paramCategory/domain/" + params.domainId,//与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
-        url: `${Host}/api/rule/composer/list/paramCategory`,
-        query: { setupChildren: false, domainId: params.domainId, pagination: { pageSize: 10, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
-        convertFunc: (item) => { return { label: item.label, value: item.id } }
-      })
+      dataIndex: 'index',
+      valueType: 'indexBorder',
+      width: 48,
     },
     {
       title: '名称',
@@ -79,16 +55,15 @@ export const ParamTable: React.FC = () => {
         convertFunc: (item) => { return { label: item.label, value: item.id } }
       })
     },
-
     {
       title: '值域',
-      tooltip: "值来自哪些常量",
       key: 'constantIds',
       dataIndex: ['valueScopes', 'label'],
-      renderText: (text, row) => row.valueScopes?.map((e) => e.label)?.join(", "),
-      hideInSearch: true,
-      fieldProps: { allowClear: true, mode: "multiple" },
       dependencies: ['domainId', 'typeId'], //若选择了枚举，只支持基本类型，否则未全部
+      fieldProps: { allowClear: true, mode: "multiple" },
+      hideInSearch: true,
+      renderText: (text, row) => row.valueScopes?.map((e) => e.label)?.join(", "),
+      tooltip: "值来自哪些常量",
       request: (params) => {
         const typeId = params.typeId
         const typeIds = type2Both(typeId)
@@ -101,6 +76,37 @@ export const ParamTable: React.FC = () => {
       }
     },
     {
+      title: '分类',
+      key: "categoryId",
+      dataIndex: ['paramCategory', 'label'],
+      dependencies: ['domainId'], //bugfix 注释掉此行或将hideInSearch设置为false无提示：react-dom.development.js:86 Warning: React does not recognize the `formItemProps` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `formitemprops` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+      hideInSearch: true, //!EnableParamCategory,  dependencies与hideInSearch:false 不兼容：react-dom.development.js:86 Warning: React does not recognize the `formItemProps` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `formitemprops` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+      hideInForm: !EnableParamCategory,
+      hideInTable: !EnableParamCategory,
+      fieldProps: { allowClear: true },
+      tooltip: "分类的附属信息，自动赋给变量的附属信息",
+      request: (params) => asyncSelectProps2Request<ParamCategory, ParamCategoryQueryParams>({
+        key: "paramCategory/domain/" + params.domainId,//与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
+        url: `${Host}/api/rule/composer/list/paramCategory`,
+        query: { setupChildren: false, domainId: params.domainId, pagination: { pageSize: 10, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+        convertFunc: (item) => { return { label: item.label, value: item.id } }
+      })
+    },
+    {
+      title: '所属',
+      key: "domainId",
+      fieldProps: { allowClear: true },
+      dataIndex: ['domain', 'label'],
+      //search:{transform:(v)=>{return {domainId: v}}},//转换form字段值的key，默认为dataIndex确定，转换后 将使用 domainId, 选中后值为v
+      request: () => asyncSelectProps2Request<Domain, DomainQueryParams>({
+        key: AllDomainKey,//与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
+        url: `${Host}/api/rule/composer/list/domain`,
+        query: { pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+        convertFunc: (item) => { return { label: item.label, value: item.id } }
+      })
+    },
+
+    {
       title: '备注',
       dataIndex: 'remark',
       valueType: 'textarea',
@@ -108,6 +114,7 @@ export const ParamTable: React.FC = () => {
       ellipsis: true,
       hideInSearch: true
     }
+  
   ]
   //提交保存前数据转换
   const transformBeforeSave = (e: Param) => {
