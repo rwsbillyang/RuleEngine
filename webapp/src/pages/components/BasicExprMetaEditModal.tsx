@@ -46,7 +46,7 @@ export const BasicExprMetaEditModal: React.FC<{
   meta?: BasicExpressionMeta
   cannotChooseOne?: boolean
 }> = ({ title, triggerName, domainId, onDone, exprId, meta, cannotChooseOne }) => {
-  const initialMeta: BasicExpressionMeta = { _class: "Basic", operandValueMap: new Map<string, OperandValueMeta>() }
+  const initialMeta: BasicExpressionMeta = { _class: "Basic", operandMetaObj:{} }
   const [newExprId, setNewExprId] = useState(exprId)
 
   //传递值时，必须新建一份copy，否则当新建再次打开对话框时，将仍在newMeta上修改，保存时冲掉原来的值
@@ -88,7 +88,7 @@ export const BasicExprMetaEditModal: React.FC<{
       formRef?.current?.setFieldValue("extra", meta?.extra)
       formRef?.current?.setFieldValue("opId", meta?.opId)
 
-      newMeta.operandValueMap.clear()
+      newMeta.operandMetaObj = {}
     } else {
       setOpTooltip(newMeta.op?.remark)
     }
@@ -123,7 +123,7 @@ export const BasicExprMetaEditModal: React.FC<{
         newMeta.opId = undefined
         newMeta.paramTypeId = undefined
         newMeta.mapKey = undefined
-        newMeta.operandValueMap.clear()
+        newMeta.operandMetaObj = {}
         setOperandConfigList(undefined)
       }
       setNewExprId(v?.exprId)
@@ -137,7 +137,7 @@ export const BasicExprMetaEditModal: React.FC<{
         newMeta.opId = undefined
         newMeta.paramTypeId = undefined
         newMeta.mapKey = undefined
-        newMeta.operandValueMap.clear()
+        newMeta.operandMetaObj = {}
         setOperandConfigList(undefined)
       }
 
@@ -146,7 +146,7 @@ export const BasicExprMetaEditModal: React.FC<{
         formRef?.current?.setFieldValue("opId", undefined)
 
         newMeta.opId = undefined
-        newMeta.operandValueMap.clear()
+        newMeta.operandMetaObj = {}
         setOperandConfigList(undefined)
       }
 
@@ -160,11 +160,11 @@ export const BasicExprMetaEditModal: React.FC<{
         const op = getOpcodeById(v.opId, newMeta.param?.paramType.id || newMeta.paramType?.id, newMeta) 
         newMeta.op = op
 
-        newMeta.operandValueMap.clear()
+        newMeta.operandMetaObj = {}
         const list = operandConfigMapStr2List(op?.operandConfigMapStr)?.list
         list?.forEach((e) => {
           const v = defaultOperandValueMeta(e)
-          if(v) newMeta.operandValueMap.set(e.name,v)
+          if(v) newMeta.operandMetaObj[e.name] = v
         })
         
         setOperandConfigList(list)
@@ -200,7 +200,7 @@ export const BasicExprMetaEditModal: React.FC<{
       if (oprandConfigList.length > 0) {
         for (let i=0; i< oprandConfigList.length; i++) {
           const e = oprandConfigList[i]
-          const operandMeta = newMeta.operandValueMap.get(e.name)
+          const operandMeta = newMeta.operandMetaObj[e.name]
           if (e.required && (!operandMeta || (operandMeta.jsonValue?.value === undefined && !operandMeta.paramId))) {
             message.warning(e.label + ": 操作数没有值")
             return false
@@ -210,12 +210,12 @@ export const BasicExprMetaEditModal: React.FC<{
       
 
       //有值，但没有相关操作数配置，则删除该值
-      for (var k in newMeta.operandValueMap) {
+      for (var k in newMeta.operandMetaObj) {
         if (oprandConfigList.length > 0){
           const cfg = Cache.findOneInArray(oprandConfigList, k, "name")
           if(!cfg || (cfg && !cfg.enable)){
-            const ret = newMeta.operandValueMap.delete(k)
-            console.log("delete " + k + " in valueMap: "+ ret + ", hasK="+ newMeta.operandValueMap.has(k))
+            delete newMeta.operandMetaObj[k]
+            //console.log("delete " + k + " in valueMap: "+ ret + ", hasK="+ newMeta.operandValueMap.has(k))
           } 
         }
       }
@@ -365,9 +365,9 @@ export const BasicExprMetaEditModal: React.FC<{
             constantQueryParams={getConstantQueryParams(e, newMeta.param, newMeta.paramType, domainId)}
             domainId={domainId}
             disabled={!!exprId}
-            value={newMeta.operandValueMap.get(e.name)}
+            value={newMeta.operandMetaObj[e.name]}
             onChange={(v) => {
-              newMeta.operandValueMap.set(e.name, v)
+              newMeta.operandMetaObj[e.name] = v
               setNewMeta({...newMeta})
             }} />)}
         </> : <div>请选择</div>

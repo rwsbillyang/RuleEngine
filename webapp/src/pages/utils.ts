@@ -1,5 +1,5 @@
 import { Cache } from '@rwsbillyang/usecache'
-import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpression, ComplexExpressionMeta, ComplexExpressionRecord, BaseExpressionRecord, JsonValue, OperandConfig, OperandConfigItem, ParamType, OperandValueMeta, Operand } from "./DataType"
+import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpression, ComplexExpressionMeta, ComplexExpressionRecord, BaseExpressionRecord, JsonValue, OperandConfig, OperandConfigItem, ParamType, OperandValueMeta, OperandValue } from "./DataType"
 
 
 /**
@@ -76,26 +76,44 @@ export const typeCode2Id = (parmTypeCode: string, cacheKey: string = AllParamTyp
 }
 
 
+
+/**
+ * 操作数配置字符串转换成OperandConfigItem[] 和 object
+ * @param mapStr 
+ * @returns 
+ */
 export const operandConfigMapStr2List = (mapStr?: string) => {
     if(!mapStr) return undefined
 
-    const map: Map<string, OperandConfig> = new Map<string, OperandConfig>()
+    //const map: Map<string, OperandConfig> = new Map<string, OperandConfig>()
+    const cfgObj: {[k:string]: OperandConfig}  = {}
     const list: OperandConfigItem[] = []
 
     const obj = JSON.parse(mapStr)
     Object.keys(obj).forEach((e)=>{
         const cfg = obj[e]
-        map.set(e, cfg as OperandConfig)
+        //map.set(e, cfg as OperandConfig)
+        cfgObj[e] =  cfg as OperandConfig
         list.push({ ...cfg, name: e })
     })
 
-    return {map, list}
+    return {obj: cfgObj, list}
 }
-export const operandConfigMap2List = (map: Map<string, OperandConfig>) => {
+//obj: Map<string, OperandConfig>
+/**
+ * 操作数配置转换成列表
+ * @param obj 
+ * @returns 
+ */
+export const operandConfigObj2List = (obj: {[k:string]: OperandConfig} ) => {
     const list: OperandConfigItem[] = []
-    map.forEach((v, k) => list.push({ ...v, name: k }))
+    for(let k in obj){
+        list.push({ ...obj[k], name: k }) //map.forEach((v, k) => list.push({ ...v, name: k }))
+    }
     return list
 }
+
+
 
 export const exprRecord2String = (expr: BaseExpressionRecord) => expr.type === "Complex" ? 
 complexExpressionMeta2String((expr as ComplexExpressionRecord).meta) 
@@ -118,11 +136,12 @@ export const complexExprRecord2String = (expr?: ComplexExpressionRecord)=>{
  */
 export const basicExpressionMeta2String = (meta?: BasicExpressionMeta)=>{
     if(!meta || meta._class === "Complex") return "暂无"
+
     const list: {key: string, value: OperandValueMeta | undefined} [] = []
+    for(let k in  meta.operandMetaObj){
+        list.push({key: k, value: meta.operandMetaObj[k]})   //meta.operandValueMap.forEach((v,k)=>{ list.push({key: k, value: v}) })
+    }
     
-    meta.operandValueMap.forEach((v,k)=>{
-        list.push({key: k, value: v})
-    })
     const oprand = list.map((e)=> operandMeta2String(e.key, e.value)).join(", ")
 
     if(meta.param)
@@ -192,12 +211,17 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
         console.log("should not come here: no op")
         return undefined
     }
+    const operandValueObj: {[key:string]: OperandValue} = {}
+    for(let k in meta.operandMetaObj){
+        const v = operandMeta2OperandValue(meta.operandMetaObj[k])
+        if(v) operandValueObj[k] = v
+    }
 
     const expr: BasicExpression = {
         _class: "",
         key: "",
         op: meta.op.code,
-        operands: meta.operandValueMap
+        operands: operandValueObj
     }
     if(meta.param){
         expr._class = meta.param.paramType.code
@@ -214,6 +238,23 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
 
     console.warn("should not come here: please check meta.param, meta.mapKey/meta.paramType")
     return undefined
+}
+
+
+/**
+ * 将OperandValueMeta转换为纯表达式中的必要字段值
+ * @param operandMeta OperandValueMeta
+ * @returns 
+ */
+const operandMeta2OperandValue = (operandMeta?: OperandValueMeta) => {
+    if (!operandMeta) return undefined
+    const opvalue:OperandValue = {
+        valueType: operandMeta.valueType,
+        key: operandMeta.param?.mapKey,
+        value:(operandMeta.jsonValue && Array.isArray(operandMeta.jsonValue.value) && operandMeta.jsonValue?._class.indexOf("Enum") > 0) 
+        ? operandMeta.jsonValue?.value?.map(e=>e.value) : operandMeta.jsonValue?.value
+    }
+    return opvalue
 }
 
 /**
@@ -253,27 +294,11 @@ export function meta2Expr(meta?: BasicExpressionMeta | ComplexExpressionMeta ){
 }
 
 
-/**
- * 将OperandValueMeta转换为纯表达式中的必要字段值
- * @param operandMeta OperandValueMeta
- * @returns 
- */
-const operandMeta2Operand = (operandMeta?: OperandValueMeta) => {
-    if (!operandMeta) return undefined
-    const opvalue:Operand = {
-        valueType: operandMeta.valueType,
-        key: operandMeta.param?.mapKey,
-        value:(operandMeta.jsonValue && Array.isArray(operandMeta.jsonValue.value) && operandMeta.jsonValue?._class.indexOf("Enum") > 0) 
-        ? operandMeta.jsonValue?.value?.map(e=>e.value) : operandMeta.jsonValue?.value
-    }
-    return opvalue
-}
-
 
 /***
  * 有效信息，用于生成md5作为id
  */
-export const opValue2Md5Msg = (name:string, opValue?: Operand)=>{
+export const opValue2Md5Msg = (name:string, opValue?: OperandValue)=>{
     if(!opValue) return ""
     if(opValue.valueType === "Param") return `&${name}.OperandKey=${opValue.key}`
     else return `&${name}.OperandValue=${opValue.value}`

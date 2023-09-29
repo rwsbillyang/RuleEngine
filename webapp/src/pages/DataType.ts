@@ -70,7 +70,8 @@ export interface Opcode extends LabeldBean {
     domainId?: number//select选择时设置，提交给后端
 
 
-    operandConfigMapStr?: string //数据库中实际存储的配置信息
+    operandConfigMapStr?: string //数据库中实际存储的配置信息 : {[k:string]: OperandConfig} 
+
    
     //临时字段 由转换operandValueMapStr而来
     operandConfigList?: OperandConfigItem[]
@@ -249,7 +250,9 @@ export interface BasicExpressionMeta extends ExpressionMetaBase{
     opId?: number,
     op?: Opcode,
 
-    operandValueMap: Map<string, OperandValueMeta>  //值
+     //使用Map<string, OperandValueMeta>时，在parse成对象时得到是object，而不是map
+     //现改成object，key为操作数键值，值为OperandValueMeta
+    operandMetaObj: {[key:string]: OperandValueMeta} 
 }
 
 export interface ComplexExpressionMeta  extends ExpressionMetaBase{
@@ -266,7 +269,7 @@ export interface Expr {
 export interface BasicExpression extends Expr {
     key: string//值为: BasicExpressionMeta.param.mapKey
     extra?: string //附加信息 协助key进行取值，如来自ParamCategory的附属分类信息
-    operands: Map<String, Operand>
+    operands: {[key: string]: OperandValue}//Map<String, Operand>
 }
 export interface ComplexExpression extends Expr {
     //op: string
@@ -291,7 +294,7 @@ export interface OperandValueMeta {
     //constants?: Constant[]
     jsonValue?: JsonValue
 }
-export interface Operand {
+export interface OperandValue {
     valueType?: "Param" | "Constant" | "JsonValue" | undefined
     key?: string // for Param type
     value?: boolean | string | number | (string | number)[]
