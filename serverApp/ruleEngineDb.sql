@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 8.0.30)
 # Database: ruleEngineDb
-# Generation Time: 2023-09-06 04:12:59 +0000
+# Generation Time: 2023-09-29 08:04:18 +0000
 # ************************************************************
 
 
@@ -70,18 +70,20 @@ CREATE TABLE `t_expression` (
 
 
 
-# Dump of table t_operator
+# Dump of table t_opcode
 # ------------------------------------------------------------
 
-DROP TABLE IF EXISTS `t_operator`;
+DROP TABLE IF EXISTS `t_opcode`;
 
-CREATE TABLE `t_operator` (
+CREATE TABLE `t_opcode` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `label` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '',
   `code` varchar(32) NOT NULL DEFAULT '',
   `is_sys` tinyint(1) DEFAULT NULL,
   `remark` varchar(512) DEFAULT NULL,
   `type` varchar(32) DEFAULT NULL,
+  `domain_id` int unsigned DEFAULT NULL,
+  `operand_config_map_str` text CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
@@ -100,6 +102,23 @@ CREATE TABLE `t_param` (
   `remark` varchar(512) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT '',
   `domain_id` int unsigned DEFAULT NULL,
   `value_scope_ids` text,
+  `category_id` int unsigned DEFAULT NULL,
+  `extra` varchar(32) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+
+
+# Dump of table t_param_category
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `t_param_category`;
+
+CREATE TABLE `t_param_category` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `label` varchar(32) DEFAULT NULL,
+  `domain_id` int unsigned DEFAULT NULL,
+  `extra` varchar(32) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
@@ -116,7 +135,8 @@ CREATE TABLE `t_param_type` (
   `code` varchar(64) NOT NULL DEFAULT '',
   `support_op_ids` varchar(512) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '',
   `is_sys` tinyint(1) DEFAULT NULL,
-  `is_basic` tinyint(1) DEFAULT NULL,
+  `type` varchar(32) DEFAULT NULL,
+  `domain_id` int unsigned DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
@@ -146,6 +166,7 @@ CREATE TABLE `t_rule` (
   `rule_parent_ids` text,
   `rule_group_parent_ids` text,
   `level` int DEFAULT NULL,
+  `exclusive` tinyint DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 

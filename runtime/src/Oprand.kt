@@ -48,16 +48,16 @@ class OperandConfig(
     val required: Boolean = true, //操作数是否必须填写
     val typeCode: String? = null,//操作数数据类型，null表示操作数与与变量类型一致
     val contantIds: List<Int>? = null, //操作数值域，常量id数组[1,2,3]
-    val selectOptions: List<SelectOption>? = null,//操作数值域，不是从远程加载常量，而是指定的选择范围内选
+    val selectOptions: List<SelectOption<String>>? = null,//操作数值域，不是从远程加载常量，而是指定的选择范围内选
     val defaultSelect: String? = null,
     val defaultOperandValueType: String? = null, //"Param" | "Constant" | "JsonValue"
     val enable: Boolean = true
 )
 @Serializable
-class SelectOption(val label: String, val value: String)
+class SelectOption<T>(val label: String, val value: T)
 
 @Serializable
-enum class OperandValueType{ Param, Constant,JsonValue } //前端OperandMeta.valueType
+enum class OperandValueType{Param, Constant,JsonValue } //前端OperandMeta.valueType
 /**
  * 操作数
  * @param name 操作数名称

@@ -115,7 +115,7 @@ data class Opcode(
 @KomapperTable("t_constant")
 data class Constant(
     val label: String,
-    var typeId: Int?=null,
+    var typeId: Int ?= null,
     var value: String? = null, //back field json of JsonValue
     val isEnum: Boolean = false, //是否是枚举
     val remark: String? = null,//备注

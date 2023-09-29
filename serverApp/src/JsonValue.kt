@@ -21,6 +21,7 @@
 package com.github.rwsbillyang.rule.composer
 
 import com.github.rwsbillyang.rule.runtime.IType
+import com.github.rwsbillyang.rule.runtime.SelectOption
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseContextualSerialization
@@ -143,38 +144,34 @@ class LocalDateTimeSetValue(
 
 
 //T: Int, Long, Double, String, DateTime
-@Serializable
-class LabelValue<T>(
-    val label: String? = null,
-    val value: T
-)
+
 @Serializable
 @SerialName(IType.Type_IntEnum)
 class IntEnumValue(
-    val value: List<LabelValue<Int>>
+    val value: List<SelectOption<Int>>
 ): JsonValue()
 
 
 @Serializable
 @SerialName(IType.Type_LongEnum)
 class LongEnumValue(
-    val value: List<LabelValue<Long>>
+    val value: List<SelectOption<Long>>
 ): JsonValue()
 
 @Serializable
 @SerialName(IType.Type_DoubleEnum)
 class DoubleEnumValue(
-    val value: List<LabelValue<Double>>
+    val value: List<SelectOption<Double>>
 ): JsonValue()
 
 @Serializable
 @SerialName(IType.Type_StringEnum)
 class StringEnumValue(
-    val value: List<LabelValue<String>>
+    val value: List<SelectOption<String>>
 ): JsonValue()
 
 @Serializable
 @SerialName(IType.Type_DateTimeEnum)
 class LocalDateTimeEnumValue(
-    val value: List<LabelValue<LocalDateTime>>
+    val value: List<SelectOption<LocalDateTime>>
 ): JsonValue()

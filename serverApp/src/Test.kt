@@ -23,10 +23,12 @@ import com.github.rwsbillyang.ktorKit.cache.VoidCache
 import com.github.rwsbillyang.ktorKit.db.AbstractSqlService
 import com.github.rwsbillyang.ktorKit.db.SqlDataSource
 import com.github.rwsbillyang.rule.runtime.*
+import com.github.rwsbillyang.yinyang.core.Gan
 
 import com.github.rwsbillyang.yinyang.core.Gender
 import com.github.rwsbillyang.yinyang.core.Zhi
 import com.github.rwsbillyang.yinyang.ziwei.LunarLeapMonthAdjustMode
+import com.github.rwsbillyang.yinyang.ziwei.ZwConstants
 import com.github.rwsbillyang.yinyang.ziwei.ZwPanData
 import com.github.rwsbillyang.yinyang.ziwei.rrt.*
 import kotlinx.serialization.decodeFromString
@@ -48,7 +50,8 @@ fun main(){
     //runTest(service, Zhi.Zi, LocalDateTime.now())
     //testSerialize() //sealed class 不能🈶多个层次的继承
 
-    insertExt(service)
+    insertZwExt(service)
+   // insertConstants(service)
 }
 
 fun extra2RuleCommon(extra: Any?): RuleCommon?{
@@ -183,8 +186,22 @@ fun runTest(service: MyBaseCrudService,gongZhi: Int, dateTime: LocalDateTime){
 //    }
 }
 
-fun insertExt(service: MyBaseCrudService){
+fun testSerialize(){
+    val json = "{\"_class\":\"Int\",\"key\":\"pos|紫微\",\"op\":\"in\",\"set\":{\"valueType\":\"Constant\",\"value\":[0,6]}}"
+    val expr:LogicalExpr = MySerializeJson.decodeFromString(json)
+    System.out.println("testSerialize:" + (expr is IntExpression))
+
+    val json2 = "{\"_class\":\"GongExpr\",\"key\":\"pos|紫微\",\"op\":\"isVip\"}"
+    val expr2:LogicalExpr = MySerializeJson.decodeFromString(json2)
+    System.out.println("testSerialize:" + (expr2 is GongExpr))
+}
+
+/**
+ * 添加rule runtime extension: Opcode + ParamType
+ * */
+fun insertZwExt(service: MyBaseCrudService){
     val domainId = 1
+
     val map = mutableMapOf<String, Opcode>()
     //将系统内置支持的操作符写入数据库，并构建map
     StarOpEnum.values().forEach {
@@ -207,13 +224,44 @@ fun insertExt(service: MyBaseCrudService){
     val types = service.batchSave(Meta.paramType, list, true)
     println("types= ${MySerializeJson.encodeToString(types)}" )
 }
-fun testSerialize(){
-    val json = "{\"_class\":\"Int\",\"key\":\"pos|紫微\",\"op\":\"in\",\"set\":{\"valueType\":\"Constant\",\"value\":[0,6]}}"
-    val expr:LogicalExpr = MySerializeJson.decodeFromString(json)
-    System.out.println("testSerialize:" + (expr is IntExpression))
+private inline fun findTypeByCode(service: MyBaseCrudService, code: String) =
+    service.findOne(Meta.paramType,{Meta.paramType.code eq code})?.id
+fun insertConstants(service: MyBaseCrudService){
+    val domainId = 1
 
-    val json2 = "{\"_class\":\"GongExpr\",\"key\":\"pos|紫微\",\"op\":\"isVip\"}"
-    val expr2:LogicalExpr = MySerializeJson.decodeFromString(json2)
-    System.out.println("testSerialize:" + (expr2 is GongExpr))
+    val intypeId = findTypeByCode(service, IType.Type_Int)?:-1
+    val gan = Constant("天干", intypeId, MySerializeJson.encodeToString(IntEnumValue(Gan.nameList.mapIndexed{i, v -> SelectOption(v, i)})), true)
+    val zhi = Constant("地支", intypeId, MySerializeJson.encodeToString(IntEnumValue(Zhi.nameList.mapIndexed{i, v -> SelectOption(v, i)})), true)
+    val gender = Constant("性别", intypeId, MySerializeJson.encodeToString(Gender.values().map{SelectOption(it.label, it.ordinal)}), true)
+    val bright = Constant("亮暗", intypeId, MySerializeJson.encodeToString(ZwConstants.Brightness.forEach { t, u -> SelectOption(u, t) }), true, domainId = domainId)
+
+    val ret1 = service.batchSave(Meta.constant, listOf(gan, zhi, gender, bright), true)
+    println("ret1= ${MySerializeJson.encodeToString(ret1)}" )
+
+    val stringSetTypeId = findTypeByCode(service, IType.Type_StringSet)?:-1
+    val list = mapOf(
+        "十二宫" to Pair(ZwConstants.twelveGongName.toSet(), "逆时针"),
+        "正曜" to Pair(ZwConstants.Zheng14Stars, null),
+        "辅佐曜" to Pair(ZwConstants.FuZuoStars, null),
+        "四煞" to Pair(ZwConstants.ShaStars, ""),
+        "空劫" to Pair(ZwConstants.KongJieStars, null),
+        "化曜" to Pair(ZwConstants.FourHua, null),
+        "杂曜" to Pair(ZwConstants.ZaStars, null),
+        "空曜" to Pair(ZwConstants.KongStars, "指空劫与天空。截空、旬空亦可算作空曜，但力量较弱"),
+        "刑曜" to Pair(ZwConstants.XingStars, null),
+        "忌曜" to Pair(ZwConstants.JiStars, null),
+        "桃花诸曜" to Pair(ZwConstants.TaoHuaStars, "廉贞贪狼虽有性质"),
+        "文曜" to Pair(ZwConstants.WenStars, null),
+        "科名诸曜" to Pair(ZwConstants.KeMingStars, "文曜加上三台八座,恩光天贵, 台辅封诰,天官天福八曜"),
+        "博士12神" to Pair(ZwConstants.BoShi12Stars, null),
+        "长生12神" to Pair(ZwConstants.ZhangSheng12Stars, null),
+        "岁前12星" to Pair(ZwConstants.SuiQian12Stars, null),
+        "将前12星" to Pair(ZwConstants.JiangQian12Stars, null),
+    ).map {
+        Constant(it.key, stringSetTypeId,
+            MySerializeJson.encodeToString(StringSetValue(it.value.first)), remark = it.value.second, domainId = domainId)
+    }
+
+    val ret2 = service.batchSave(Meta.constant, list, true)
+    println("ret2= ${MySerializeJson.encodeToString(ret2)}" )
 }
-
