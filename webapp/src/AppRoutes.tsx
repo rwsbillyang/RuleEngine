@@ -9,17 +9,16 @@ import { NoFoundPage } from './pages/404'
 
 import { MyRoute } from './myPro/MyRoute'
 //import { MySimpleLayout } from './myPro/MySimpleLayout'
-import { ParamTable } from './pages/basic/ParamTable'
+import { ParamTable, ParamTableTab } from './pages/basic/ParamTable'
 import { ParamTypeTable } from './pages/basic/ParamTypeTable'
 import { OpcodeTable } from './pages/basic/OpcodeTable'
 import { ConstantTable } from './pages/basic/ConstantTable'
 import { DomainTable } from './pages/basic/DomainTable'
-import { BasicExpressionTable, ComplexExpressionTable } from './pages/basic/ExpressionTable'
+import { ExpressionTableTab } from './pages/basic/ExpressionTable'
 import { RuleTable } from './pages/rule/RuleTable'
 import { RuleEdit } from './pages/rule/RuleEdit'
 import { ActionTable } from './pages/rule/ActionTable'
 import { RuleGroupTable } from './pages/rule/RuleGroupTable'
-import { ParamCategoryTable } from './pages/basic/ParamCategory'
 import { EnableParamCategory } from './Config'
 import MyProLayout, { MyProLayoutProps } from './myPro/MyProLayout';
 
@@ -30,13 +29,13 @@ import {
   TranslationOutlined,
   ClearOutlined,
   PartitionOutlined,
-  ProfileOutlined
+  ProfileOutlined,DatabaseOutlined
 } from '@ant-design/icons';
 import { Tooltip, message } from 'antd';
 
 
 // 实现懒加载的用Suspense包裹 定义函数
-const lazyLoad = (children: ReactNode): ReactNode => {
+export const lazyLoad = (children: ReactNode): ReactNode => {
   return <Suspense fallback={<div>Loading...</div>}>
     {children}
   </Suspense>
@@ -44,11 +43,29 @@ const lazyLoad = (children: ReactNode): ReactNode => {
 
 const menuRoutes: MyRoute[] = [
   {
+    path: '/meta',
+    id: 'meta',
+    icon:<ProfileOutlined />,
+    name: "元数据",
+    //element: lazyLoad(<Page2 />),//优先级高于children
+    children: [
+      {
+        path: '/meta/type',
+        name: '类型',
+        element: lazyLoad(<ParamTypeTable />)
+      },
+      {
+        path: '/meta/operator',
+        name: "操作符",
+        element: lazyLoad(<OpcodeTable />)
+      },
+    ]
+  },
+  {
     path: '/basic',
     id: 'basic',
-    icon:<ProfileOutlined />,
+    icon:<DatabaseOutlined />,
     name: "基础数据",
-    //element: lazyLoad(<Page2 />),//优先级高于children
     children: [
       {
         path: '/basic/domain',
@@ -56,41 +73,36 @@ const menuRoutes: MyRoute[] = [
         element: lazyLoad(<DomainTable />)
       },
       {
-        path: '/basic/type',
-        name: '类型',
-        element: lazyLoad(<ParamTypeTable />)
-      },
-      {
-        path: '/basic/operator',
-        name: "操作符",
-        element: lazyLoad(<OpcodeTable />)
-      },
-      {
         path: '/basic/constant',
         name: '常量',
         element: lazyLoad(<ConstantTable />)
       },
-      {
-        path: '/basic/paramCategory',
-        name: '变量分类',
-        hideInMenu: !EnableParamCategory,
-        element: lazyLoad(<ParamCategoryTable />)
-      },
+      // {
+      //   path: '/basic/paramCategory',
+      //   name: '变量分类',
+      //   hideInMenu: !EnableParamCategory,
+      //   element: lazyLoad(<ParamCategoryTable />)
+      // },
       {
         path: '/basic/param',
         name: '变量',
-        element: lazyLoad(<ParamTable />)
+        element: lazyLoad(EnableParamCategory?<ParamTableTab/> : <ParamTable />)
       },
       {
-        path: '/basic/basicExpression',
-        name: '基本表达式',
-        element: lazyLoad(<BasicExpressionTable />)
+        path: '/basic/expression',
+        name: '表达式',
+        element: lazyLoad(<ExpressionTableTab />)
       },
-      {
-        path: '/basic/complexExpression',
-        name: '复合表达式',
-        element: lazyLoad(<ComplexExpressionTable />)
-      }
+      // {
+      //   path: '/basic/basicExpression',
+      //   name: '基本表达式',
+      //   element: lazyLoad(<BasicExpressionTable />)
+      // },
+      // {
+      //   path: '/basic/complexExpression',
+      //   name: '复合表达式',
+      //   element: lazyLoad(<ComplexExpressionTable />)
+      // }
     ]
   },
   {

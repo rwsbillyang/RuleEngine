@@ -15,6 +15,8 @@ import { defaultProps } from "../moduleTableProps"
 import { UseCacheConfig } from "@rwsbillyang/usecache"
 import { ComplexExpressionRecordEditor } from "../components/ComplexExpressionRecordEditor"
 import { basicMeta2Expr, complexMeta2Expr } from "../utils"
+import { Tabs, TabsProps } from "antd"
+import { lazyLoad } from "@/AppRoutes"
 
 
 
@@ -96,7 +98,7 @@ export const BasicExpressionTable: React.FC = () => {
       //因BaiscExpressionEditor中paramId和opId值在form中，与上一级与domainId等平齐，但后端保存在meta中，
       //所以form编辑时，往上提一级
       //此函数在操作这一栏render "编辑" 按钮时，给BaiscExpressionEditor传初始值时执行
-      
+
       if (!e) return e
       e.meta = e.metaStr ? JSON.parse(e.metaStr) : undefined
       e.expr = e.exprStr ? JSON.parse(e.exprStr) : undefined
@@ -125,7 +127,7 @@ export const BasicExpressionTable: React.FC = () => {
   }
 
 
-//因为共用columns，故先解构，避免相互干扰
+  //因为共用columns，故先解构，避免相互干扰
   return <MyProTable<BasicExpressionRecord, ExpressionQueryParams>
     {...props}
     columns={[...columns]}
@@ -204,5 +206,19 @@ export const ComplexExpressionTable: React.FC = () => {
 }
 
 
-
+export const ExpressionTableTab: React.FC = () => {
+  const items: TabsProps['items'] = [
+    {
+      key: 'BasicExpressionTable',
+      label: '基本表达式',
+      children: lazyLoad(<BasicExpressionTable />),
+    },
+    {
+      key: 'ComplexExpressionTable',
+      label: '复合表达式',
+      children: lazyLoad(<ComplexExpressionTable />),
+    },
+  ];
+  return <Tabs defaultActiveKey="BasicExpressionTable" items={items} />
+}
 

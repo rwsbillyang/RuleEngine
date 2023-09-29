@@ -13,6 +13,9 @@ import { EnableParamCategory, Host } from "@/Config"
 import { type2Both } from "../utils"
 
 import { defaultProps, mustFill } from "../moduleTableProps"
+import { Tabs, TabsProps } from "antd"
+import { lazyLoad } from "@/AppRoutes"
+import { ParamCategoryTable } from "./ParamCategory"
 
 
 export const ParamTable: React.FC = () => {
@@ -148,4 +151,20 @@ export const ParamTable: React.FC = () => {
   return <MyProTable<Param, ParamQueryParams> {...props} columns={columns}
     initialQuery={initialQuery}
   />
+}
+
+export const ParamTableTab: React.FC = () => {
+  const items: TabsProps['items'] = [
+    {
+      key: 'ParamTable',
+      label: '变量',
+      children: lazyLoad(<ParamTable />),
+    },
+    {
+      key: 'ParamCategoryTable',
+      label: '变量分类',
+      children: lazyLoad(<ParamCategoryTable />),
+    },
+  ];
+  return <Tabs defaultActiveKey="ParamTable" items={items} />
 }
