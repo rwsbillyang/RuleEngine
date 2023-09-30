@@ -1,4 +1,4 @@
-import { TreeCache } from "@rwsbillyang/usecache";
+import { ArrayUtil, TreeCache } from "@rwsbillyang/usecache";
 
 
 export function testTreeSearch() {
@@ -10,15 +10,15 @@ export function testTreeSearch() {
         { id: "5", children: [{ id: "5.1" }, { id: "5.2" }, { id: "5.3", children: [{ id: "5.3.1" }, { id: "5.3.2", children: [{ id: "5.3.2.1" }, { id: "hit2" }] }] }] },
     ]
 
-    const path = TreeCache.getOnePathFromTreeArray(array, "hit2", "children", "id", true)
+    const path = ArrayUtil.findOneFromTree(array, "hit2", "children", "id", true)
     console.log("path=", path)
 
     const allPaths: any[][] = []
-    TreeCache.getAllPathFromTreeArray(allPaths, array, "hit2", "children", "id")
+    ArrayUtil.findAllFromTree(allPaths, array, "hit2", "children", "id")
     console.log("allPaths:", allPaths)
 
 
-    const path2 = TreeCache.getElementsByPathIdsInTree(array, ["2", "2.3", "hit2"], "id")
+    const path2 = ArrayUtil.getArrayByPathInTree(array, ["2", "2.3", "hit2"], "id")
     console.log("path2=", path2)
 
 
