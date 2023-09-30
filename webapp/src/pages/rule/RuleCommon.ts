@@ -43,11 +43,11 @@ function getOnSaveOk(fromTable: string, isAdd: boolean, debug: boolean, currentR
             if (debug) console.log(log)
             let flag
             if(isAdd){
-                //新增时，新增的节点后端最多返回从自身开始的parentPath，后更改为空path，需自己构建
-                flag = TreeCache.onAddOneInTree(cacheKey, data, currentRow.parentPath, idKey, "children", (parentPath, parent) => { data.parentPath = [...parent.parentPath, data[idKey]]} )
+                //新增时，新增的节点后端最多返回从自身开始的parentPath，后更改为自己的typeId，需前端构建
+                flag = TreeCache.onAddOneInTree(cacheKey, data, currentRow.parentPath, idKey, "children", (parentPath, parent) => { data.parentPath = [...(parent.parentPath || parentPath), data[idKey]]} )
             }else{
                 if(currentRow.parentPath){
-                    //编辑时，节点后端返回从自身开始的parentPath，应该从根节点开始，后更改为空path，需自己构建
+                    //编辑时，节点后端返回从自身开始的parentPath，应该从根节点开始，后更改为自己的typeId，前端恢复原值
                     data.parentPath = currentRow.parentPath
                     data.children = currentRow.children
                     flag = TreeCache.onEditOneInTree(cacheKey, data, currentRow.parentPath, idKey)
@@ -86,11 +86,13 @@ export function saveRuleOrGroup(
         if (!rowRuleCommon) {
             if (fromTable === RuleName) {//新增顶级rule
                 if (debug) console.log("to save top rule in rule table...")
+                //bugfix：parentIdPath后端返回自己的[typeId]，避免了空
                 saveOne(values as Rule, record, rubleTableProps.saveApi,
                     rubleTableProps.transformBeforeSave, undefined, isAdd,
                     rubleTableProps.listApi, rubleTableProps.cacheKey, rubleTableProps.idKey)
             } else if (fromTable === RuleGroupName) {//新增顶级ruleGroup
                 if (debug) console.log("to save top ruleGroup in ruleGroup table...")
+                 //bugfix：parentIdPath后端返回自己的[typeId]，避免了空
                 saveOne(values as RuleGroup, record, rubleGroupTableProps.saveApi,
                     rubleGroupTableProps.transformBeforeSave, undefined, isAdd,
                     rubleGroupTableProps.listApi, rubleGroupTableProps.cacheKey, rubleGroupTableProps.idKey)

@@ -301,9 +301,9 @@ data class Rule(
     //@KomapperIgnore var children: MutableList<RuleCommon> ? = null //为前端构造tree型列表展示，不再使用List<Rule>和List<RuleGroup>，让前端子列表统一
 ){
     fun toRuleCommon(service: BaseCrudService?, path: MutableList<String>? = null): RuleCommon  {
-        val pair = if(service != null)getChildrenTree(service, path) else Pair(listOf(), null) //在新增和鞭酒修改时无需构建children，因1是没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
+        val pair = if(service != null) getChildrenTree(service, path) else null //在新增和修改时无需构建children，因1是没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
         return RuleCommon(
-            pair.first, this, null, id, "rule$id", level, label, priority, remark, enable, tags, exclusive, domainId,  domain, pair.second
+            pair?.first?: listOf("rule$id"), this, null, id, "rule$id", level, label, priority, remark, enable, tags, exclusive, domainId,  domain, pair?.second
         )
     }
 
@@ -375,9 +375,9 @@ data class RuleGroup(
     //@KomapperIgnore var ruleGroupChildren: List<RuleGroup>? = null,
 ){
     fun toRuleCommon(service: BaseCrudService?, path: MutableList<String>? = null): RuleCommon  {
-        val pair = if(service != null)getChildrenTree(service, path) else Pair(listOf(), null) //在新增和鞭酒修改时无需构建children，因1是没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
+        val pair = if(service != null) getChildrenTree(service, path) else null //在新增和鞭酒修改时无需构建children，因1是没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
         return RuleCommon(
-            pair.first, null, this, id, "group$id", level, label, priority, remark, enable, tags, exclusive, domainId, domain, pair.second
+            pair?.first?: listOf("group$id"), null, this, id, "group$id", level, label, priority, remark, enable, tags, exclusive, domainId, domain, pair?.second
         )
     }
 
