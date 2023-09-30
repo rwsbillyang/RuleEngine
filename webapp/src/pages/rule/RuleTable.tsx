@@ -1,5 +1,5 @@
 
-import React from "react"
+import React, { useState } from "react"
 
 import { AllDomainKey, Domain, DomainQueryParams, Rule, RuleCommon, RuleQueryParams } from "../DataType"
 import { useSearchParams } from "react-router-dom"
@@ -19,6 +19,7 @@ import { Dropdown } from "antd"
 import { RuleGroupEditModal, initialValuesRuleGroup, rubleGroupTableProps } from "./RuleGroupTable"
 import { deleteRuleOrGroup } from "./RuleCommon"
 import { basicMeta2Expr, complexMeta2Expr } from "../utils"
+import { ArrayUtil } from "@rwsbillyang/usecache"
 
 const ruleColumns: ProColumns<RuleCommon>[] = [
     {
@@ -166,11 +167,13 @@ export const RuleTable: React.FC = () => {
 
     const [searchParams] = useSearchParams();
     const initialQuery: RuleQueryParams = { domainId: searchParams["domainId"], level: 0 }
-
+    const [path, setPath] = useState<string[]>()
+    
     //新增和编辑将全部转移到自定义的
     const toolBarRender = () => [
-        <RuleEditModal isAdd={true} record={initialValueRule} fromTable={RuleName} key="addOne" />
-    ]
+        <RuleEditModal isAdd={true} record={initialValueRule} fromTable={RuleName} key="addOne" />,
+        path? <a onClick={() => {setPath(undefined)}} key="viewAll">恢复查看全部</a>: undefined
+    ].filter(e=>!!e)
 
     //自定义编辑
     const actions: ProColumns<RuleCommon> = {
@@ -195,7 +198,9 @@ export const RuleTable: React.FC = () => {
                 record.rule ? <RuleEditModal isAdd={false} record={rubleTableProps.transformBeforeEdit ? rubleTableProps.transformBeforeEdit(record.rule) : record.rule} currentRow={record} fromTable={RuleName} key="editOne" /> : undefined,
                 record.ruleGroup ? <RuleGroupEditModal isAdd={false} record={rubleGroupTableProps.transformBeforeEdit ? rubleGroupTableProps.transformBeforeEdit(record.ruleGroup) : record.ruleGroup} currentRow={record} fromTable={RuleName} key="editOne" /> : undefined,
 
-                <a onClick={() => deleteRuleOrGroup(RuleName, record)} key="delete">删除</a>
+                <a onClick={() => deleteRuleOrGroup(RuleName, record)} key="delete">删除</a>,
+
+                <a onClick={() => {setPath(record.parentPath)}} key="viewOnlyNode">只看当前</a>
             ]
         }
     }
@@ -206,6 +211,13 @@ export const RuleTable: React.FC = () => {
     columns={ruleColumns} 
     initialQuery={initialQuery} 
     initialValues={initialValueRule}
+    listTransformArgs={path}
+        listTransform={(list: RuleCommon[], path?:any) => {
+            if(!path) return list
+            const root = ArrayUtil.trimTreeByPath(list, path, rubleGroupTableProps.idKey, "children", true)
+            //console.log("after remove, root=",root)
+            return root? [root] : list
+        }}
     //rowKey={ (record) => record.typedId  }
     toolBarRender={toolBarRender} actions={actions} //注释掉此行，将跳到新的页面RuleEdit，否则使用Modal对话框
     />

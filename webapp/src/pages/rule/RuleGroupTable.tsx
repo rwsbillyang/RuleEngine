@@ -1,5 +1,5 @@
 
-import React from "react"
+import React, { useState } from "react"
 
 import { AllDomainKey, Domain, DomainQueryParams, RuleCommon, RuleGroup, RuleGroupQueryParams } from "../DataType"
 import { useSearchParams } from "react-router-dom"
@@ -18,6 +18,8 @@ import { BetaSchemaForm } from "@ant-design/pro-form"
 import { defaultProps, mustFill } from "../moduleTableProps"
 
 import { deleteRuleOrGroup, saveRuleOrGroup } from "./RuleCommon"
+import { ArrayUtil } from "@rwsbillyang/usecache"
+
 
 
 const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup> = 
@@ -114,10 +116,13 @@ export const RuleGroupTable: React.FC = () => {
 
     const [searchParams] = useSearchParams();
     const initialQuery: RuleGroupQueryParams = { domainId: searchParams["domainId"], level: 0 }
+    const [path, setPath] = useState<string[]>()
 
     const toolBarRender = () => [
-        <RuleGroupEditModal isAdd={true} record={initialValuesRuleGroup} fromTable={RuleGroupName} key="addOne" />
-    ]
+        <RuleGroupEditModal isAdd={true} record={initialValuesRuleGroup} fromTable={RuleGroupName} key="addOne" />,
+        path? <a onClick={() => {setPath(undefined)}} key="viewAll">恢复查看全部</a>: undefined
+    ].filter(e=>!!e)
+
     //自定义编辑
     const actions: ProColumns<RuleCommon> = {
         title: '操作',
@@ -141,11 +146,14 @@ export const RuleGroupTable: React.FC = () => {
                 record.rule ? <RuleEditModal isAdd={false} record={rubleTableProps.transformBeforeEdit ? rubleTableProps.transformBeforeEdit(record.rule) : record.rule} currentRow={record} fromTable={RuleGroupName} key="editOne" /> : undefined,
                 record.ruleGroup ? <RuleGroupEditModal isAdd={false} record={rubleGroupTableProps.transformBeforeEdit ? rubleGroupTableProps.transformBeforeEdit(record.ruleGroup) : record.ruleGroup} currentRow={record} fromTable={RuleGroupName} key="editOne" /> : undefined,
 
-                <a onClick={() => deleteRuleOrGroup(RuleGroupName, record)} key="delete">删除</a>
+                <a onClick={() => deleteRuleOrGroup(RuleGroupName, record)} key="delete">删除</a>,
+
+                <a onClick={() => {setPath(record.parentPath)}} key="viewOnlyNode">只看当前</a>
             ]
         }
     }
 
+    
 
     return <MyProTable<RuleCommon, RuleGroupQueryParams>
         {...rubleGroupTableProps}
@@ -153,6 +161,14 @@ export const RuleGroupTable: React.FC = () => {
         columns={ruleGroupColumns}
         initialQuery={initialQuery}
         initialValues={initialValuesRuleGroup}
+        listTransformArgs={path}
+        listTransform={(list: RuleCommon[], path?:any) => {
+            if(!path) return list
+            const root = ArrayUtil.trimTreeByPath(list, path, rubleGroupTableProps.idKey, "children", true)
+            //console.log("after remove, root=",root)
+            return root? [root] : list
+        }}
+        
         //rowKey={ (record) => record.typedId || "unknown"+record.id }
         toolBarRender={toolBarRender} actions={actions}
     />

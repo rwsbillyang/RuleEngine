@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Dropdown, MenuProps, Space, Tooltip, Transfer, message } from 'antd';
 import { TransferDirection, TransferListProps } from 'antd/es/transfer';
 
-import { cachedGet, Cache } from "@rwsbillyang/usecache"
+import { cachedGet, ArrayUtil } from "@rwsbillyang/usecache"
 
 import { BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpressionMeta, ComplexExpressionRecord, ExpressionMeta, ExpressionRecord, Opcode } from '../DataType';
 import { BasicExprMetaEditModal } from './BasicExprMetaEditModal';
@@ -22,6 +22,7 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta?: ComplexEx
 
   //transfer right list
   const [targetKeys, setTargetKeys] = useState<string[]>([]);
+  const [sourceSelectKeys, setSourceSelectedKeys] = useState<string[]>();
   const { current } = useRef<{ allRecords: ExpressionRecord[], allExprList: ExpressionRecord[]}>({ allRecords: [], allExprList: []}) //用于从现有记录中查询名称
   
   useMemo(()=>{
@@ -82,10 +83,16 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta?: ComplexEx
           <BasicExprMetaEditModal cannotChooseOne={true} title="添加基本表达式" triggerName="添加基本表达式" domainId={domainId}
             onDone={(v) => {
               console.log("create basicRecord done, get v=",v)
-              const mockExpr: BasicExpressionRecord = { key: md5(sortedConcat(meta2Expr(v))), meta: v, type: "Basic", label: "临时" }
-              if (pushIfNotPresent(exprList, mockExpr, "key")) //metaList.push(v)
+              const mockExpr: BasicExpressionRecord = { 
+                key: md5(sortedConcat(meta2Expr(v))), 
+                meta: v, 
+                type: "Basic", 
+                label: "临时"
+               }
+              if (pushIfNotPresent(exprList, mockExpr, "key")){//metaList.push(v)
                 setExprList([...exprList])
-              else {
+                console.log("exprList=",exprList)
+              }else {
                 message.info("已存在相同表达式")
               }
             }} />
@@ -97,23 +104,33 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta?: ComplexEx
               const expr = meta2Expr(v) as BasicExpression
               const key = md5(sortedConcat(expr))
               if(key !== basicRecord1.key){
-                for(let i=0; i<targetKeys.length; i++){
-                  if(targetKeys[i] === basicRecord1.key){
-                    targetKeys[i] = key
-                  }
-                }
-                
                 basicRecord1.key = key
                 basicRecord1.meta = v
-                basicRecord1["expr"] = expr
-                basicRecord1.exprStr = JSON.stringify(expr)
-                basicRecord1.metaStr = JSON.stringify(v)
+                //basicRecord1["expr"] = expr
+                //basicRecord1.exprStr = JSON.stringify(expr)
+                //basicRecord1.metaStr = JSON.stringify(v)
 
+                let flag = false
+                for(let i=0; i<targetKeys.length; i++){
+                  if(targetKeys[i] === key){
+                    targetKeys[i] = key
+                    flag = true
+                  }
+                }
+                if(flag) setTargetKeys([...targetKeys])
                 setExprList([...exprList])
-                setTargetKeys([...targetKeys])
                 //setBasicRecord1
               }
             }} />}
+            {
+              (sourceSelectKeys && sourceSelectKeys.length > 0) && <a onClick={()=>{
+                if(ArrayUtil.removeMany(exprList, sourceSelectKeys, "key")){
+                  setExprList([...exprList])
+                  setSourceSelectedKeys(undefined)
+                }
+                    
+              }}>删除选中</a>
+            }
         </Space>
 
       );
@@ -158,22 +175,24 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta?: ComplexEx
                //key and meta被替换成新值
                const expr = meta2Expr(v) as BasicExpression
                const key = md5(sortedConcat(expr))
-              if(key !== basicRecord2.key){
-                for(let i=0; i<targetKeys.length; i++){
-                  if(targetKeys[i] === basicRecord2.key){
-                    targetKeys[i] = key
-                  }
-                }
                 basicRecord2.key = key
                 basicRecord2.meta = v
-                basicRecord2["expr"] = expr
-                basicRecord2.exprStr = JSON.stringify(expr)
-                basicRecord2.metaStr = JSON.stringify(v)
+                //basicRecord2["expr"] = expr
+                //basicRecord2.exprStr = JSON.stringify(expr)
+                //basicRecord2.metaStr = JSON.stringify(v)
 
+                let flag = false
+                for(let i=0; i<targetKeys.length; i++){
+                  if(targetKeys[i] === key){
+                    targetKeys[i] = key
+                    flag = true
+                  }
+                }
+                if(flag) setTargetKeys([...targetKeys])
                 setExprList([...exprList])
-                setTargetKeys([...targetKeys])
+   
               }
-            }} />}
+            } />}
         </Space>
 
       );
@@ -209,6 +228,7 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta?: ComplexEx
       } else {
         setBasicRecord1(undefined)
       }
+      setSourceSelectedKeys(sourceSelectedKeys)
 
       if (targetSelectedKeys.length === 1) {
         const list = getByIds(current.allExprList, targetSelectedKeys, "key")
@@ -234,7 +254,7 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta?: ComplexEx
       }
       const customLabel = (
         <span style={{ width: '100' }}>
-          [{item.label || "临时"}] - {str}
+          [{item.label || "临时"}] {str}
         </span>
       );
 
@@ -301,14 +321,14 @@ function destructComplexMetaList(allRecords: ExpressionRecord[], metaList?: Expr
     if (e._class === "Complex") {
       const meta = e as ComplexExpressionMeta
       const key = md5(sortedConcat(complexMeta2Expr(meta)))
-      const label = expr?.label || Cache.findOneInArray(allRecords, key, "key")?.label
+      const label = expr?.label || ArrayUtil.findOne(allRecords, key, "key")?.label
       const mockExpr: ComplexExpressionRecord = { label: label ? label + "-" + list.length : "临时", meta, key, type: "Complex" }
       pushIfNotPresent(list, mockExpr, "key")
       destructComplexMetaList(allRecords, meta.metaList, expr, result)
     } else {
       const meta = e as BasicExpressionMeta
       const key = md5(sortedConcat(basicMeta2Expr(meta)))
-      const label = expr?.label || Cache.findOneInArray(allRecords, key, "key")?.label
+      const label = expr?.label || ArrayUtil.findOne(allRecords, key, "key")?.label
       const mockExpr: BasicExpressionRecord = { label: label ? label + "-" + list.length : "临时", meta, key, type: "Basic" }
       pushIfNotPresent(list, mockExpr, "key")
     }
@@ -365,7 +385,7 @@ const LogicalExprDropDwon: React.FC<{ title?: string, disabled?: boolean, onClic
   }, [])
 
   const onClick2: MenuProps['onClick'] = ({ key }) => {
-    const e = Cache.findOneInArray(ops, key, "code")
+    const e = ArrayUtil.findOne(ops, key, "code")
     if (e) onClick(e)
     else console.log("clicked key=" + key + ", but not found in ops=", ops)
   };

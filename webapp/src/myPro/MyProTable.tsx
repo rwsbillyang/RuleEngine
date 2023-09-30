@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { PlusOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import ProTable, { ProColumns, ProTableProps } from '@ant-design/pro-table';
-import { Cache, BasePageQuery, StorageType, CacheStorage, useCacheList, BaseRecord, UseCacheConfig, cachedFetch, cachedFetchPromise, contains } from '@rwsbillyang/usecache';
+import { Cache, BasePageQuery, StorageType, CacheStorage, useCacheList, BaseRecord, UseCacheConfig, cachedFetch, cachedFetchPromise, ArrayUtil } from '@rwsbillyang/usecache';
 import { EditProps, MyProTableProps } from './MyProTableProps';
 import { MyProConfig } from './MyProConfig';
 
@@ -24,7 +24,7 @@ function applyinitalQuery<T extends BaseRecord, Q extends BasePageQuery = BasePa
 
   //没有明确禁止，且有任意saveApi、delApi则添加actions
   if ((!disableActions && (saveApi || delApi)) && columns && columns.length > 0) {
-    if (!contains(columns, actions, (e1, e2) => e1.title === e2.title)) {
+    if (!ArrayUtil.contains(columns, actions, (e1, e2) => e1.title === e2.title)) {
       columns.push(actions)
     }
   }
@@ -74,6 +74,10 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
 
   // console.log("currentQuery=", currentQuery)
   // console.log("current.query=", current.query)
+  
+  const dataSource = props.listTransform ? props.listTransform(list, props.listTransformArgs) : list
+  //console.log("props=", props)
+  //console.log("dataSource=", dataSource)
 
   //删除后从缓存中刷新
   useBus('refreshList-' + props.listApi, () => {
@@ -166,7 +170,7 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
           loading={isLoading}
           columns={columns}
           formRef={formRef} // 赋值ref
-          dataSource={props.listTransform ? props.listTransform(list) : list}
+          dataSource={dataSource}
           rowKey={props.rowKey || props.idKey || "_id"}
           pagination={props.pagination ? props.pagination : false}
           onReset={searchReset}

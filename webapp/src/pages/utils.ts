@@ -13,12 +13,12 @@ export const getBasicType = (parmTypeId?: number, cacheKey: string = AllParamTyp
     const paramType: ParamType = Cache.findOne(cacheKey, parmTypeId, "id")
     if (paramType) {
         let end = paramType.code.indexOf("Set")
-        if(end < 0) end = paramType.code.indexOf("Enum")
+        if (end < 0) end = paramType.code.indexOf("Enum")
         //console.log("end="+end)
         if (end > 0) {
             const basicTypeCode = paramType.code.slice(0, end)
             return Cache.findOne(cacheKey, basicTypeCode, "code")
-        }else 
+        } else
             return paramType
     }
     return undefined
@@ -51,19 +51,19 @@ export const getBasicType = (parmTypeId?: number, cacheKey: string = AllParamTyp
  * @returns 
  */
 export const type2Both = (typeId?: number, cacheKey: string = AllParamTypeKey) => {
-    if(typeId){
-      const basicType = getBasicType(typeId)
-      if(basicType){
-        const setTypeId = typeCode2Id(basicType.code + "Set", cacheKey)
-        const typeIds = [basicType.id, setTypeId].filter(e => e !== undefined)
-        return typeIds.join(",")
-      }else{
+    if (typeId) {
+        const basicType = getBasicType(typeId)
+        if (basicType) {
+            const setTypeId = typeCode2Id(basicType.code + "Set", cacheKey)
+            const typeIds = [basicType.id, setTypeId].filter(e => e !== undefined)
+            return typeIds.join(",")
+        } else {
+            return undefined
+        }
+
+    } else
         return undefined
-      }
-  
-    }else
-      return undefined
-  }
+}
 
 /**
  * 根据类型的code，查询得到其id
@@ -83,21 +83,21 @@ export const typeCode2Id = (parmTypeCode: string, cacheKey: string = AllParamTyp
  * @returns 
  */
 export const operandConfigMapStr2List = (mapStr?: string) => {
-    if(!mapStr) return undefined
+    if (!mapStr) return undefined
 
     //const map: Map<string, OperandConfig> = new Map<string, OperandConfig>()
-    const cfgObj: {[k:string]: OperandConfig}  = {}
+    const cfgObj: { [k: string]: OperandConfig } = {}
     const list: OperandConfigItem[] = []
 
     const obj = JSON.parse(mapStr)
-    Object.keys(obj).forEach((e)=>{
+    Object.keys(obj).forEach((e) => {
         const cfg = obj[e]
         //map.set(e, cfg as OperandConfig)
-        cfgObj[e] =  cfg as OperandConfig
+        cfgObj[e] = cfg as OperandConfig
         list.push({ ...cfg, name: e })
     })
 
-    return {obj: cfgObj, list}
+    return { obj: cfgObj, list }
 }
 //obj: Map<string, OperandConfig>
 /**
@@ -105,27 +105,25 @@ export const operandConfigMapStr2List = (mapStr?: string) => {
  * @param obj 
  * @returns 
  */
-export const operandConfigObj2List = (obj: {[k:string]: OperandConfig} ) => {
+export const operandConfigObj2List = (obj: { [k: string]: OperandConfig }) => {
     const list: OperandConfigItem[] = []
-    for(let k in obj){
+    for (let k in obj) {
         list.push({ ...obj[k], name: k }) //map.forEach((v, k) => list.push({ ...v, name: k }))
     }
     return list
 }
 
+export const exprRecord2String = (expr: BaseExpressionRecord) => expr.type === "Complex" ?
+    complexExpressionMeta2String((expr as ComplexExpressionRecord).meta)
+    : basicExpressionMeta2String((expr as BasicExpressionRecord).meta)
 
 
-export const exprRecord2String = (expr: BaseExpressionRecord) => expr.type === "Complex" ? 
-complexExpressionMeta2String((expr as ComplexExpressionRecord).meta) 
-: basicExpressionMeta2String((expr as BasicExpressionRecord).meta)
-
-
-export const basicExprRecord2String = (expr?: BasicExpressionRecord)=>{
-    if(!expr) return "暂无"
+export const basicExprRecord2String = (expr?: BasicExpressionRecord) => {
+    if (!expr) return "暂无"
     return "[" + expr.label + "]: " + basicExpressionMeta2String(expr.meta)
 }
-export const complexExprRecord2String = (expr?: ComplexExpressionRecord)=>{
-    if(!expr) return "暂无"
+export const complexExprRecord2String = (expr?: ComplexExpressionRecord) => {
+    if (!expr) return "暂无"
     return "[" + expr.label + "]: " + complexExpressionMeta2String(expr.meta)
 }
 
@@ -134,21 +132,21 @@ export const complexExprRecord2String = (expr?: ComplexExpressionRecord)=>{
  * @param meta BasicExpressionMeta
  * @returns 
  */
-export const basicExpressionMeta2String = (meta?: BasicExpressionMeta)=>{
-    if(!meta || meta._class === "Complex") return "暂无"
+export const basicExpressionMeta2String = (meta?: BasicExpressionMeta) => {
+    if (!meta || meta._class === "Complex") return "暂无"
 
-    const list: {key: string, value: OperandValueMeta | undefined} [] = []
-    for(let k in  meta.operandMetaObj){
-        list.push({key: k, value: meta.operandMetaObj[k]})   //meta.operandValueMap.forEach((v,k)=>{ list.push({key: k, value: v}) })
+    const list: { key: string, value: OperandValueMeta | undefined }[] = []
+    for (let k in meta.operandMetaObj) {
+        list.push({ key: k, value: meta.operandMetaObj[k] })   //meta.operandValueMap.forEach((v,k)=>{ list.push({key: k, value: v}) })
     }
-    
-    const oprand = list.map((e)=> operandMeta2String(e.key, e.value)).join(", ")
 
-    if(meta.param)
+    const oprand = list.map((e) => operandMeta2String(e.key, e.value)).join(", ")
+
+    if (meta.param)
         return `${meta.param.label} '${meta.op?.label}' ${oprand}`
-    else if(meta.mapKey)
+    else if (meta.mapKey)
         return `${meta.mapKey} '${meta.op?.label}' ${oprand}`
-    else 
+    else
         return `unknown '${meta.op?.label}' ${oprand}`
 }
 
@@ -159,17 +157,17 @@ export const basicExpressionMeta2String = (meta?: BasicExpressionMeta)=>{
  * @param meta ComplexExpressionMeta
  * @returns 
  */
-export const complexExpressionMeta2String = (meta?: ComplexExpressionMeta)=>{
-    if(!meta || meta._class !== "Complex") return "暂无"
-    const list = meta.metaList?.map((e)=>{
-        if(e._class === "Complex"){
+export const complexExpressionMeta2String = (meta?: ComplexExpressionMeta) => {
+    if (!meta || meta._class !== "Complex") return "暂无"
+    const list = meta.metaList?.map((e) => {
+        if (e._class === "Complex") {
             return complexExpressionMeta2String(e as ComplexExpressionMeta)
-        }else{
+        } else {
             return basicExpressionMeta2String(e as BasicExpressionMeta)
         }
     }).join(", ")
 
-    return  meta.op?.code + "("+ list +")"
+    return meta.op?.code + "(" + list + ")"
 }
 
 /**
@@ -178,24 +176,24 @@ export const complexExpressionMeta2String = (meta?: ComplexExpressionMeta)=>{
  * @returns 
  */
 export const operandMeta2String = (name: string, operandMeta?: OperandValueMeta) => {
-    if(!operandMeta) return ""
-    if(operandMeta.valueType  === 'Param'){
-        return name + "=" + operandMeta.param?.label + "("+ operandMeta.param?.mapKey + ")"
-    }else if(operandMeta.valueType  === 'Constant'){
-        return name + "=" + jsonValue2String(operandMeta.jsonValue)     
-    }else if(operandMeta.valueType  === 'JsonValue'){
-        return name + "=" + jsonValue2String(operandMeta.jsonValue)    
-    }else{
-        console.warn("should not come here, wrong operandMeta.valueType =" + operandMeta.valueType )
+    if (!operandMeta) return ""
+    if (operandMeta.valueType === 'Param') {
+        return name + "=" + operandMeta.param?.label + "(" + operandMeta.param?.mapKey + ")"
+    } else if (operandMeta.valueType === 'Constant') {
+        return name + "=" + jsonValue2String(operandMeta.jsonValue)
+    } else if (operandMeta.valueType === 'JsonValue') {
+        return name + "=" + jsonValue2String(operandMeta.jsonValue)
+    } else {
+        console.warn("should not come here, wrong operandMeta.valueType =" + operandMeta.valueType)
         return "wrong operandMeta.valueType!!!"
     }
 }
 
 const jsonValue2String = (jsonValue?: JsonValue) => {
-    if(!jsonValue) return ""
-    if(Array.isArray(jsonValue.value)){
+    if (!jsonValue) return ""
+    if (Array.isArray(jsonValue.value)) {
         return "[" + jsonValue.value.join(",") + "]"
-    }else 
+    } else
         return jsonValue.value
 
 }
@@ -207,14 +205,14 @@ const jsonValue2String = (jsonValue?: JsonValue) => {
  */
 export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
     if (!meta) return undefined
-    if(!meta.op){
+    if (!meta.op) {
         console.log("should not come here: no op")
         return undefined
     }
-    const operandValueObj: {[key:string]: OperandValue} = {}
-    for(let k in meta.operandMetaObj){
+    const operandValueObj: { [key: string]: OperandValue } = {}
+    for (let k in meta.operandMetaObj) {
         const v = operandMeta2OperandValue(meta.operandMetaObj[k])
-        if(v) operandValueObj[k] = v
+        if (v) operandValueObj[k] = v
     }
 
     const expr: BasicExpression = {
@@ -223,13 +221,13 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
         op: meta.op.code,
         operands: operandValueObj
     }
-    if(meta.param){
+    if (meta.param) {
         expr._class = meta.param.paramType.code
         expr.key = meta.param.mapKey
         expr.extra = meta.param.extra
         return expr
     }
-    if(meta.mapKey && meta.paramType){
+    if (meta.mapKey && meta.paramType) {
         expr._class = meta.paramType.code
         expr.key = meta.mapKey
         expr.extra = meta.extra
@@ -248,11 +246,11 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
  */
 const operandMeta2OperandValue = (operandMeta?: OperandValueMeta) => {
     if (!operandMeta) return undefined
-    const opvalue:OperandValue = {
+    const opvalue: OperandValue = {
         valueType: operandMeta.valueType,
         key: operandMeta.param?.mapKey,
-        value:(operandMeta.jsonValue && Array.isArray(operandMeta.jsonValue.value) && operandMeta.jsonValue?._class.indexOf("Enum") > 0) 
-        ? operandMeta.jsonValue?.value?.map(e=>e.value) : operandMeta.jsonValue?.value
+        value: (operandMeta.jsonValue && Array.isArray(operandMeta.jsonValue.value) && operandMeta.jsonValue?._class.indexOf("Enum") > 0)
+            ? operandMeta.jsonValue?.value?.map(e => e.value) : operandMeta.jsonValue?.value
     }
     return opvalue
 }
@@ -262,16 +260,16 @@ const operandMeta2OperandValue = (operandMeta?: OperandValueMeta) => {
  * @param meta ComplexExpressionMeta
  * @returns 
  */
-export const complexMeta2Expr =  (meta?: ComplexExpressionMeta) => {
+export const complexMeta2Expr = (meta?: ComplexExpressionMeta) => {
     if (!meta) return undefined
     if (!meta.op) {
         console.log("should not come here: no op")
         return undefined
-    }  
-    const list = meta.metaList.map((e)=>{
-        if(e._class === "Complex"){
+    }
+    const list = meta.metaList.map((e) => {
+        if (e._class === "Complex") {
             return complexMeta2Expr(e as ComplexExpressionMeta)
-        }else{
+        } else {
             return basicMeta2Expr(e as BasicExpressionMeta)
         }
     }).filter((e) => !!e)
@@ -280,16 +278,16 @@ export const complexMeta2Expr =  (meta?: ComplexExpressionMeta) => {
     const expr: ComplexExpression = {
         _class: meta._class,
         op: meta.op.code,
-        exprs: list as (BasicExpression|ComplexExpression)[]
+        exprs: list as (BasicExpression | ComplexExpression)[]
     }
     return expr
 }
 
-export function meta2Expr(meta?: BasicExpressionMeta | ComplexExpressionMeta ){
-    if(!meta) return undefined
-    if(meta._class === "Complex")
+export function meta2Expr(meta?: BasicExpressionMeta | ComplexExpressionMeta) {
+    if (!meta) return undefined
+    if (meta._class === "Complex")
         return complexMeta2Expr(meta as ComplexExpressionMeta)
-    else 
+    else
         return basicMeta2Expr(meta as BasicExpressionMeta)
 }
 
@@ -298,9 +296,9 @@ export function meta2Expr(meta?: BasicExpressionMeta | ComplexExpressionMeta ){
 /***
  * 有效信息，用于生成md5作为id
  */
-export const opValue2Md5Msg = (name:string, opValue?: OperandValue)=>{
-    if(!opValue) return ""
-    if(opValue.valueType === "Param") return `&${name}.OperandKey=${opValue.key}`
+export const opValue2Md5Msg = (name: string, opValue?: OperandValue) => {
+    if (!opValue) return ""
+    if (opValue.valueType === "Param") return `&${name}.OperandKey=${opValue.key}`
     else return `&${name}.OperandValue=${opValue.value}`
 }
 
@@ -323,28 +321,26 @@ export function sortedConcat(obj: any) {
     for (let i = 0; i < keys.length - 1; i++) {
         const key = keys[i]
         const v = obj[key]
-        if(v){
+        if (v) {
             str += `${key}=$`
-            if(typeof v === 'object'){
+            if (typeof v === 'object') {
                 str += `${key}=${sortedConcat(v)}&`
-            }else{
+            } else {
                 str += `${key}=${v}&`
-            } 
+            }
         }
     }
 
     const key = keys[keys.length - 1]
     const v = obj[key]
-    if(v){
+    if (v) {
         str += `${key}=$`
-        if(typeof v === 'object'){
+        if (typeof v === 'object') {
             str += `${key}=${sortedConcat(v)}&`
-        }else{
+        } else {
             str += `${key}=${v}`
-        } 
+        }
     }
 
     return str + "}";
 }
-
-

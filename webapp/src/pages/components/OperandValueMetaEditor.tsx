@@ -1,5 +1,5 @@
 import { Cascader, Form, Select, Space } from "antd"
-import { Constant, ConstantQueryParams, OperandConfig, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, OperandValueMeta } from "../DataType"
+import { Constant, ConstantQueryParams, OperandConfig, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, OperandValueMeta, JsonValue } from "../DataType"
 import { JsonValueEditor } from "./JsonValueEditor"
 import React, { useEffect, useState } from "react"
 import { MyAsyncSelectProps } from "@/myPro/MyProTableProps"
@@ -268,6 +268,8 @@ const getJsonValueFromArray = (constants: Constant[], multiple: boolean, arry: (
         } else {
             jsonValue = constant?.jsonValue
         }
+        
+        if(!jsonValue) return undefined
 
         if (multiple) {
             jsonValue._class = jsonValue._class.replaceAll("Set", "").replaceAll("Enum", "") + "Set"

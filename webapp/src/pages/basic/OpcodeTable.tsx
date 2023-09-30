@@ -51,6 +51,7 @@ export const OpcodeTable: React.FC = () => {
       key: "domainId",
       fieldProps: { allowClear: true },
       dataIndex: ['domain', 'label'],
+      hideInForm: true,
       //search:{transform:(v)=>{return {domainId: v}}},//转换form字段值的key，默认为dataIndex确定，转换后 将使用 domainId, 选中后值为v
       request: () => asyncSelectProps2Request<Domain, DomainQueryParams>({
         key: AllDomainKey,//与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore

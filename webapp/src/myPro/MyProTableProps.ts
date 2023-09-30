@@ -19,8 +19,9 @@ export interface MyProTableProps<T extends BaseRecord, Q extends BasePageQuery> 
   initialQuery?: Q //列表初始查询条件
   listApi: string, //请求列表api，如'/api/oa/admin/list'
   needLoadMore?: boolean //默认为true，是否显示加载更多按钮 
-  listTransform?: (list: T[]) => T[] //对列表数据进行变换
- 
+  listTransform?: (list: T[], args?: any) => T[] //对列表数据进行变换 第二个参数是变换时所需附加参数
+  listTransformArgs?: any //用于传递给listTransform的实参
+
   delApi?: string, // 不提供则无删除按钮，删除Api， 如"/api/ad/admin/del" ，将自动再最后拼接id，最后拼接为："/api/ad/admin/del/{id}"
   disableDel?: (e: T) => boolean //提供了且返回true，则关闭该项删除功能
 

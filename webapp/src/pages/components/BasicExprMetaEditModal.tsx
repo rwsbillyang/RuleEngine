@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { ModalForm, ProFormCascader, ProFormDependency, ProFormInstance, ProFormSelect, ProFormText } from "@ant-design/pro-form";
 import { AllParamTypeKey, BasicExpressionMeta, ConstantQueryParams, BaseExpressionRecord, ExpressionQueryParams, Opcode, OpcodeQueryParams, OperandConfig, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, ParamTypeQueryParams, OperandValueMeta, ParamOperandConfigKey, OperandConfigItem } from "../DataType";
 
-import { TreeCache, Cache } from "@rwsbillyang/usecache"
+import { TreeCache, Cache, deepCopy, ArrayUtil } from "@rwsbillyang/usecache"
 import { asyncSelectProps2Request } from "@/myPro/MyProTableProps";
 import { EnableParamCategory, Host } from "@/Config";
 import { OperandValueMetaEditor } from "./OperandValueMetaEditor";
@@ -50,13 +50,13 @@ export const BasicExprMetaEditModal: React.FC<{
   const [newExprId, setNewExprId] = useState(exprId)
 
   //传递值时，必须新建一份copy，否则当新建再次打开对话框时，将仍在newMeta上修改，保存时冲掉原来的值
-  const [newMeta, setNewMeta] = useState(meta ? { ...meta } : {...initialMeta})
+  const [newMeta, setNewMeta] = useState(deepCopy(meta || initialMeta))
   const [opTooltip, setOpTooltip] = useState<string>()
   const [oprandConfigList, setOperandConfigList] = useState<OperandConfigItem[] | undefined>(operandConfigMapStr2List(meta?.op?.operandConfigMapStr)?.list)
   
   // console.log("BasicExprMetaEditModal, meta=", meta)
   // console.log("BasicExprMetaEditModal, newMeta=", newMeta)
-  const paramCfg = oprandConfigList? Cache.findOneInArray(oprandConfigList, ParamOperandConfigKey, "name") : undefined
+  const paramCfg = oprandConfigList? ArrayUtil.findOne(oprandConfigList, ParamOperandConfigKey, "name") : undefined
 
 
   const formRef = useRef<ProFormInstance>()
@@ -68,7 +68,6 @@ export const BasicExprMetaEditModal: React.FC<{
 
       if (meta) {
         setNewMeta(meta)
-        setOpTooltip(meta.op?.remark)
         //if (meta.op?.operandConfigMapStr) setOperandMap(JSON.parse(meta.op.operandConfigMapStr))
         setOperandConfigList(operandConfigMapStr2List(meta.op?.operandConfigMapStr)?.list)
       } else {
@@ -89,6 +88,7 @@ export const BasicExprMetaEditModal: React.FC<{
       formRef?.current?.setFieldValue("opId", meta?.opId)
 
       newMeta.operandMetaObj = {}
+      setOpTooltip(meta?.op?.remark)
     } else {
       setOpTooltip(newMeta.op?.remark)
     }
@@ -138,6 +138,7 @@ export const BasicExprMetaEditModal: React.FC<{
         newMeta.paramTypeId = undefined
         newMeta.mapKey = undefined
         newMeta.operandMetaObj = {}
+        setOpTooltip(undefined)
         setOperandConfigList(undefined)
       }
 
@@ -147,6 +148,7 @@ export const BasicExprMetaEditModal: React.FC<{
 
         newMeta.opId = undefined
         newMeta.operandMetaObj = {}
+        setOpTooltip(undefined)
         setOperandConfigList(undefined)
       }
 
@@ -166,7 +168,7 @@ export const BasicExprMetaEditModal: React.FC<{
           const v = defaultOperandValueMeta(e)
           if(v) newMeta.operandMetaObj[e.name] = v
         })
-        
+        setOpTooltip(op?.remark)
         setOperandConfigList(list)
       }
 
@@ -212,15 +214,15 @@ export const BasicExprMetaEditModal: React.FC<{
       //有值，但没有相关操作数配置，则删除该值
       for (var k in newMeta.operandMetaObj) {
         if (oprandConfigList.length > 0){
-          const cfg = Cache.findOneInArray(oprandConfigList, k, "name")
+          const cfg = ArrayUtil.findOne(oprandConfigList, k, "name")
           if(!cfg || (cfg && !cfg.enable)){
             delete newMeta.operandMetaObj[k]
             //console.log("delete " + k + " in valueMap: "+ ret + ", hasK="+ newMeta.operandValueMap.has(k))
           } 
         }
       }
-      console.log("onDone=", newMeta)
-      onDone(newMeta, newExprId)
+      //console.log("onDone=", newMeta)
+      onDone(deepCopy(newMeta), newExprId)//deepcopy 新值传递给调用者
       return true
     }}>
 
@@ -500,7 +502,7 @@ const adjustParamType = (operandConfig: OperandConfig, param?: Param, paramType?
  */
 const getOpcodeById = (opId?: number, paramTypeId?: number, meta?: BasicExpressionMeta) => {
   let opcode: Opcode | undefined = Cache.findOne(OpKeyPrefix + paramTypeId, opId, "id")
-  opcode = Cache.findOneInArray(getParamTypeById(paramTypeId, meta?.paramType)?.supportOps || [],opId, "id") 
+  opcode = ArrayUtil.findOne(getParamTypeById(paramTypeId, meta?.paramType)?.supportOps || [],opId, "id") 
   if (!opcode) opcode = meta?.op
   return opcode
 }
