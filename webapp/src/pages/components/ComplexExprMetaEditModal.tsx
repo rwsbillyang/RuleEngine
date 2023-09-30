@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Form,  message } from 'antd';
+import React, { useRef, useState } from 'react';
+import { Form, message } from 'antd';
 
-import { Cache } from "@rwsbillyang/usecache"
-import { ComplexExpressionMeta,  BaseExpressionRecord, ExpressionMeta, ExpressionQueryParams, ExpressionRecord, Opcode, OpcodeQueryParams } from '../DataType';
+import { Cache, deepCopy } from "@rwsbillyang/usecache"
+import { ComplexExpressionMeta, BaseExpressionRecord, ExpressionMeta, ExpressionQueryParams, ExpressionRecord, Opcode, OpcodeQueryParams } from '../DataType';
 
 import { Host } from '@/Config';
 import { ModalForm, ProFormInstance, ProFormSelect, ProFormText } from '@ant-design/pro-form';
@@ -44,37 +44,16 @@ export const ComplexExprMetaEditModal: React.FC<{
     meta?: ComplexExpressionMeta
     cannotChooseOne?: boolean
 }> = ({ title, triggerName, domainId, onDone, exprId, meta, cannotChooseOne }) => {
-    const initialMeta: ComplexExpressionMeta = {_class: "Complex", metaList:[]}
-    
+    const initialMeta: ComplexExpressionMeta = { _class: "Complex", metaList: [] }
+
     //传递值时，必须新建一份copy，否则当新建再次打开对话框时，将仍在newMeta上修改，保存时冲掉原来的值
-    const [newMeta, setNewMeta] = useState(meta? {...meta} : initialMeta)
+    const [newMeta, setNewMeta] = useState(deepCopy(meta || initialMeta) as ComplexExpressionMeta)
     const [newExprId, setNewExprId] = useState(exprId)
-    
     const { current } = useRef<{ selectedRecords?: ExpressionRecord[] }>({}) //用于从现有记录中查询名称
-  
 
     //console.log("ComplexExprMetaEditModal, newMeta=",newMeta)
 
     const formRef = useRef<ProFormInstance>()
-
-    useEffect(() => {
-        if (newExprId) {
-            const expression: BaseExpressionRecord | undefined = Cache.findOne(ExpressionKeyPrefix + domainId, newExprId, "id")
-            const meta = expression?.metaStr ? JSON.parse(expression?.metaStr) : undefined
-            //console.log("=====update newMeta by newExprId=" + newExprId, meta)
-
-            if (meta) {
-                setNewMeta(meta)
-                formRef?.current?.setFieldValue("opId", meta?.opId)
-            } else {
-                //打开Rule Edit中，显示基本和复合表达式的 ”编辑“按钮时，将导致两个对话框初始化，从而执行到此处
-                console.log("shold not come here: changed exprId=" + newExprId + ", but no expression or expression.metaStr")
-            }
-        }
-
-    }, [newExprId])
-
-
 
     return <ModalForm<ComplexExpressionMeta>
         formRef={formRef}
@@ -89,22 +68,31 @@ export const ComplexExprMetaEditModal: React.FC<{
         submitTimeout={2000}
         onValuesChange={(v) => {
             // console.log("onValuesChange:" + JSON.stringify(v))
-            //现有表达式选择变化 -> 此处执行 -> newExprId变化 -> useEffect中切换 metaList和targetKeys、opId操作符变化 -> UI中transfer变化
-            //若是清空，导致transfer左侧使用所有表达式，右侧为空 
-            //exprId清空(先不为空，后为空)才执行
-            if (newExprId && !v?.exprId) { // 其它字段修改，该条件也成立
-                setNewMeta(initialMeta)
-                formRef?.current?.setFieldValue("opId", undefined)
-            }
-            setNewExprId(v?.exprId)
+            //现有表达式选择变化 -> 此处执行 -> newExprId变化 ->  metaList和targetKeys、opId操作符变化 -> UI中transfer变化
 
+             //表达式切换  清空（if(newExprId && !v?.exprId)）不做处理
+            if (newExprId && v?.exprId !== newExprId) { 
+                //console.log("=====update newMeta by newExprId=" + newExprId, meta)
+                const expression: BaseExpressionRecord | undefined = Cache.findOne(ExpressionKeyPrefix + domainId, newExprId, "id")
+                const meta = expression?.metaStr ? JSON.parse(expression?.metaStr) : undefined
+                
+                if (!meta) {
+                    //打开Rule Edit中，显示基本和复合表达式的 ”编辑“按钮时，将导致两个对话框初始化，从而执行到此处
+                    console.log("changed exprId=" + newExprId + ", but no expression or expression.metaStr")
+                }
+
+                formRef?.current?.setFieldValue("opId", meta?.opId)
+                setNewMeta(meta || initialMeta)
+                setNewExprId(v?.exprId)
+            }
+           //opId的修改不至于引起连锁反应，等到onFinish获取值时再更新
         }}
         onFinish={async (values) => {
             if (!current.selectedRecords || current.selectedRecords.length < 2) {
                 message.warning("已选表达式至少2个以上，才可进行逻辑运算")
                 return false
             } else {
-                if(!values.opId){
+                if (!values.opId) {
                     message.warning("请选择逻辑运算符")
                     return false
                 }
@@ -117,8 +105,8 @@ export const ComplexExprMetaEditModal: React.FC<{
                 newMeta._class = values._class
 
                 console.log("ComplexExpressionMetaEditorModal: ModalForm.onFinish: onDone=", newMeta);
-                
-                onDone(newMeta, newExprId)
+
+                onDone(deepCopy(newMeta), newExprId)
                 return true
             }
 
@@ -142,7 +130,7 @@ export const ComplexExprMetaEditModal: React.FC<{
         />
 
         <Form.Item label="表达式列表" required rules={[{ required: true, message: '必选' }]}>
-            <ComplexExprTransfer domainId={domainId} meta={newMeta} onSelectedChange={(keys, records)=> {current.selectedRecords = records}}/>
+            <ComplexExprTransfer domainId={domainId} meta={newMeta} onSelectedChange={(keys, records) => { current.selectedRecords = records }} />
         </Form.Item>
 
         <ProFormSelect
@@ -151,8 +139,7 @@ export const ComplexExprMetaEditModal: React.FC<{
             tooltip="已选表达式以何种方式进行逻辑运算"
             label="逻辑运算符"
             rules={[{ required: true, message: '必选' }]}
-
-            request={(params) => asyncSelectProps2Request<Opcode, OpcodeQueryParams>({ //params为注入的dependencies字段值： {isEnum: true}
+            request={() => asyncSelectProps2Request<Opcode, OpcodeQueryParams>({ //params为注入的dependencies字段值： {isEnum: true}
                 key: LogicalOpKey,//不提供key，则不缓存，每次均从远程请求
                 url: `${Host}/api/rule/composer/list/opcode`,
                 query: { type: "Logical", pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载

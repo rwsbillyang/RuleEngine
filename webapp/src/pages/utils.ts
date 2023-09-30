@@ -221,19 +221,19 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
         op: meta.op.code,
         operands: operandValueObj
     }
-    if (meta.param) {
-        expr._class = meta.param.paramType.code
-        expr.key = meta.param.mapKey
-        expr.extra = meta.param.extra
-        return expr
-    }
     if (meta.mapKey && meta.paramType) {
         expr._class = meta.paramType.code
         expr.key = meta.mapKey
         expr.extra = meta.extra
         return expr
     }
-
+    if (meta.param) {
+        expr._class = meta.param.paramType.code
+        expr.key = meta.param.mapKey
+        expr.extra = meta.param.extra
+        return expr
+    }
+    
     console.warn("should not come here: please check meta.param, meta.mapKey/meta.paramType")
     return undefined
 }

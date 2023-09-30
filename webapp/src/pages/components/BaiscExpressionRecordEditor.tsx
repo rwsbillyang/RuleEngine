@@ -92,68 +92,11 @@ export const BaiscExpressionRecordEditor: React.FC<{
     <ProFormDependency name={["domainId"]}>
       {({ domainId }) => {
         return <Form.Item label="表达式" required>
-          {basicExpressionMeta2String(meta)} <BasicExprMetaEditModal onDone={setMeta}
-            domainId={domainId} meta={meta} cannotChooseOne={true} />
+          {basicExpressionMeta2String(meta)} <BasicExprMetaEditModal onDone={setMeta} //不使用cannotChooseOne表示可以在现有基础上修改 快速创建
+            domainId={domainId} meta={meta} />
         </Form.Item>
       }}
     </ProFormDependency>
-
-    {/* <ProFormSelect
-        name="paramId"
-        dependencies={['domainId']}
-        label="变量"
-        required
-        request={(params) => asyncSelectProps2Request<Param, ParamQueryParams>({
-          key: "param/domain/" + params.domainId, //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
-          url: `${Host}/api/rule/composer/list/param`,
-          query: { domainId: params.domainId, pagination: { pageSize: -1, sKey: "id", sort: 1 } }, //pageSize: -1为全部加载
-          convertFunc: (item) => {
-            return { label: "(" + item.paramType.label + ")" + item.label, value: item.id }
-          }
-        })}
-      />
-
-
-      <ProFormSelect
-        name="opId"
-        label="比较符"
-        required
-        dependencies={['paramId', 'domainId']}
-        request={(params) => asyncGetOpOptions(params.paramId, params.domainId)}
-      />
-
-      <ProFormDependency name={['domainId', "paramId", "opId"]}>
-        {({ domainId, paramId, opId }) => {
-          // console.log("domainId=" + domainId + ", paramId=" + paramId + ", opId=" + opId)
-          const c = getValueMapParam(domainId, paramId, opId)
-
-          const { err, other, start, end, set, e, num, multiple, param, op } = c
-
-          meta.paramId = paramId
-          meta.opId = opId
-          meta.param = param
-          meta.op = op
-          if (param) meta._class = param.paramType.code
-
-          //去掉不需要的，上次修改时保留的值
-          if (!other) delete meta.other
-          if (!start) delete meta.start
-          if (!end) delete meta.end
-          if (!set) delete meta.set
-          if (!e) delete meta.e
-          if (!num) delete meta.num
-
-          return err ? <div> {err} </div> : <>
-            {other && <OperandMetaEditor name="other" constantQueryParams={getConstantQueryParams({ useSelf: true }, domainId, param)} label="值" param={param} domainId={domainId} multiple={multiple === true} value={meta.other} onChange={(v) => { setMeta({ ...meta, other: v }) }} />}
-            {start && <OperandMetaEditor name="start" constantQueryParams={getConstantQueryParams({ useSelf: true }, domainId, param)} label="起始" param={param} domainId={domainId} multiple={false} value={meta.start} onChange={(v) => { setMeta({ ...meta, start: v }) }} />}
-            {end && <OperandMetaEditor name="end" constantQueryParams={getConstantQueryParams({ useSelf: true }, domainId, param)} label="终止" param={param} domainId={domainId} multiple={false} value={meta.end} onChange={(v) => { setMeta({ ...meta, end: v }) }} />}
-            {set && <OperandMetaEditor name="set" constantQueryParams={getConstantQueryParams({ toSetType: true }, domainId, param)} label="集合" param={param} domainId={domainId} multiple={true} value={meta.set} onChange={(v) => { setMeta({ ...meta, set: v }) }} />}
-            {e && <OperandMetaEditor name="e" constantQueryParams={getConstantQueryParams({ toBasicType: true }, domainId, param)} label="某项" param={param} domainId={domainId} multiple={false} value={meta.e} onChange={(v) => { setMeta({ ...meta, e: v }) }} />}
-            {num && <OperandMetaEditor name="num" constantQueryParams={getConstantQueryParams({ paramType: ["Int", "Long"] }, domainId, param)} label="数量" param={param} domainId={domainId} multiple={false} value={meta.num} onChange={(v) => { setMeta({ ...meta, num: v }) }} />}
-          </>
-
-        }}
-      </ProFormDependency> */}
 
     <ProFormTextArea
       name="remark"

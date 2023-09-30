@@ -80,7 +80,7 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta?: ComplexEx
     if (!info || info?.direction === 'left') {
       return (
         <Space>
-          <BasicExprMetaEditModal cannotChooseOne={true} title="添加基本表达式" triggerName="添加基本表达式" domainId={domainId}
+          <BasicExprMetaEditModal title="添加基本表达式" triggerName="添加基本表达式" domainId={domainId}
             onDone={(v) => {
               console.log("create basicRecord done, get v=",v)
               const mockExpr: BasicExpressionRecord = { 
