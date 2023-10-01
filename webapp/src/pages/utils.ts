@@ -1,5 +1,5 @@
 import { Cache } from '@rwsbillyang/usecache'
-import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpression, ComplexExpressionMeta, ComplexExpressionRecord, BaseExpressionRecord, JsonValue, OperandConfig, OperandConfigItem, ParamType, OperandValueMeta, OperandValue } from "./DataType"
+import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpression, ComplexExpressionMeta, ComplexExpressionRecord, BaseExpressionRecord, JsonValue, OperandConfig, OperandConfigItem, ParamType, OperandValueMeta, OperandValue, LabelValue } from "./DataType"
 
 
 /**
@@ -189,13 +189,24 @@ export const operandMeta2String = (name: string, operandMeta?: OperandValueMeta)
     }
 }
 
+//to human-reading string
 const jsonValue2String = (jsonValue?: JsonValue) => {
-    if (!jsonValue) return ""
-    if (Array.isArray(jsonValue.value)) {
-        return "[" + jsonValue.value.join(",") + "]"
-    } else
-        return jsonValue.value
-
+    if (!jsonValue || !jsonValue.value) return ""
+    const value = jsonValue.value
+    if (Array.isArray(value)) {
+        if(value.length === 0) return "[]"
+        if(typeof value[0]  === 'object'){
+            return "[" + value.map((e)=> e.label || e.value).join(",") + "]"
+        }else{
+            return "[" + value.join(",") + "]"
+        }  
+    } else{
+        if(typeof value  === 'object'){
+            const v = value as LabelValue
+            return v.label || v.value
+        }else
+            return value
+    }     
 }
 
 /**
@@ -238,7 +249,23 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
     return undefined
 }
 
-
+const extractJsonValue = (jsonValue?: JsonValue) => {
+    if (!jsonValue || !jsonValue.value) return undefined
+    const value = jsonValue.value
+    if (Array.isArray(value)) {
+        if(value.length === 0) return undefined
+        if(typeof value[0]  === 'object'){
+            return (value as LabelValue[]).map((e)=> e.value)
+        }else{
+            return value as boolean[] | string[] | number[]
+        }  
+    } else{
+        if(typeof value  === 'object'){
+            return (value as LabelValue).value
+        }else
+            return value
+    }     
+}
 /**
  * 将OperandValueMeta转换为纯表达式中的必要字段值
  * @param operandMeta OperandValueMeta
@@ -246,11 +273,11 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
  */
 const operandMeta2OperandValue = (operandMeta?: OperandValueMeta) => {
     if (!operandMeta) return undefined
+    
     const opvalue: OperandValue = {
         valueType: operandMeta.valueType,
         key: operandMeta.param?.mapKey,
-        value: (operandMeta.jsonValue && Array.isArray(operandMeta.jsonValue.value) && operandMeta.jsonValue?._class.indexOf("Enum") > 0)
-            ? operandMeta.jsonValue?.value?.map(e => e.value) : operandMeta.jsonValue?.value
+        value: extractJsonValue(operandMeta.jsonValue) 
     }
     return opvalue
 }

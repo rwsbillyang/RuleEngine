@@ -1,5 +1,5 @@
 import { Cascader, Form, Select, Space } from "antd"
-import { Constant, ConstantQueryParams, OperandConfig, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, OperandValueMeta, JsonValue } from "../DataType"
+import { Constant, ConstantQueryParams, OperandConfig, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, OperandValueMeta, JsonValue, LabelValue } from "../DataType"
 import { JsonValueEditor } from "./JsonValueEditor"
 import React, { useEffect, useState } from "react"
 import { MyAsyncSelectProps } from "@/myPro/MyProTableProps"
@@ -62,6 +62,7 @@ export const OperandValueMetaEditor: React.FC<{
             if (item.value) item.jsonValue = JSON.parse(item.value)
             if (item.jsonValue?.value && Array.isArray(item.jsonValue.value)) {
                 if (item.isEnum) {
+                    //某些枚举值，如整数枚举，值可能需要创建标签，LabelValue是因为常量中枚举值类型
                     return { label: item.label, value: item.id, children: item.jsonValue.value.map((e) => { return { label: e.label || e.value, value: e.value } }) }
                 } else {
                     return { label: item.label, value: item.id, children: item.jsonValue.value.map((e) => { return { label: e.toString(), value: e } }) }
@@ -212,8 +213,8 @@ export const OperandValueMetaEditor: React.FC<{
                             //eg：树形select的option的value 
                             //单选：[1, "乙"] 以及 [4]；
                             //多选选中多个[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
-                            //console.log("OperandValueMetaEditor constant, Cascader.onChange:multiple="+ multiple + ", v=" + JSON.stringify(v))
-                            //console.log("param?.paramType.code=" + param?.paramType.code)
+                            //console.log("OperandValueMetaEditor constant, Cascader.onChange:multiple="+ multiple + ", v=", v)
+                        
                             if (v && v.length > 0) {
                                 const constants: Constant[] = []
                                 let jsonValue
@@ -254,32 +255,40 @@ export const OperandValueMetaEditor: React.FC<{
  * @returns 
  */
 const getJsonValueFromArray = (constants: Constant[], multiple: boolean, arry: (string | number)[], paramType?: ParamType, constantKey?: string) => {
-    //假定select中value都是id值，事实也是如此
+    //console.log("getJsonValueFromArray: arry=" + JSON.stringify(arry))
     const constantId = arry[0]
     const constant: Constant | undefined = Cache.findOne(constantKey || "", constantId, "id")
     if (constant) {
-        let jsonValue
-        if (arry.length > 1) {
+        let jsonValue: JsonValue | undefined
+        
+        if (arry.length > 1) {//常量是集合或枚举类型，其中的值被选中一个
             if (constant.isEnum) {
-                jsonValue = { value: arry[1], _class: paramType?.code || constant.jsonValue?._class.replaceAll("Enum", "") || "String" }
+                //arry[1]可能是LabelValue的value
+                jsonValue = { value: arry[1], _class: paramType?.code || constant.jsonValue?._class || "String" }
             } else {
-                jsonValue = { value: arry[1], _class: paramType?.code || constant.jsonValue?._class.replaceAll("Set", "") || "String" }
+                //arry[1]是各种基本类型
+                jsonValue = { value: arry[1], _class: paramType?.code || constant.jsonValue?._class || "String" }
             }
         } else {
-            jsonValue = constant?.jsonValue
+            //多选：常量集合或枚举中的类型全部选中 单选：常量的值只是简单的基本类型
+            jsonValue = constant.value? JSON.parse(constant.value) : undefined//有可能为空
         }
         
-        if(!jsonValue) return undefined
+        if(!jsonValue){
+            console.warn("getJsonValueFromArray: no jsonValue in constant: ", constant)
+             return undefined
+        }
 
-        if (multiple) {
+        if (multiple) {//多选
             jsonValue._class = jsonValue._class.replaceAll("Set", "").replaceAll("Enum", "") + "Set"
-        } else {
+        } else {//单选：[1, "乙"] 以及 [4]；
             jsonValue._class = jsonValue._class.replaceAll("Set", "").replaceAll("Enum", "")
         }
         constants.push(constant)
+        
         return jsonValue
     } else {
-        console.warn("Should not come here, no Constant, id=" + constantId)
+        console.warn("Should not come here, no Constant, id=" + constantId + ", cacheKey="+constantKey)
     }
     return undefined
 }
@@ -288,17 +297,32 @@ const getJsonValueFromArray = (constants: Constant[], multiple: boolean, arry: (
  * 多选选中多个取值
  * @param constants 盛放选中的Constant结果
  * @param multiple 是否多选
- * @param arrayArray 多选选中多个[[1, 2],[1, 2],[1, 2]]，[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
+ * @param arrayArray 多选选中多个[[3],[1, 2],[1, 2],[1, 2]]，[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
  * @param paramType 常量类型，用于填充到jsonValue中的_class
  * @param constantKey 从哪个缓存中搜索Constant
  * @returns 
  */
 const getJsonValueFromArrayArray = (constants: Constant[], multiple: boolean, arrayArray: (string | number)[][], paramType?: ParamType, constantKey?: string) => {
+    //console.log("getJsonValueFromArrayArray: arrayArray=" + JSON.stringify(arrayArray))
     const value = arrayArray.flatMap((e) => getJsonValueFromArray(constants, multiple, e, paramType, constantKey)?.value)
-        .filter((e) => e !== undefined) //因为e有可能是单个元素也有可能是数组，故使用flatMap 而不是map
+    .filter((e) => e !== undefined) as ( (string| number)[] | LabelValue[]) //因为e有可能是单个元素也有可能是数组，故使用flatMap 而不是map
 
-    const _class = (paramType?.code.replaceAll("Set", "").replaceAll("Enum", "") || "String") + "Set"
+    if(value.length === 0){
+        console.log("not get jsonValue in arrayArray: ", arrayArray)
+         return undefined
+    }
 
-    return { _class, value }
+    let _class =  paramType?.code || (constants.length > 0? (constants[0]?.jsonValue?._class || "String"): "String")
+    if (multiple) {//多选
+        _class = _class.replaceAll("Set", "").replaceAll("Enum", "") + "Set"
+    } else {//单选：[1, "乙"] 以及 [4]；
+       _class =_class.replaceAll("Set", "").replaceAll("Enum", "")
+    }
+
+    const jsonValue: JsonValue = { _class, value }
+
+    //console.log("get jsonValue in arrayArray: ",jsonValue)
+
+    return jsonValue
 }
 

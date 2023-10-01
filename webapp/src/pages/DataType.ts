@@ -110,15 +110,15 @@ export interface ParamTypeQueryParams extends BasePageQuery {
     domainId?: number
 }
 
-
+//常量中有标签的枚举类型，如整形枚举可为枚举值创建一个标签名称
 export interface LabelValue{
     label?: string,
     value: string | number //: Int, Long, Double, String, DateTime
 }
-
+//export type BasicValueType =  boolean | string | number 
 export interface JsonValue {
     _class: string, //backend ktorkit lib set: classDiscriminator="_class"
-    value?: boolean | string | number | (string | number)[] | LabelValue[]
+    value?: boolean | string | number  | (string| number)[] | LabelValue | LabelValue[] //有LabelValue是因为常量中枚举常量的值可能需要创建标签
 }
 /**
  * 值常量
@@ -297,7 +297,7 @@ export interface OperandValueMeta {
 export interface OperandValue {
     valueType?: "Param" | "Constant" | "JsonValue" | undefined
     key?: string // for Param type
-    value?: boolean | string | number | (string | number)[]
+    value?: boolean | string | number  | (boolean | string| number)[]
 }
 
  

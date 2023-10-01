@@ -45,6 +45,10 @@ export const RuleEditModal: React.FC<{
         onFinish={async (values) => {
             //console.log("RuleEdit onFinish: values=",values);
             //console.log("oldValues:", record);
+            if(!values.label){
+                message.warning("请填写名称")
+                return false
+            }
             if (!condition.meta) {
                 message.warning("基本条件和复合条件二选一")
                 return false
