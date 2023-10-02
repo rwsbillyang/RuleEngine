@@ -303,7 +303,7 @@ data class Rule(
     fun toRuleCommon(service: BaseCrudService?, path: MutableList<String>? = null): RuleCommon  {
         val pair = if(service != null) getChildrenTree(service, path) else null //在新增和修改时无需构建children，因1是没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
         return RuleCommon(
-            pair?.first?: listOf("rule$id"), this, null, id, "rule$id", level, label, priority, remark, enable, tags, exclusive, domainId,  domain, pair?.second
+            pair?.first?: listOf("${RuleType.rule.name}-$id"), this, null, id, "${RuleType.rule.name}-$id", level, label, priority, remark, enable, tags, exclusive, domainId,  domain, pair?.second
         )
     }
 
@@ -313,7 +313,7 @@ data class Rule(
 
         //为前端构造tree型列表展示
         val myPath = path?: mutableListOf() //顶级节点负责创建path
-        myPath.add("rule$id")//将当前节点id添加进path，子节点中递归调用时，都将当前id加入，形成parentPath
+        myPath.add("${RuleType.rule.name}-$id")//将当前节点id添加进path，子节点中递归调用时，都将当前id加入，形成parentPath
 
         val list = myPath.toList()//记录下parentPath，相当于copy
 
@@ -377,7 +377,7 @@ data class RuleGroup(
     fun toRuleCommon(service: BaseCrudService?, path: MutableList<String>? = null): RuleCommon  {
         val pair = if(service != null) getChildrenTree(service, path) else null //在新增和鞭酒修改时无需构建children，因1是没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
         return RuleCommon(
-            pair?.first?: listOf("group$id"), null, this, id, "group$id", level, label, priority, remark, enable, tags, exclusive, domainId, domain, pair?.second
+            pair?.first?: listOf("${RuleType.ruleGroup.name}-$id"), null, this, id, "${RuleType.ruleGroup.name}-$id", level, label, priority, remark, enable, tags, exclusive, domainId, domain, pair?.second
         )
     }
 
@@ -387,7 +387,7 @@ data class RuleGroup(
 
         //为前端构造tree型列表展示
         val myPath = path?: mutableListOf() //顶级节点负责创建path
-        myPath.add("group$id")//将当前节点id添加进path，子节点中递归调用时，都将当前id加入，形成parentPath
+        myPath.add("${RuleType.ruleGroup.name}-$id")//将当前节点id添加进path，子节点中递归调用时，都将当前id加入，形成parentPath
 
         val list = myPath.toList()//记录下parentPath，相当于copy
 
@@ -428,3 +428,13 @@ data class RuleAction(
     val id: Int? = null
 )
 
+@Serializable
+enum class RuleType{ rule, ruleGroup} //名称将用于RuleCommon中的typedId，http endpoint等
+@Serializable
+class RuleIdType(val id: Int, val type: RuleType)
+@Serializable
+class MoveParam(
+    val current: RuleIdType, //当前节点
+    val oldParent: RuleIdType? = null, //空表示current为顶级节点
+    val newParent: RuleIdType? = null //空表示移动到新顶级节点
+)

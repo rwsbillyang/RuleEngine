@@ -256,6 +256,14 @@ fun Routing.composerApi() {
             }
         }
 
+        post("/move"){
+            val param = call.receive<MoveParam>()
+            if(param.oldParent == null && param.newParent == null)
+                call.respondBoxKO("invalid parameter: no old parent, no new parent")
+            else
+                call.respondBoxOK(ruleTreeController.moveRuleCommonIntoNewParent(param))
+        }
+
 
 
         //初始化数据库： http://localhost:18000/api/rule/composer/initDb

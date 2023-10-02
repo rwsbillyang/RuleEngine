@@ -509,7 +509,7 @@ const getParamById = (paramId?: number | number[], domainId?: number, defaultVal
   let param: Param | undefined
   if (EnableParamCategory) {
     if (Array.isArray(paramId) && paramId.length === 2) {
-      const elems = TreeCache.getElementsByPathIdsInTreeFromCache(ParamCategoryKeyPrefix + domainId, paramId, "id")
+      const elems: Param[] | undefined = TreeCache.getElementsByPathIdsInTreeFromCache(ParamCategoryKeyPrefix + domainId, paramId, "id")
       if (elems) {
         param = elems[1]
       } else {

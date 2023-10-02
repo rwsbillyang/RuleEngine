@@ -162,7 +162,7 @@ export const OperandValueMetaEditor: React.FC<{
                             //console.log("OperandValueMetaEditor paramId, Cascader.onChange: value=", v)
                             if (v) {
                                 const key = paramCategoryAsyncSelectProps.key || ""
-                                const elems = TreeCache.getElementsByPathIdsInTreeFromCache(key, v, "id")
+                                const elems: Param[] | undefined = TreeCache.getElementsByPathIdsInTreeFromCache(key, v, "id")
                                 if (!elems || elems.length !== 2) {
                                     console.warn("not found category-param, key=" + key + ", path=" + JSON.stringify(v) + ",elems=", elems) //没有找到分类-变量
                                 } else {

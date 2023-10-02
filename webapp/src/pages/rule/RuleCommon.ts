@@ -1,4 +1,4 @@
-import { UseCacheConfig, TreeCache } from "@rwsbillyang/usecache"
+import { UseCacheConfig, TreeCache, cachedFetchPromise } from "@rwsbillyang/usecache"
 import { Rule, RuleCommon, RuleGroup } from "../DataType"
 import { RuleName, rubleTableProps } from "./RuleTable"
 import { dispatch } from "use-bus"
@@ -6,10 +6,11 @@ import { deleteOne, saveOne } from "@/myPro/MyProTable"
 import { RuleGroupName, rubleGroupTableProps } from "./RuleGroupTable"
 
 import { message } from "antd"
+import { MoveNodeParamWithParent } from "./MoveRuleNode"
+
 
 export const SaveSubInRuleAPI = "/api/rule/composer/saveSubInRule/" //   {name}/{parentRuleId}"
 export const SaveSubInRuleGroupAPI = "/api/rule/composer/saveSubInRuleGroup/" //   {name}/{parentRuleId}"
-
 
 
 /**
@@ -42,18 +43,19 @@ function getOnSaveOk(fromTable: string, isAdd: boolean, debug: boolean, currentR
         if (cacheKey) {
             if (debug) console.log(log)
             let flag
-            if(isAdd){
-                //新增时，新增的节点后端最多返回从自身开始的parentPath，后更改为自己的typeId，需前端构建
-                flag = TreeCache.onAddOneInTree(cacheKey, data, currentRow.parentPath, idKey, "children", (parentPath, parent) => { data.parentPath = [...(parent.parentPath || parentPath), data[idKey]]} )
-            }else{
-                if(currentRow.parentPath){
+            if (isAdd) {
+                //新增时，新增的节点后端为自己的typeId，需前端构建
+                flag = TreeCache.onAddOneInTree(cacheKey, data, currentRow.parentPath, idKey, 
+                    (parents, parent) => { data.parentPath = [...(parent.parentPath), data[idKey]] })
+            } else {
+                if (currentRow.parentPath) {
                     //编辑时，节点后端返回从自身开始的parentPath，应该从根节点开始，后更改为自己的typeId，前端恢复原值
                     data.parentPath = currentRow.parentPath
                     data.children = currentRow.children
                     flag = TreeCache.onEditOneInTree(cacheKey, data, currentRow.parentPath, idKey)
-                }else console.warn("no path when edit/update")
+                } else console.warn("no path when edit/update")
             }
-            if(flag) dispatch("refreshList-" + listApi) //已更新
+            if (flag) dispatch("refreshList-" + listApi) //已更新
         }
     }
 
@@ -80,7 +82,6 @@ export function saveRuleOrGroup(
     rowRuleCommon?: RuleCommon,
     debug: boolean = true) {
 
-
     if (isAdd) {//add one
         //新增顶级root
         if (!rowRuleCommon) {
@@ -92,7 +93,7 @@ export function saveRuleOrGroup(
                     rubleTableProps.listApi, rubleTableProps.cacheKey, rubleTableProps.idKey)
             } else if (fromTable === RuleGroupName) {//新增顶级ruleGroup
                 if (debug) console.log("to save top ruleGroup in ruleGroup table...")
-                 //bugfix：parentIdPath后端返回自己的[typeId]，避免了空
+                //bugfix：parentIdPath后端返回自己的[typeId]，避免了空
                 saveOne(values as RuleGroup, record, rubleGroupTableProps.saveApi,
                     rubleGroupTableProps.transformBeforeSave, undefined, isAdd,
                     rubleGroupTableProps.listApi, rubleGroupTableProps.cacheKey, rubleGroupTableProps.idKey)
@@ -135,7 +136,7 @@ export function saveRuleOrGroup(
             }
         }
     } else {//update one
-        if(rowRuleCommon){
+        if (rowRuleCommon) {
             const onSaveOK = getOnSaveOk(fromTable, isAdd, debug, rowRuleCommon)
             //不区分是根节点，由onSaveOK进行区分去更新cache
             if (fromTable === RuleName) {//编辑rule
@@ -152,7 +153,7 @@ export function saveRuleOrGroup(
                         //, isAdd,rubleTableProps.listApi, rubleTableProps.cacheKey, rubleTableProps.idKey
                     )
                 }
-    
+
             } else if (fromTable === RuleGroupName) {
                 if (name === RuleName) {
                     if (debug) console.log("to update rule in ruleGroup table...")
@@ -167,15 +168,15 @@ export function saveRuleOrGroup(
                         rubleGroupTableProps.transformBeforeSave, onSaveOK
                         // , isAdd,rubleGroupTableProps.listApi, rubleGroupTableProps.cacheKey, rubleGroupTableProps.idKey
                     )
-    
+
                 } else {
                     console.warn("not support fromTable=" + fromTable)
                 }
             }
-        }else{
+        } else {
             console.warn("not provdide row rule common when edit, fromTable=" + fromTable)
         }
-        
+
     }
 }
 
@@ -220,8 +221,7 @@ export function deleteRuleOrGroup(
     //刷新缓存
     const onDelOK = (count) => {
         message.success(count + "条被删除")
-        if(TreeCache.onDelOneInTree(tableProps.cacheKey, item, item.parentPath, tableProps.idKey))
-        {
+        if (TreeCache.onDelOneInTree(tableProps.cacheKey, item, item.parentPath, tableProps.idKey)) {
             dispatch("refreshList-" + tableProps.listApi) //删除完毕，发送refreshList，告知ListView去更新
         }
     }
@@ -235,7 +235,7 @@ export function deleteRuleOrGroup(
                 deleteOne(item, rubleTableProps.delApi + "/" + item.id, onDelOK)
             } else if (fromTable === RuleGroupName) {//新增顶级ruleGroup
                 if (debug) console.log("to delete leaf rule in ruleGroup table...")
-                deleteOne(item, rubleGroupTableProps.delApi+ "/" + item.id, onDelOK)
+                deleteOne(item, rubleGroupTableProps.delApi + "/" + item.id, onDelOK)
             }
         } else {//待删项不是叶子节点
             if (fromTable === RuleName) {
@@ -307,6 +307,75 @@ export function deleteRuleOrGroup(
 }
 
 
+
+
+interface RuleIdType {
+    id: number,
+    type: string //RuleName, RuleGroupName
+}
+
+interface MoveParamPostData {
+    current: RuleIdType, //当前节点
+    oldParent?: RuleIdType, //空表示current为顶级节点
+    newParent?: RuleIdType //空表示移动到新顶级节点
+}
+
+/**
+ * 
+ * @param moveParam 
+ * @param newParent 移动到新的父节点，若为空，则表示移动到根节点
+ */
+export function moveInNewParent(moveParam: MoveNodeParamWithParent) {
+    const id = moveParam.currentRow.id
+    const type = moveParam.currentRow.rule ? RuleName : (moveParam.currentRow.ruleGroup ? RuleGroupName : undefined)
+    if (!id || !type) {
+        console.warn("no id or rule or group in currentRow=", moveParam.currentRow)
+        return new Promise((resolve) => { resolve(false) });
+    }
+    const postData: MoveParamPostData = {
+        current: { id: id, type: type }
+    }
+
+    const oldParent = moveParam.oldParent
+    if (oldParent) {
+        const t = oldParent.rule ? RuleName : (oldParent.ruleGroup ? RuleGroupName : moveParam.fromTable)
+        postData.oldParent = { id: oldParent.id, type: t }
+    }
+
+    const newParent = moveParam.newParent
+    if (newParent) {
+        const t = newParent.rule ? RuleName : (newParent.ruleGroup ? RuleGroupName : moveParam.fromTable)
+        postData.newParent = { id: newParent.id, type: t }
+    }
+
+    return cachedFetchPromise<number>(`/api/rule/composer/move`, 'POST', postData)
+        .then((data) => {
+            if (data) {
+                message.warning("移动节点成功")
+                console.log("successful to move, update cache")
+                const tableProps = moveParam.tableProps
+                const flag1 = TreeCache.onDelOneInTree(tableProps.cacheKey, moveParam.currentRow, moveParam.currentRow.parentPath, tableProps.idKey)
+
+                const flag2 = TreeCache.onAddOneInTree(tableProps.cacheKey, moveParam.currentRow,
+                    moveParam.newParent?.parentPath, tableProps.idKey, 
+                    //因为当前节点变了，需要更新它，便以新父节点以及自己的id，构成自己的新path
+                    (parents, parent) => { moveParam.currentRow.parentPath = [...(parent.parentPath), moveParam.currentRow[tableProps.idKey]] })
+
+                if (flag1 || flag2) {
+                    dispatch("refreshList-" + tableProps.listApi) //发送refreshList，告知ListView去更新
+                }else{
+                    console.warn("fail to onDelOneInTree and onAddOneInTree")
+                }
+            } else {
+                console.log("fail to move")
+                message.warning("移动节点失败")
+            }
+            return new Promise((resolve) => { resolve(true) });
+        }).catch((err:Error) => {
+            console.warn("moveInNewParent exception: " + err.message)
+            message.error(err.message)
+        })
+}
 
 
 

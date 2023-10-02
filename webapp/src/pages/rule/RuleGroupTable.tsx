@@ -1,5 +1,5 @@
 
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
 
 import { AllDomainKey, Domain, DomainQueryParams, RuleCommon, RuleGroup, RuleGroupQueryParams } from "../DataType"
 import { useSearchParams } from "react-router-dom"
@@ -10,7 +10,7 @@ import { ProColumns } from "@ant-design/pro-table"
 import { Host } from "@/Config"
 
 
-import { Button, Dropdown } from "antd"
+import { Button, Dropdown, message } from "antd"
 import { RuleEditModal } from "./RuleEdit"
 import { initialValueRule, rubleTableProps } from "./RuleTable"
 import { BetaSchemaForm } from "@ant-design/pro-form"
@@ -19,6 +19,7 @@ import { defaultProps, mustFill } from "../moduleTableProps"
 
 import { deleteRuleOrGroup, saveRuleOrGroup } from "./RuleCommon"
 import { ArrayUtil } from "@rwsbillyang/usecache"
+import { MoveIntoNewParentModal, MoveNodeParam } from "./MoveRuleNode"
 
 
 
@@ -85,7 +86,7 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
 
 
 export const initialValuesRuleGroup: Partial<RuleGroup> = { exclusive: true, enable: true, priority: 50, level: 0 }
-export const RuleGroupName = "ruleGroup"
+export const RuleGroupName = "ruleGroup" //typedId以此开头
 export const rubleGroupTableProps = {
     ...defaultProps(RuleGroupName),
     idKey: "typedId",
@@ -117,13 +118,15 @@ export const RuleGroupTable: React.FC = () => {
     const [searchParams] = useSearchParams();
     const initialQuery: RuleGroupQueryParams = { domainId: searchParams["domainId"], level: 0 }
     const [path, setPath] = useState<string[]>()
+    const [moveParam, setMoveParam] = useState<MoveNodeParam>()
+    const { current } = useRef<{ treeData?: RuleCommon[] }>({}) //移动节点时，用于作为树形选择器的数据
 
     const toolBarRender = () => [
         <RuleGroupEditModal isAdd={true} record={initialValuesRuleGroup} fromTable={RuleGroupName} key="addOne" />,
-        path? <a onClick={() => {setPath(undefined)}} key="viewAll">恢复查看全部</a>: undefined
-    ].filter(e=>!!e)
+        path ? <a onClick={() => { setPath(undefined) }} key="viewAll">恢复查看全部</a> : undefined
+    ].filter(e => !!e)
 
-    //自定义编辑
+    //自定义操作
     const actions: ProColumns<RuleCommon> = {
         title: '操作',
         valueType: 'option',
@@ -139,39 +142,53 @@ export const RuleGroupTable: React.FC = () => {
                         { label: (<RuleGroupEditModal isAdd={true} record={{ ...initialValuesRuleGroup, domainId: record.domainId, level: (record.level || 0) + 1 }} currentRow={record} fromTable={RuleGroupName} key="addSubRuleGroup" />), key: 'subRuleGroup' }
                     ]
                 }}>
-                    <a onClick={(e) => e.preventDefault()}> 新增<DownOutlined /> </a>
+                    <a onClick={(e) => e.preventDefault()}> 新增 </a>
                 </Dropdown>,
 
                 //Edit rule或ruleGroup，根据是哪种类型使用不同的编辑器，没有parent表示不是新增子项，isAdd为false表示编辑
                 record.rule ? <RuleEditModal isAdd={false} record={rubleTableProps.transformBeforeEdit ? rubleTableProps.transformBeforeEdit(record.rule) : record.rule} currentRow={record} fromTable={RuleGroupName} key="editOne" /> : undefined,
                 record.ruleGroup ? <RuleGroupEditModal isAdd={false} record={rubleGroupTableProps.transformBeforeEdit ? rubleGroupTableProps.transformBeforeEdit(record.ruleGroup) : record.ruleGroup} currentRow={record} fromTable={RuleGroupName} key="editOne" /> : undefined,
 
-                <a onClick={() => deleteRuleOrGroup(RuleGroupName, record)} key="delete">删除</a>,
-
-                <a onClick={() => {setPath(record.parentPath)}} key="viewOnlyNode">只看当前</a>
-            ]
+                <Dropdown key="more" menu={{
+                    items: [
+                        { label: (<a onClick={() => { setPath(record.parentPath) }} key="viewOnlyNode">只看当前</a>), key: 'viewOnlyNode' },
+                        { label: (<a onClick={() => { 
+                            if(current.treeData)
+                                setMoveParam({fromTable: RuleGroupName, list: current.treeData, currentRow: record})
+                            else message.warning("no list tree data")
+                            }} key="moveNode">移动</a>), key: 'moveNode' },
+                        { label: (<a onClick={() => deleteRuleOrGroup(RuleGroupName, record)} key="delete">删除</a>), key: 'delete' },
+                    ]
+                }}>
+                    <a onClick={(e) => e.preventDefault()}> 更多.. </a>
+                </Dropdown>,   
+            ].filter(e=>!!e)
         }
     }
 
-    
 
-    return <MyProTable<RuleCommon, RuleGroupQueryParams>
-        {...rubleGroupTableProps}
-        expandable={expandable}
-        columns={ruleGroupColumns}
-        initialQuery={initialQuery}
-        initialValues={initialValuesRuleGroup}
-        listTransformArgs={path}
-        listTransform={(list: RuleCommon[], path?:any) => {
-            if(!path) return list
-            const root = ArrayUtil.trimTreeByPath(list, path, rubleGroupTableProps.idKey, "children", true)
-            //console.log("after remove, root=",root)
-            return root? [root] : list
-        }}
-        
-        //rowKey={ (record) => record.typedId || "unknown"+record.id }
-        toolBarRender={toolBarRender} actions={actions}
-    />
+
+    return <>
+        <MyProTable<RuleCommon, RuleGroupQueryParams>
+            {...rubleGroupTableProps}
+            expandable={expandable}
+            columns={ruleGroupColumns}
+            initialQuery={initialQuery}
+            initialValues={initialValuesRuleGroup}
+            listTransformArgs={path}
+            listTransform={(list: RuleCommon[], path?: any) => {
+                current.treeData = list //记录下当前全部树形数据
+                if (!path) return list
+                const root = ArrayUtil.trimTreeByPath(list, path, rubleGroupTableProps.idKey, "children", true)
+                //console.log("after remove, root=",root)
+                return root ? [root] : list
+            }}
+
+            //rowKey={ (record) => record.typedId || "unknown"+record.id }
+            toolBarRender={toolBarRender} actions={actions}
+        />
+        <MoveIntoNewParentModal param={moveParam} setParam={setMoveParam}/>
+    </>
 }
 
 /**
@@ -187,7 +204,7 @@ export const RuleGroupEditModal: React.FC<{
     record?: Partial<RuleGroup>,
     fromTable: string,
     currentRow?: RuleCommon
-}> = ({ isAdd, record,  fromTable, currentRow }) => {
+}> = ({ isAdd, record, fromTable, currentRow }) => {
 
 
     return <BetaSchemaForm<RuleGroup>

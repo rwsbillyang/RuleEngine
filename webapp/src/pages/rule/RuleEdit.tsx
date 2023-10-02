@@ -6,12 +6,15 @@ import { Host } from "@/Config"
 import { useLocation, useNavigate } from "react-router-dom"
 import { Button, Form, message } from "antd"
 
+
+
 import { RuleName } from "./RuleTable"
 
-import { saveRuleOrGroup } from "./RuleCommon"
+import {  saveRuleOrGroup } from "./RuleCommon"
 import { basicExpressionMeta2String, complexExpressionMeta2String } from "../utils"
 import { BasicExprMetaEditModal } from "../components/BasicExprMetaEditModal"
 import { ComplexExprMetaEditModal } from "../components/ComplexExprMetaEditModal"
+
 
 
 /**
@@ -45,7 +48,7 @@ export const RuleEditModal: React.FC<{
         onFinish={async (values) => {
             //console.log("RuleEdit onFinish: values=",values);
             //console.log("oldValues:", record);
-            if(!values.label){
+            if (!values.label) {
                 message.warning("请填写名称")
                 return false
             }
@@ -85,11 +88,11 @@ export const RuleEditModal: React.FC<{
                 return <>
                     <Form.Item label="基本条件" tooltip="基本条件和复合条件二选一">
                         {basicExpressionMeta2String(condition.meta)} <BasicExprMetaEditModal onDone={(meta, exprId) => setCondition({ meta, exprId })}
-                            domainId={domainId} exprId={condition.exprId} meta={condition.meta?._class === "Basic" ? condition.meta: undefined} />
+                            domainId={domainId} exprId={condition.exprId} meta={condition.meta?._class === "Basic" ? condition.meta : undefined} />
                     </Form.Item>
                     <Form.Item label="复合条件" tooltip="基本条件和复合条件二选一">
                         {complexExpressionMeta2String(condition.meta)} <ComplexExprMetaEditModal onDone={(meta, exprId) => setCondition({ meta, exprId })}
-                            domainId={domainId} exprId={condition.exprId} meta={condition.meta?._class === "Complex" ? condition.meta: undefined} />
+                            domainId={domainId} exprId={condition.exprId} meta={condition.meta?._class === "Complex" ? condition.meta : undefined} />
                     </Form.Item>
                 </>
             }}

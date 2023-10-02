@@ -1,5 +1,5 @@
 
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
 
 import { AllDomainKey, Domain, DomainQueryParams, Rule, RuleCommon, RuleQueryParams } from "../DataType"
 import { useSearchParams } from "react-router-dom"
@@ -15,11 +15,12 @@ import { defaultProps, mustFill } from "../moduleTableProps"
 
 
 import { RuleEditModal } from "./RuleEdit"
-import { Dropdown } from "antd"
+import { Dropdown, message } from "antd"
 import { RuleGroupEditModal, initialValuesRuleGroup, rubleGroupTableProps } from "./RuleGroupTable"
 import { deleteRuleOrGroup } from "./RuleCommon"
 import { basicMeta2Expr, complexMeta2Expr } from "../utils"
 import { ArrayUtil } from "@rwsbillyang/usecache"
+import { MoveIntoNewParentModal, MoveNodeParam } from "./MoveRuleNode"
 
 const ruleColumns: ProColumns<RuleCommon>[] = [
     {
@@ -32,8 +33,8 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
         hideInSearch: true,
         hideInForm: true,
         renderText(text, record, index, action) {
-            if(record.rule) return "规则"
-            else if(record.ruleGroup)return "规则组"
+            if (record.rule) return "规则"
+            else if (record.ruleGroup) return "规则组"
             else return "未知"
         },
     },
@@ -48,13 +49,13 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
             convertFunc: (item) => { return { label: item.label, value: item.id } }
         })
     },
-    
+
     {
         title: '状态',
         valueType: "switch",
         dataIndex: 'enable',
     },
-  
+
     {
         title: '优先级',
         tooltip: "值越小越优先执行",
@@ -100,7 +101,7 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
         hideInTable: true,
         tooltip: "规则执行条件可信度百分比",
         dataIndex: ['rule', 'threshhold'],
-        key:"threshhold",
+        key: "threshhold",
         valueType: "percent"
     },
 ]
@@ -109,7 +110,7 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
 
 
 
-export const RuleName = "rule"
+export const RuleName = "rule"//typedId以此开头
 export const initialValueRule: Partial<Rule> = { enable: true, priority: 50, threshhold: 100, level: 0 }
 export const rubleTableProps = {
     ...defaultProps(RuleName),
@@ -130,8 +131,8 @@ export const rubleTableProps = {
 
         //保存它们对应的string信息
         //delete e.meta
- 
-       // delete e.expr
+
+        // delete e.expr
 
         return e
     },
@@ -168,12 +169,14 @@ export const RuleTable: React.FC = () => {
     const [searchParams] = useSearchParams();
     const initialQuery: RuleQueryParams = { domainId: searchParams["domainId"], level: 0 }
     const [path, setPath] = useState<string[]>()
-    
+    const [moveParam, setMoveParam] = useState<MoveNodeParam>()
+    const { current } = useRef<{ treeData?: RuleCommon[] }>({}) //移动节点时，用于作为树形选择器的数据
+
     //新增和编辑将全部转移到自定义的
     const toolBarRender = () => [
         <RuleEditModal isAdd={true} record={initialValueRule} fromTable={RuleName} key="addOne" />,
-        path? <a onClick={() => {setPath(undefined)}} key="viewAll">恢复查看全部</a>: undefined
-    ].filter(e=>!!e)
+        path ? <a onClick={() => { setPath(undefined) }} key="viewAll">恢复查看全部</a> : undefined
+    ].filter(e => !!e)
 
     //自定义编辑
     const actions: ProColumns<RuleCommon> = {
@@ -188,7 +191,7 @@ export const RuleTable: React.FC = () => {
                     items: [
                         //有parent属性表示新增子项，不同类型parentRule、parentGroup只有一个非空
                         { label: (<RuleEditModal isAdd={true} record={{ ...initialValueRule, domainId: record.domainId, level: (record.level || 0) + 1 }} currentRow={record} fromTable={RuleName} key="addSubRule" />), key: 'subRule' },
-                        { label: (<RuleGroupEditModal isAdd={true} record={{ ...initialValuesRuleGroup, domainId: record.domainId, level: (record.level || 0) + 1  }} currentRow={record} fromTable={RuleName} key="addSubRuleGroup" />), key: 'subRuleGroup' }
+                        { label: (<RuleGroupEditModal isAdd={true} record={{ ...initialValuesRuleGroup, domainId: record.domainId, level: (record.level || 0) + 1 }} currentRow={record} fromTable={RuleName} key="addSubRuleGroup" />), key: 'subRuleGroup' }
                     ]
                 }}>
                     <a onClick={(e) => e.preventDefault()}> 新增<DownOutlined /> </a>
@@ -198,29 +201,46 @@ export const RuleTable: React.FC = () => {
                 record.rule ? <RuleEditModal isAdd={false} record={rubleTableProps.transformBeforeEdit ? rubleTableProps.transformBeforeEdit(record.rule) : record.rule} currentRow={record} fromTable={RuleName} key="editOne" /> : undefined,
                 record.ruleGroup ? <RuleGroupEditModal isAdd={false} record={rubleGroupTableProps.transformBeforeEdit ? rubleGroupTableProps.transformBeforeEdit(record.ruleGroup) : record.ruleGroup} currentRow={record} fromTable={RuleName} key="editOne" /> : undefined,
 
-                <a onClick={() => deleteRuleOrGroup(RuleName, record)} key="delete">删除</a>,
+                <Dropdown key="more" menu={{
+                    items: [
+                        { label: (<a onClick={() => { setPath(record.parentPath) }} key="viewOnlyNode">只看当前</a>), key: 'viewOnlyNode' },
+                        {
+                            label: (<a onClick={() => {
+                                if (current.treeData)
+                                    setMoveParam({ fromTable: RuleName, list: current.treeData, currentRow: record })
+                                else message.warning("no list tree data")
+                            }} key="moveNode">移动</a>), key: 'moveNode'
+                        },
+                        { label: (<a onClick={() => deleteRuleOrGroup(RuleName, record)} key="delete">删除</a>), key: 'delete' },
+                    ]
+                }}>
+                    <a onClick={(e) => e.preventDefault()}> 更多.. </a>
+                </Dropdown>,
 
-                <a onClick={() => {setPath(record.parentPath)}} key="viewOnlyNode">只看当前</a>
             ]
         }
     }
 
-    return <MyProTable<RuleCommon, RuleQueryParams> 
-    {...rubleTableProps} 
-    expandable={expandable} 
-    columns={ruleColumns} 
-    initialQuery={initialQuery} 
-    initialValues={initialValueRule}
-    listTransformArgs={path}
-        listTransform={(list: RuleCommon[], path?:any) => {
-            if(!path) return list
-            const root = ArrayUtil.trimTreeByPath(list, path, rubleGroupTableProps.idKey, "children", true)
-            //console.log("after remove, root=",root)
-            return root? [root] : list
-        }}
-    //rowKey={ (record) => record.typedId  }
-    toolBarRender={toolBarRender} actions={actions} //注释掉此行，将跳到新的页面RuleEdit，否则使用Modal对话框
-    />
+    return <>
+        <MyProTable<RuleCommon, RuleQueryParams>
+            {...rubleTableProps}
+            expandable={expandable}
+            columns={ruleColumns}
+            initialQuery={initialQuery}
+            initialValues={initialValueRule}
+            listTransformArgs={path}
+            listTransform={(list: RuleCommon[], path?: any) => {
+                current.treeData = list //记录下当前全部树形数据
+                if (!path) return list
+                const root = ArrayUtil.trimTreeByPath(list, path, rubleGroupTableProps.idKey, "children", true)
+                //console.log("after remove, root=",root)
+                return root ? [root] : list
+            }}
+            //rowKey={ (record) => record.typedId  }
+            toolBarRender={toolBarRender} actions={actions} //注释掉此行，将跳到新的页面RuleEdit，否则使用Modal对话框
+        />
+        <MoveIntoNewParentModal param={moveParam} setParam={setMoveParam} />
+    </>
 }
 
 

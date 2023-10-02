@@ -10,18 +10,17 @@ import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, BasicExpressionR
 export const getBasicType = (parmTypeId?: number, cacheKey: string = AllParamTypeKey) => {
     if (parmTypeId === undefined) return undefined
 
-    const paramType: ParamType = Cache.findOne(cacheKey, parmTypeId, "id")
+    let paramType: ParamType | undefined = Cache.findOne(cacheKey, parmTypeId, "id")
     if (paramType) {
         let end = paramType.code.indexOf("Set")
         if (end < 0) end = paramType.code.indexOf("Enum")
         //console.log("end="+end)
         if (end > 0) {
             const basicTypeCode = paramType.code.slice(0, end)
-            return Cache.findOne(cacheKey, basicTypeCode, "code")
-        } else
-            return paramType
+            paramType = Cache.findOne(cacheKey, basicTypeCode, "code")
+        } 
     }
-    return undefined
+    return paramType
 }
 // export const getBasicTypeId = (parmTypeId?: number) => {
 //     if (parmTypeId === undefined) return parmTypeId
@@ -71,7 +70,7 @@ export const type2Both = (typeId?: number, cacheKey: string = AllParamTypeKey) =
  * @returns 
  */
 export const typeCode2Id = (parmTypeCode: string, cacheKey: string = AllParamTypeKey) => {
-    const paramType: ParamType = Cache.findOne(cacheKey, parmTypeCode, "code")
+    const paramType: ParamType | undefined = Cache.findOne(cacheKey, parmTypeCode, "code")
     return paramType?.id
 }
 
