@@ -27,11 +27,11 @@ export const JsonValueEditor: React.FC<{
     if (type === 'Bool')
       return <Switch style={{ width: width }} disabled={disabled} checked={value?.value === true} onChange={onChange? (v) => onChange({ _class: type, value: v }): undefined} />
     if (type === 'Datetime')
-      return <DatePicker style={{ width: width }} showTime disabled={disabled} value={value?.value ? dayjs(value.value.toString(), 'YYYY-MM-DD HH:mm:ss') : undefined} onChange={onChange? (v) => onChange({ _class: type, value: v ? v.format('YYYY-MM-DD HH:mm:ss') : undefined }): undefined} />
+      return <DatePicker style={{ width: width }} showTime disabled={disabled} value={value?.value !== undefined ? dayjs(value.value.toString(), 'YYYY-MM-DD HH:mm:ss') : undefined} onChange={onChange? (v) => onChange({ _class: type, value: v ? v.format('YYYY-MM-DD HH:mm:ss') : undefined }): undefined} />
     if (type === 'Int' || type === 'Long' || type === 'Double')
-      return <InputNumber style={{ width: width }} disabled={disabled} value={value?.value ? +value.value : undefined} onChange={onChange? (v) => onChange({ _class: type, value: v ? v : undefined }): undefined} />
+      return <InputNumber style={{ width: width }} disabled={disabled} value={value?.value !== undefined ? +value.value : undefined} onChange={onChange? (v) => onChange({ _class: type, value: v ? v : undefined }): undefined} />
     else
-      return <Input style={{ width: width }} disabled={disabled} value={value?.value ? value.value.toString() : undefined} onChange={onChange? (v) => onChange({ _class: type || 'String', value: v ? v.target.value : undefined }): undefined} />
+      return <Input style={{ width: width }} disabled={disabled} value={value?.value !== undefined ? value.value.toString() : undefined} onChange={onChange? (v) => onChange({ _class: type || 'String', value: v ? v.target.value : undefined }): undefined} />
   }
 
 }

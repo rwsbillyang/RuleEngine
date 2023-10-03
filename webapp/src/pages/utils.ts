@@ -190,7 +190,7 @@ export const operandMeta2String = (name: string, operandMeta?: OperandValueMeta)
 
 //to human-reading string
 const jsonValue2String = (jsonValue?: JsonValue) => {
-    if (!jsonValue || !jsonValue.value) return ""
+    if (!jsonValue || jsonValue.value === undefined) return ""
     const value = jsonValue.value
     if (Array.isArray(value)) {
         if(value.length === 0) return "[]"

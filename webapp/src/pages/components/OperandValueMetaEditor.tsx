@@ -215,7 +215,7 @@ export const OperandValueMetaEditor: React.FC<{
                             //多选选中多个[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
                             //console.log("OperandValueMetaEditor constant, Cascader.onChange:multiple="+ multiple + ", v=", v)
                         
-                            if (v && v.length > 0) {
+                            if (v !== undefined && v.length > 0) {
                                 const constants: Constant[] = []
                                 let jsonValue
                                 if (multiple) {
