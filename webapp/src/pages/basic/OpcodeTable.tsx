@@ -137,6 +137,13 @@ export const OpcodeTable: React.FC = () => {
               tooltip: '是否可多选'
             },
             {
+              title: '必选项',
+              dataIndex: "required",
+              valueType: "switch",
+              fieldProps:{placeholder: "必选"},
+              tooltip: '是否必选'
+            },
+            {
               title: '值固定选项',
               dataIndex: "selectOptions",
               valueType: "formList",

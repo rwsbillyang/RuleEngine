@@ -3,7 +3,7 @@ import React, { useRef, useState } from "react"
 
 import { AllDomainKey, Domain, DomainQueryParams, RuleCommon, RuleGroup, RuleGroupQueryParams } from "../DataType"
 import { useSearchParams } from "react-router-dom"
-import { DownOutlined } from '@ant-design/icons'
+
 import { MyProTable } from "@/myPro/MyProTable"
 import { asyncSelectProps2Request } from "@/myPro/MyProTableProps"
 import { ProColumns } from "@ant-design/pro-table"
@@ -20,6 +20,7 @@ import { defaultProps, mustFill } from "../moduleTableProps"
 import { deleteRuleOrGroup, saveRuleOrGroup } from "./RuleCommon"
 import { ArrayUtil } from "@rwsbillyang/usecache"
 import { MoveIntoNewParentModal, MoveNodeParam } from "./MoveRuleNode"
+
 
 
 
@@ -151,7 +152,7 @@ export const RuleGroupTable: React.FC = () => {
 
                 <Dropdown key="more" menu={{
                     items: [
-                        { label: (<a onClick={() => { setPath(record.parentPath) }} key="viewOnlyNode">只看当前</a>), key: 'viewOnlyNode' },
+                        { label: (<a onClick={() => { setPath(record.posPath) }} key="viewOnlyNode">只看当前</a>), key: 'viewOnlyNode' },
                         { label: (<a onClick={() => { 
                             if(current.treeData)
                                 setMoveParam({fromTable: RuleGroupName, list: current.treeData, currentRow: record})
@@ -177,10 +178,17 @@ export const RuleGroupTable: React.FC = () => {
             initialValues={initialValuesRuleGroup}
             listTransformArgs={path}
             listTransform={(list: RuleCommon[], path?: any) => {
+                ArrayUtil.traverseTree(list, (e) => {
+                    const children = e.children
+                    if(children && children.length > 0)
+                        e.children = children.sort((a,b)=>(a.priority||50) - (b.priority||50))
+                })
+                list.sort((a,b)=>(a.priority||50) - (b.priority||50))
+                
                 current.treeData = list //记录下当前全部树形数据
                 if (!path) return list
-                const root = ArrayUtil.trimTreeByPath(list, path, rubleGroupTableProps.idKey, "children", true)
-                //console.log("after remove, root=",root)
+                const root = ArrayUtil.trimTreeByPath(list, path, rubleGroupTableProps.idKey)
+                console.log("after trim, root=",root)
                 return root ? [root] : list
             }}
 

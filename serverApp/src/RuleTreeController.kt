@@ -33,16 +33,16 @@ class RuleTreeController : KoinComponent {
      * @param rule 待插入或更新的子rule 若已存在，则修改子rule新的字段值以及亲子关系
      * @param parentRuleId 父rule的id
      * */
-    public fun saveRuleInParentRule(rule: Rule, parentRuleId: Int): RuleCommon {
+    public fun saveRuleInRule(rule: Rule, parentRuleId: Int): InsertNodeResult {
         val old = rule.id?.let { service.findOne(Meta.rule, { Meta.rule.id eq it }, "rule/${rule.id}") }
         //更新亲子关系数据，其它3个前端不做变动，仍旧传递回来
         rule.ruleParentIds = addId(old?.ruleParentIds, parentRuleId)
         val newOne = service.save(Meta.rule, rule, old == null, "rule/${rule.id}")
 
-        addRelation_RuleInRule(newOne.id!!, parentRuleId)
+        val children = addChild_RuleInRule(newOne.id!!, parentRuleId)
 
         //并不是从根上进行构建tree,故path只是自己，前端需要结合parent重新构建
-        return newOne.toRuleCommon(service)//转换成RuleCommon用于给前端添加到children中，展示到树形列表中
+        return InsertNodeResult(newOne.toRuleCommon(service), RuleAndGroupdIds(children, null))//转换成RuleCommon用于给前端添加到children中，展示到树形列表中
     }
 
     /**
@@ -51,7 +51,7 @@ class RuleTreeController : KoinComponent {
      * @param ruleGroup 待插入或更新的子ruleGroup 若已存在，则修改子ruleGroup新的字段值以及亲子关系
      * @param parentRuleId 父rule的id
      * */
-    public fun saveRuleGroupInParentRule(ruleGroup: RuleGroup, parentRuleId: Int): RuleCommon {
+    public fun saveGroupInRule(ruleGroup: RuleGroup, parentRuleId: Int): InsertNodeResult {
         val old = if(ruleGroup.id != null)
             service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq ruleGroup.id }, "ruleGroup/${ruleGroup.id}")
         else null
@@ -59,10 +59,10 @@ class RuleTreeController : KoinComponent {
         ruleGroup.ruleParentIds = addId(old?.ruleChildrenIds, parentRuleId)
         val newOne = service.save(Meta.ruleGroup, ruleGroup, old == null, "ruleGroup/${ruleGroup.id}")
 
-        addRelation_GroupInRule(newOne.id!!, parentRuleId)
+        val children = addChild_GroupInRule(newOne.id!!, parentRuleId)
 
         //并不是从根上进行构建tree,故path只是自己，前端需要结合parent重新构建
-        return newOne.toRuleCommon(service)//转换成RuleCommon用于给前端添加到children中，展示到树形列表中
+        return InsertNodeResult(newOne.toRuleCommon(service), RuleAndGroupdIds(null, children))//转换成RuleCommon用于给前端添加到children中，展示到树形列表中
     }
 
     /**
@@ -71,7 +71,7 @@ class RuleTreeController : KoinComponent {
      * @param ruleGroup 待插入或更新的子ruleGroup 若已存在，则修改子ruleGroup新的字段值以及亲子关系
      * @param parentRuleGroupId 父ruleGroup的id
      * */
-    public fun saveRuleGroupInParentRuleGroup(ruleGroup: RuleGroup, parentRuleGroupId: Int): RuleCommon {
+    public fun saveGroupInGroup(ruleGroup: RuleGroup, parentRuleGroupId: Int): InsertNodeResult {
         val old = if(ruleGroup.id != null)
             service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq ruleGroup.id }, "ruleGroup/${ruleGroup.id}")
         else null
@@ -79,10 +79,10 @@ class RuleTreeController : KoinComponent {
         ruleGroup.ruleGroupParentIds = addId(old?.ruleGroupParentIds, parentRuleGroupId)
         val newOne = service.save(Meta.ruleGroup, ruleGroup, old == null, "ruleGroup/${ruleGroup.id}")
 
-        addRelation_GroupInGroup(newOne.id!!, parentRuleGroupId)
+        val children = addChild_GroupInGroup(newOne.id!!, parentRuleGroupId)
 
         //并不是从根上进行构建tree,故path只是自己，前端需要结合parent重新构建
-        return newOne.toRuleCommon(service)//转换成RuleCommon用于给前端添加到children中，展示到树形列表中
+        return InsertNodeResult(newOne.toRuleCommon(service), RuleAndGroupdIds(null, children))//转换成RuleCommon用于给前端添加到children中，展示到树形列表中
     }
 
     /**
@@ -91,7 +91,7 @@ class RuleTreeController : KoinComponent {
      * @param rule 待插入或更新的子rule 若已存在，则修改子rule新的字段值以及亲子关系
      * @param parentRuleGroupId 父ruleGroup的id
      * */
-    public fun saveRuleInParentRuleGroup(rule: Rule, parentRuleGroupId: Int): RuleCommon {
+    public fun saveRuleInGroup(rule: Rule, parentRuleGroupId: Int): InsertNodeResult {
         val old = if(rule.id != null)
             service.findOne(Meta.rule, { Meta.rule.id eq rule.id }, "rule/${rule.id}")
         else null
@@ -99,10 +99,10 @@ class RuleTreeController : KoinComponent {
         rule.ruleGroupParentIds = addId(old?.ruleGroupParentIds, parentRuleGroupId)
         val newOne = service.save(Meta.rule, rule, old == null, "rule/${rule.id}")
 
-        addRelation_RuleInGroup(newOne.id!!, parentRuleGroupId)
+        val children = addChild_RuleInGroup(newOne.id!!, parentRuleGroupId)
 
         //并不是从根上进行构建tree,故path只是自己，前端需要结合parent重新构建
-        return newOne.toRuleCommon(service) //转换成RuleCommon用于给前端添加到children中，展示到树形列表中
+        return InsertNodeResult(newOne.toRuleCommon(service), RuleAndGroupdIds(children, null)) //转换成RuleCommon用于给前端添加到children中，展示到树形列表中
     }
 
     /**
@@ -136,14 +136,19 @@ class RuleTreeController : KoinComponent {
      *
      * @param id 子rule的id
      * @param parentRuleId 父rule的id 若为空则可能是root级别
+     *
+     * @return 返回的删除结果，只是包含当前的亲子关系，
+     * 不包括循环遍历删除当前节点子孙节点的节点更新情况（实际使用情况目前还没这种情况），此时前端需清除缓存
      * */
-    public fun removeRuleInParentRule(id: Int, parentRuleId: Int?): Long {
-        var count = 0L
+    public fun removeRuleInRule(id: Int, parentRuleId: Int?):  DelResult? {
         val rule = service.findOne(Meta.rule, { Meta.rule.id eq id }, "rule/$id")
         if (rule == null) {
             log.warn("no child rule, id=$id when del, parentRuleId=$parentRuleId")
-            return count
+            return null
         }
+
+        var count = 0L
+        var pair: Pair<String?,String?>? = null
 
         val ruleParent = rule.ruleParentIds?.split(",")
         val groupParent = rule.ruleGroupParentIds?.split(",")
@@ -158,20 +163,22 @@ class RuleTreeController : KoinComponent {
 
             //若有孩子，先递归删除rule的孩子，再删除rule
             groupChildren?.forEach {
-                count += removeRuleGroupInParentRule(it.toInt(), id) //删除rule下的group孩子：可能删除了孩子，也可能只是拆解父子关系
+                count += removeGroupInRule(it.toInt(), id)?.count?:0L //删除rule下的group孩子：可能删除了孩子，也可能只是拆解父子关系
             }
             ruleChildren?.forEach {
-                count += removeRuleInParentRule(it.toInt(), id)//删除rule下的rule孩子：可能删除了孩子，也可能只是拆解父子关系
+                count += removeRuleInRule(it.toInt(), id)?.count?:0L//删除rule下的rule孩子：可能删除了孩子，也可能只是拆解父子关系
             }
 
             //若无孩子，上面的不被执行，将直接将其删除
             count += service.delete(Meta.rule, { Meta.rule.id eq id }, "rule/$id")
-
+            if(groupParent != null && groupParent.size == 1 && groupParent[0] == parentRuleId.toString()){
+                pair = removeRelation_RuleInRule(rule, parentRuleId!!, false)
+            }
         } else if (parentRuleId != null) {//非单亲：有父group，or有其它父rule，只拆除亲子关系 注意：拆除非原子操作
             removeRelation_RuleInRule(rule, parentRuleId)
         }
 
-        return count
+        return DelResult(count, RuleAndGroupdIds(pair?.first,null),RuleAndGroupdIds(pair?.second, null))
     }
 
     /**
@@ -182,14 +189,19 @@ class RuleTreeController : KoinComponent {
      *
      * @param id 子ruleGroup的id
      * @param parentRuleId 父rule的id 若为空则可能是root级别
+     *
+     * @return 返回的删除结果，只是包含当前的亲子关系，
+     * 不包括循环遍历删除当前节点子孙节点的节点更新情况（实际使用情况目前还没这种情况），此时前端需清除缓存
      * */
-    public fun removeRuleGroupInParentRule(id: Int, parentRuleId: Int?): Long {
-        var count = 0L
+    public fun removeGroupInRule(id: Int, parentRuleId: Int?):  DelResult? {
         val ruleGroup = service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq id }, "ruleGroup/$id")
         if (ruleGroup == null) {
             log.warn("no child ruleGroup, id=$id when del, parentRuleId=$parentRuleId")
-            return count
+            return null
         }
+
+        var count = 0L
+        var pair: Pair<String?,String?>? = null
 
         val ruleParent = ruleGroup.ruleParentIds?.split(",")
         val groupParent = ruleGroup.ruleGroupParentIds?.split(",")
@@ -204,20 +216,22 @@ class RuleTreeController : KoinComponent {
 
             //若有孩子，先递归删除rule的孩子，再删除rule
             groupChildren?.forEach {
-                count += removeRuleGroupInParentRuleGroup(it.toInt(), id) //删除ruleGroup下的group孩子：可能删除了孩子，也可能只是拆解父子关系
+                count += removeRuleInGroup(it.toInt(), id)?.count?:0L //删除ruleGroup下的group孩子：可能删除了孩子，也可能只是拆解父子关系
             }
             ruleChildren?.forEach {
-                count += removeRuleInParentRuleGroup(it.toInt(), id)//删除ruleGroup下的rule孩子：：可能删除了孩子，也可能只是拆解父子关系
+                count += removeRuleInGroup(it.toInt(), id)?.count?:0L//删除ruleGroup下的rule孩子：：可能删除了孩子，也可能只是拆解父子关系
             }
 
             //若无孩子，上面的不被执行，将直接将其删除
             count += service.delete(Meta.ruleGroup, { Meta.ruleGroup.id eq id }, "ruleGroup/$id")
-
+            if(groupParent != null && groupParent.size == 1 && groupParent[0] == parentRuleId.toString()){
+                pair = removeRelation_GroupInRule(ruleGroup, parentRuleId!!, false)
+            }
         } else if (parentRuleId != null) {//非单亲：有父group，or有其它父rule，只拆除亲子关系 注意：拆除非原子操作
             removeRelation_GroupInRule(ruleGroup, parentRuleId)
         }
 
-        return count
+        return DelResult(count, RuleAndGroupdIds(pair?.first, null), RuleAndGroupdIds(null, pair?.second))
     }
 
     /**
@@ -228,19 +242,23 @@ class RuleTreeController : KoinComponent {
      *
      * @param id 子ruleGroup的id
      * @param parentRuleGroupId 父ruleGroup的id 若为空则可能是root级别
+     *
+     * @return 返回的删除结果，只是包含当前的亲子关系，
+     * 不包括循环遍历删除当前节点子孙节点的节点更新情况（实际使用情况目前还没这种情况），此时前端需清除缓存
      * */
-    public fun removeRuleGroupInParentRuleGroup(id: Int, parentRuleGroupId: Int?): Long {
-        var count = 0L
+    public fun removeGroupInGroup(id: Int, parentRuleGroupId: Int?):  DelResult? {
         val ruleGroup = service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq id }, "ruleGroup/$id")
         if (ruleGroup == null) {
             log.warn("no child ruleGroup, id=$id when del, parentRuleGroupId=$parentRuleGroupId")
-            return count
+            return null
         }
+        var count = 0L
+        var pair: Pair<String?,String?>? = null
 
         val ruleParent = ruleGroup.ruleParentIds?.split(",")
         val groupParent = ruleGroup.ruleGroupParentIds?.split(",")
 
-        //只是单亲, 先删除ruleGroup
+        //只是单亲, 删除子节点  除了指定的parentRuleGroupId没有其它parent，目前都是此情况
         if (ruleParent.isNullOrEmpty() //没有父rule，
             //且： 没有其它父rule（或只有一个且是parentId）
             && (groupParent.isNullOrEmpty() || (groupParent.size == 1 && groupParent[0] == parentRuleGroupId.toString()))
@@ -250,20 +268,22 @@ class RuleTreeController : KoinComponent {
 
             //若有孩子，先递归删除rule的孩子，再删除rule
             groupChildren?.forEach {
-                count += removeRuleGroupInParentRuleGroup(it.toInt(), id) //删除ruleGroup下的group孩子：可能删除了孩子，也可能只是拆解父子关系
+                count += removeGroupInGroup(it.toInt(), id)?.count?:0L //删除ruleGroup下的group孩子：可能删除了孩子，也可能只是拆解父子关系
             }
             ruleChildren?.forEach {
-                count += removeRuleInParentRuleGroup(it.toInt(), id)//删除ruleGroup下的rule孩子：：可能删除了孩子，也可能只是拆解父子关系
+                count += removeRuleInGroup(it.toInt(), id)?.count?:0L//删除ruleGroup下的rule孩子：：可能删除了孩子，也可能只是拆解父子关系
             }
 
             //若无孩子，上面的不被执行，将直接将其删除
             count += service.delete(Meta.ruleGroup, { Meta.ruleGroup.id eq id }, "ruleGroup/$id")
-
+            if(groupParent != null && groupParent.size == 1 && groupParent[0] == parentRuleGroupId.toString()){
+                pair = removeRelation_GroupInGroup(ruleGroup, parentRuleGroupId!!, false)
+            }
         } else if (parentRuleGroupId != null) {//非单亲：有父group，or有其它父rule，只拆除亲子关系 注意：拆除非原子操作
-            removeRelation_GroupInGroup(ruleGroup, parentRuleGroupId)
+            pair = removeRelation_GroupInGroup(ruleGroup, parentRuleGroupId) //除了指定的parentRuleGroupId还有其它parent，只拆除双方关系，不删除
         }
 
-        return count
+        return DelResult(count, RuleAndGroupdIds(null, pair?.first),RuleAndGroupdIds(null,pair?.second))
     }
 
 
@@ -275,19 +295,24 @@ class RuleTreeController : KoinComponent {
      *
      * @param id 子rule的id
      * @param parentRuleGroupId 父ruleGroup的id 若为空则可能是root级别
+     *
+     * @return 返回的删除结果，只是包含当前的亲子关系，
+     * 不包括循环遍历删除当前节点子孙节点的节点更新情况（实际使用情况目前还没这种情况），此时前端需清除缓存
      * */
-    public fun removeRuleInParentRuleGroup(id: Int, parentRuleGroupId: Int?): Long {
-        var count = 0L
+    public fun removeRuleInGroup(id: Int, parentRuleGroupId: Int?): DelResult? {
         val rule = service.findOne(Meta.rule, { Meta.rule.id eq id }, "rule/$id")
         if (rule == null) {
             log.warn("no child rule, id=$id when del, parentRuleGroupId=$parentRuleGroupId")
-            return count
+            return null
         }
+
+        var count = 0L
+        var pair: Pair<String?,String?>? = null
 
         val ruleParent = rule.ruleParentIds?.split(",")
         val groupParent = rule.ruleGroupParentIds?.split(",")
 
-        //只是单亲, 先删除rule
+        //只是单亲, 需删除自己
         if (ruleParent.isNullOrEmpty() //没有父rule，
             //且： 没有其它父ruleGroup（或只有一个且是parentRuleGroupId）
             && (groupParent.isNullOrEmpty() || (groupParent.size == 1 && groupParent[0] == parentRuleGroupId.toString()))
@@ -297,61 +322,64 @@ class RuleTreeController : KoinComponent {
 
             //若有孩子，先递归删除rule的孩子，再删除rule
             groupChildren?.forEach {
-                count += removeRuleGroupInParentRule(it.toInt(), id) //删除rule下的group孩子：可能删除了孩子，也可能只是拆解父子关系
+                count += removeGroupInRule(it.toInt(), id)?.count?:0 //删除rule下的group孩子：可能删除了孩子，也可能只是拆解父子关系
             }
             ruleChildren?.forEach {
-                count += removeRuleInParentRule(it.toInt(), id)//删除rule下的rule孩子：：可能删除了孩子，也可能只是拆解父子关系
+                count += removeRuleInRule(it.toInt(), id)?.count?:0//删除rule下的rule孩子：：可能删除了孩子，也可能只是拆解父子关系
             }
 
             //若无孩子，上面的不被执行，将直接将其删除
             count += service.delete(Meta.rule, { Meta.rule.id eq id }, "rule/$id")
-
+            if(groupParent != null && groupParent.size == 1 && groupParent[0] == parentRuleGroupId.toString()){
+                pair = removeRelation_RuleInGroup(rule, parentRuleGroupId!!, false)
+            }
         } else if (parentRuleGroupId != null){//非单亲：有父group，or有其它父rule，只拆除亲子关系 注意：拆除非原子操作
-            removeRelation_RuleInGroup(rule, parentRuleGroupId)
+            pair = removeRelation_RuleInGroup(rule, parentRuleGroupId, false)
         }
 
-        return count
+        return DelResult(count, RuleAndGroupdIds(null, pair?.first), RuleAndGroupdIds(pair?.second, null))
     }
 
     /**
      * 将当前rule或ruleGroup移动到新的rule或RuleGroup下
      * 先解除亲子关系，再重新建立新的亲子关系
      * */
-    public fun moveRuleCommonIntoNewParent(p: MoveParam): Int {
+    public fun moveRuleCommonIntoNewParent(p: MoveParam): MoveResult? {
         when(p.current.type){
             RuleType.rule -> {
                 val rule = service.findOne(Meta.rule, { Meta.rule.id eq p.current.id }, "rule/${p.current.id}")
                 if (rule == null) {
                     log.warn("no child rule, id=${p.current.id} when move")
-                    return 0
+                    return null
                 }
 
                 var parentGroupIds = rule.ruleGroupParentIds
                 var parentRuleIds = rule.ruleParentIds
-                if(p.oldParent != null){
+                val oldRuleChildrenIds = if(p.oldParent != null){
                     when(p.oldParent.type){
                         RuleType.rule -> {
                             parentRuleIds = removeId(parentRuleIds, p.oldParent.id)
-                            removeRelation_RuleInRule(rule, p.oldParent.id, false)
+                            removeRelation_RuleInRule(rule, p.oldParent.id, false).second
                         }
                         RuleType.ruleGroup -> {
                             parentGroupIds = removeId(parentGroupIds, p.oldParent.id)
-                            removeRelation_RuleInGroup(rule, p.oldParent.id, false)
+                            removeRelation_RuleInGroup(rule, p.oldParent.id, false).second
                         }
                     }
-                }
-                if(p.newParent != null){
+                }else null
+
+                val newRuleChildrenIds = if(p.newParent != null){
                     when(p.newParent.type){
                         RuleType.rule -> {
                             parentRuleIds = addId(parentRuleIds, p.newParent.id)
-                            addRelation_RuleInRule(p.current.id, p.newParent.id)
+                            addChild_RuleInRule(p.current.id, p.newParent.id)
                         }
                         RuleType.ruleGroup -> {
                             parentGroupIds = addId(parentGroupIds, p.newParent.id)
-                            addRelation_RuleInGroup(p.current.id, p.newParent.id)
+                            addChild_RuleInGroup(p.current.id, p.newParent.id)
                         }
                     }
-                }
+                }else null
 
                 // 更新父节点信息
                 service.updateValues(
@@ -363,43 +391,45 @@ class RuleTreeController : KoinComponent {
                     { Meta.rule.id eq p.current.id },
                     "rule/${p.current.id}"
                 )
-                return 1
+
+                return MoveResult(RuleAndGroupdIds(parentRuleIds, parentGroupIds), RuleAndGroupdIds(oldRuleChildrenIds, null), RuleAndGroupdIds(newRuleChildrenIds, null))
             }
 
             RuleType.ruleGroup -> {
                 val ruleGroup = service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq p.current.id }, "ruleGroup/${p.current.id}")
                 if (ruleGroup == null) {
                     log.warn("no child ruleGroup, id=${p.current.id} when move")
-                    return 0
+                    return null
                 }
 
                 var parentGroupIds = ruleGroup.ruleGroupParentIds
                 var parentRuleIds = ruleGroup.ruleParentIds
-                if(p.oldParent != null){
+                val oldGroupChildrenIds = if(p.oldParent != null){
                     when(p.oldParent.type){
                         RuleType.rule -> {
                             parentRuleIds = removeId(parentRuleIds, p.oldParent.id)
-                            removeRelation_GroupInRule(ruleGroup, p.oldParent.id, false)
+                            removeRelation_GroupInRule(ruleGroup, p.oldParent.id, false).second
                         }
                         RuleType.ruleGroup -> {
                             parentGroupIds = removeId(parentGroupIds, p.oldParent.id)
-                            removeRelation_GroupInGroup(ruleGroup, p.oldParent.id, false)
+                            removeRelation_GroupInGroup(ruleGroup, p.oldParent.id, false).second
                         }
                     }
-                }
-                if(p.newParent != null){
+                }else null
+                val newGroupChildrenIds = if(p.newParent != null){
                     when(p.newParent.type){
                         RuleType.rule -> {
                             parentRuleIds = addId(parentRuleIds, p.newParent.id)
-                            addRelation_RuleInRule(p.current.id, p.newParent.id)
+                            addChild_RuleInRule(p.current.id, p.newParent.id)
                         }
                         RuleType.ruleGroup -> {
                             parentGroupIds = addId(parentGroupIds, p.newParent.id)
-                            addRelation_RuleInGroup(p.current.id, p.newParent.id)
+                            addChild_RuleInGroup(p.current.id, p.newParent.id)
                         }
                     }
-                }
+                }else null
 
+                log.info("update parentRuleIds=${parentRuleIds}, parentGroupIds=${parentGroupIds} of rule=${p.current.id}")
                 // 更新父节点信息
                 service.updateValues(
                     Meta.rule,
@@ -410,32 +440,33 @@ class RuleTreeController : KoinComponent {
                     { Meta.rule.id eq p.current.id },
                     "rule/${p.current.id}"
                 )
-                return 1
+                return MoveResult(RuleAndGroupdIds(parentRuleIds, parentGroupIds), RuleAndGroupdIds(null, oldGroupChildrenIds), RuleAndGroupdIds(null, newGroupChildrenIds))
             }
         }
     }
 
     /**
-     * 将id添加父节点的chidlren中
+     * 将id添加父节点的children中，返回父节点的新childrenIds
      * @param id 子rule id
      * @param parentRuleId 父rule id
      * */
-    private fun addRelation_RuleInRule(id: Int, parentRuleId: Int): Int{
+    private fun addChild_RuleInRule(id: Int, parentRuleId: Int): String?{
         val parent = service.findOne(Meta.rule, { Meta.rule.id eq parentRuleId }, "rule/$parentRuleId")
         return if (parent == null) {
             log.warn("no parentRule,Id=$parentRuleId when addRelation_RuleInRule")
-            0
+            null
         } else {
             //更新父Rule的子rule节点：从父rule的ruleChildrenIds中移出id并更新父rule
             val ruleChildrenIds = addId(parent.ruleChildrenIds, id)
             if (ruleChildrenIds != parent.ruleChildrenIds) {
-                service.updateValues(
+                val count = service.updateValues(
                     Meta.rule,
                     { Meta.rule.ruleChildrenIds eq ruleChildrenIds },
                     { Meta.rule.id eq parentRuleId },
                     "rule/$parentRuleId"
-                ).toInt()
-            }else 0
+                )
+                if (count > 0L ) ruleChildrenIds else null
+            }else null
         }
     }
 
@@ -444,18 +475,21 @@ class RuleTreeController : KoinComponent {
      * @param rule 子节点
      * @param parentId 父节点id
      * @param updateChild 是否更新子节点的 parentIds信息
+     * @return 返回字符串对：子节点中更新后的parentIds 父节点中更新后的childrenIds
      * */
-    private fun removeRelation_RuleInRule(rule: Rule, parentId: Int, updateChild: Boolean = true){
+    private fun removeRelation_RuleInRule(rule: Rule, parentId: Int, updateChild: Boolean = true): Pair<String?, String?>{
         val id = rule.id!!
+        var pId: String? = null
+        var childId: String? = null
         if(updateChild){
             val ruleParentIds = removeId(rule.ruleParentIds, parentId)
             if (ruleParentIds != rule.ruleParentIds) {
-                service.updateValues(
+                if(service.updateValues(
                     Meta.rule,
                     { Meta.rule.ruleParentIds eq ruleParentIds },
                     { Meta.rule.id eq id },
                     "rule/$id"
-                )
+                ) > 0L) pId = ruleParentIds
             }
         }
 
@@ -466,38 +500,41 @@ class RuleTreeController : KoinComponent {
             //更新父Rule的子rule节点：从父rule的ruleChildrenIds中移出id并更新父rule
             val ruleChildrenIds = removeId(parent.ruleChildrenIds, id)
             if (ruleChildrenIds != parent.ruleChildrenIds) {
-                service.updateValues(
+                val count = service.updateValues(
                     Meta.rule,
                     { Meta.rule.ruleChildrenIds eq ruleChildrenIds },
                     { Meta.rule.id eq parentId },
                     "rule/$parentId"
                 )
+                if (count > 0L ) childId = ruleChildrenIds
             }
         }
+        return Pair(pId, childId)
     }
 
     /**
-     * 将id添加父节点的chidlren中
+     * 将id添加父节点的children中，返回父节点的新childrenIds
      * @param id 子rule id
      * @param parentRuleGroupId 父ruleGroup id
      * */
-    private fun addRelation_RuleInGroup(id: Int, parentRuleGroupId: Int): Int{
+    private fun addChild_RuleInGroup(id: Int, parentRuleGroupId: Int): String?{
         val parent =
             service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq parentRuleGroupId }, "ruleGroup/$parentRuleGroupId")
         return if (parent == null) {
             log.warn("no parentRuleGroup, parentRuleGroupId=$parentRuleGroupId when addRelation_RuleInGroup")
-            0
+            null
         } else {
             //更新父RuleGroup的子rule节点：在父ruleGroup的ruleChildrenIds中添加id并更新父ruleGroup
             val ruleChildrenIds = addId(parent.ruleChildrenIds, id)
             if (ruleChildrenIds != parent.ruleChildrenIds) {
-                service.updateValues(
+                val count = service.updateValues(
                     Meta.ruleGroup,
                     { Meta.ruleGroup.ruleChildrenIds eq ruleChildrenIds },
                     { Meta.ruleGroup.id eq parentRuleGroupId },
                     "ruleGroup/$parentRuleGroupId"
-                ).toInt()
-            }else 0
+                )
+                if (count > 0L ) ruleChildrenIds else null
+            }else null
         }
     }
     /**
@@ -505,18 +542,21 @@ class RuleTreeController : KoinComponent {
      * @param rule 子节点
      * @param parentId 父节点id
      * @param updateChild 是否更新子节点的 parentIds信息
+     * @return 返回字符串对：子节点中更新后的parentIds 父节点中更新后的childrenIds
      * */
-    private fun removeRelation_RuleInGroup(rule: Rule, parentId: Int, updateChild: Boolean = true){
+    private fun removeRelation_RuleInGroup(rule: Rule, parentId: Int, updateChild: Boolean = true): Pair<String?, String?>{
         val id = rule.id!!
+        var pId: String? = null
+        var childId: String? = null
         if(updateChild){
             val ruleGroupParentIds = removeId(rule.ruleGroupParentIds, parentId)
             if (ruleGroupParentIds != rule.ruleGroupParentIds) {
-                service.updateValues(
+                if(service.updateValues(
                     Meta.rule,
                     { Meta.rule.ruleGroupParentIds eq ruleGroupParentIds },
                     { Meta.rule.id eq id },
                     "rule/$id"
-                )
+                ) > 0L) pId = ruleGroupParentIds
             }
         }
 
@@ -531,37 +571,40 @@ class RuleTreeController : KoinComponent {
             //更新父RuleGroup的子rule节点：从父RuleGroup的ruleChildrenIds中移出id并更新父RuleGroup
             val ruleChildrenIds = removeId(parent.ruleChildrenIds, id)
             if (ruleChildrenIds != parent.ruleChildrenIds) {
-                service.updateValues(
+                val count = service.updateValues(
                     Meta.ruleGroup,
                     { Meta.ruleGroup.ruleChildrenIds eq ruleChildrenIds },
                     { Meta.ruleGroup.id eq parentId },
                     "ruleGroup/$parentId"
                 )
+                if (count > 0L ) childId = ruleChildrenIds
             }
         }
+        return Pair(pId, childId)
     }
 
     /**
-     * 将id添加父节点的chidlren中
+     * 将id添加父节点的children中，返回父节点的新childrenIds
      * @param id 子group id
      * @param parentRuleId 父rule id
      * */
-    private fun addRelation_GroupInRule(id: Int, parentRuleId: Int): Int{
+    private fun addChild_GroupInRule(id: Int, parentRuleId: Int): String?{
         val parent = service.findOne(Meta.rule, { Meta.rule.id eq parentRuleId }, "rule/$parentRuleId")
         return if (parent == null) {
             log.warn("no parentRule, parentRuleId=$parentRuleId when del")
-            0
+            null
         } else {
             //更新父Rule的子ruleGroup节点：在父rule的ruleGroupChildrenIds中添加id并更新父rule
             val ruleGroupChildrenIds = addId(parent.ruleGroupChildrenIds, id)
             if (ruleGroupChildrenIds != parent.ruleGroupChildrenIds) {
-                service.updateValues(
+                val count = service.updateValues(
                     Meta.rule,
                     { Meta.rule.ruleGroupChildrenIds eq ruleGroupChildrenIds },
                     { Meta.rule.id eq parentRuleId },
                     "rule/$parentRuleId"
-                ).toInt()
-            }else 0
+                )
+                if (count > 0L ) ruleGroupChildrenIds else null
+            }else null
         }
     }
 
@@ -571,18 +614,21 @@ class RuleTreeController : KoinComponent {
      * @param ruleGroup 子节点
      * @param parentId 父节点id
      * @param updateChild 是否更新子节点的 parentIds信息
+     * @return 返回字符串对：子节点中更新后的parentIds 父节点中更新后的childrenIds
      * */
-    private fun removeRelation_GroupInRule(ruleGroup: RuleGroup, parentId: Int, updateChild: Boolean = true){
+    private fun removeRelation_GroupInRule(ruleGroup: RuleGroup, parentId: Int, updateChild: Boolean = true): Pair<String?, String?>{
         val id = ruleGroup.id!!
+        var pId: String? = null
+        var childId: String? = null
         if(updateChild){
             val ruleParentIds = removeId(ruleGroup.ruleParentIds, parentId)
             if (ruleParentIds != ruleGroup.ruleParentIds) {
-                service.updateValues(
+                if(service.updateValues(
                     Meta.ruleGroup,
                     { Meta.ruleGroup.ruleParentIds eq ruleParentIds },
                     { Meta.ruleGroup.id eq id },
                     "ruleGroup/$id"
-                )
+                ) > 0L) pId = ruleParentIds
             }
         }
 
@@ -593,38 +639,41 @@ class RuleTreeController : KoinComponent {
             //更新父Rule的子group节点：从父rule的ruleGroupChildrenIds中移出id并更新父rule
             val ruleGroupChildrenIds = removeId(parent.ruleGroupChildrenIds, id)
             if (ruleGroupChildrenIds != parent.ruleGroupChildrenIds) {
-                service.updateValues(
+               val count = service.updateValues(
                     Meta.rule,
                     { Meta.rule.ruleGroupChildrenIds eq ruleGroupChildrenIds },
                     { Meta.rule.id eq parentId },
                     "rule/$parentId"
                 )
+                if (count > 0L ) childId = ruleGroupChildrenIds
             }
         }
+        return Pair(pId, childId)
     }
 
     /**
-     * 将id添加父节点的chidlren中
+     * 将id添加父节点的children中，返回父节点的新childrenIds
      * @param id 子group id
      * @param parentRuleId 父ruleGroup id
      * */
-    private fun addRelation_GroupInGroup(id: Int, parentRuleGroupId: Int): Int{
+    private fun addChild_GroupInGroup(id: Int, parentRuleGroupId: Int): String?{
         val parent =
             service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq parentRuleGroupId }, "ruleGroup/$parentRuleGroupId")
         return if (parent == null) {
             log.warn("no parentRuleGroup, parentRuleGroupId=$parentRuleGroupId when addRelation_GroupInGroup")
-            0
+            null
         } else {
             //更新父RuleGroup的子ruleGroup节点：在父rule的ruleGroupChildrenIds中添加id并更新父rule
             val ruleGroupChildrenIds = addId(parent.ruleGroupChildrenIds, id)
             if (ruleGroupChildrenIds != parent.ruleGroupChildrenIds) {
-                service.updateValues(
+                val count = service.updateValues(
                     Meta.ruleGroup,
                     { Meta.ruleGroup.ruleGroupChildrenIds eq ruleGroupChildrenIds },
                     { Meta.ruleGroup.id eq parentRuleGroupId },
                     "ruleGroup/$parentRuleGroupId"
-                ).toInt()
-            }else 0
+                )
+                if (count > 0L ) ruleGroupChildrenIds else null
+            }else null
         }
     }
 
@@ -633,19 +682,23 @@ class RuleTreeController : KoinComponent {
      * @param ruleGroup 子节点
      * @param parentId 父节点id
      * @param updateChild 是否更新子节点的 parentIds信息
+     * @return 返回字符串对：子节点中更新后的parentIds 父节点中更新后的childrenIds
      * */
-    private fun removeRelation_GroupInGroup(ruleGroup: RuleGroup, parentId: Int, updateChild: Boolean = true) {
+    private fun removeRelation_GroupInGroup(ruleGroup: RuleGroup, parentId: Int, updateChild: Boolean = true): Pair<String?, String?> {
         //更新子ruleGroup的父group节点: 从rule的ruleParentIds中移出parentRuleId并更新ruleGroup
         val id = ruleGroup.id!!
+        var pId: String? = null
+        var childId: String? = null
         if(updateChild){
             val ruleGroupParentIds = removeId(ruleGroup.ruleGroupParentIds, parentId)
             if (ruleGroupParentIds != ruleGroup.ruleGroupParentIds) {
-                service.updateValues(
+                val count = service.updateValues(
                     Meta.ruleGroup,
                     { Meta.ruleGroup.ruleGroupParentIds eq ruleGroupParentIds },
                     { Meta.ruleGroup.id eq id },
                     "ruleGroup/$id"
                 )
+                if(count > 0L) pId = ruleGroupParentIds
             }
         }
 
@@ -657,13 +710,15 @@ class RuleTreeController : KoinComponent {
             //更新父RuleGroup子group节点：从父RuleGroup的ruleGroupChildrenIds中移出id并更新父RuleGroup
             val ruleGroupChildrenIds = removeId(parent.ruleGroupChildrenIds, id)
             if (ruleGroupChildrenIds != parent.ruleGroupChildrenIds) {
-                service.updateValues(
+                val count = service.updateValues(
                     Meta.ruleGroup,
                     { Meta.ruleGroup.ruleGroupChildrenIds eq ruleGroupChildrenIds },
                     { Meta.ruleGroup.id eq parentId },
                     "ruleGroup/$parentId"
                 )
+                if (count > 0L ) childId = ruleGroupChildrenIds
             }
         }
+        return Pair(pId, childId)
     }
 }

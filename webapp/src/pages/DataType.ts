@@ -311,7 +311,7 @@ export interface RuleQueryParams extends BasePageQuery{
 }
 
 export interface RuleCommon{
-    parentPath: string[], // parent: Rule.id or RuleGroup.id
+    posPath: string[], // parent: Rule.id or RuleGroup.id
     rule?: Rule,//RuleCommon数据来源Rule
     ruleGroup?: RuleGroup,//RuleCommon数据来源RuleGroup
     

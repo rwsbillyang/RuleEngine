@@ -313,12 +313,12 @@ export function MySchemaFormEditor<T extends BaseRecord, Q extends BasePageQuery
  * @param idKey 保存成功后的动作：更新缓存需要
  * @returns 
  */
-export function saveOne<T extends BaseRecord>(
+export function saveOne<T extends BaseRecord, ResultType = T>(
   values: T,
   oldValues?: Partial<T>,
   saveApi?: string,
   transformBeforeSave?: (data: T) => T | undefined,
-  onSaveOK?: (data) => void, //若提供了onSaveOK，可不提供后面的信息（用于更新缓存）
+  onSaveOK?: (data: ResultType) => void, //若提供了onSaveOK，可不提供后面的信息（用于更新缓存）
   isAdd?: boolean,
   listApi?: string,
   cacheKey?: string,
@@ -340,7 +340,7 @@ export function saveOne<T extends BaseRecord>(
     console.log("after values merge oldValues, new values=", newValues)
   }
 
-  const onOK = onSaveOK || ((data: T) => {
+  const onOK = onSaveOK || ((data: ResultType) => {
     message.success('保存成功');
 
     if (cacheKey) {
@@ -367,7 +367,7 @@ export function saveOne<T extends BaseRecord>(
   //   console.log("after transformed, values=", transformedData);
   // }
 
-  cachedFetchPromise<T>(saveApi, 'POST', transformedData)//undefined, StorageType.OnlySessionStorage, undefined,undefined,false
+  cachedFetchPromise<ResultType>(saveApi, 'POST', transformedData)//undefined, StorageType.OnlySessionStorage, undefined,undefined,false
     .then((data) => {
       if (data) {
         onOK(data)
@@ -392,10 +392,10 @@ export function saveOne<T extends BaseRecord>(
  * @param idKey 更新缓存比较时，以哪个键为准
  * @returns 
  */
-export function deleteOne(
+export function deleteOne<T = number>(
   item: Record<string, any>,
   delApi?: string,
-  onDelOk?: (count: number) => void,
+  onDelOk?: (result: T) => void,
   listApi?: string,
   cacheKey?: string,
   idKey?: string
@@ -416,16 +416,16 @@ export function deleteOne(
     icon: <ExclamationCircleFilled />,
     content: '删除后不能恢复',
     onOk: () => {
-      cachedFetch<number>({
+      cachedFetch<T>({
         url: delApi,
         method: "GET",
         attachAuthHeader: true,
         isShowLoading: true,
-        onOK: onDelOk || ((count) => {
+        onOK: onDelOk || ((result: T) => {
           if (MyProConfig.EnableLog) console.log("successfully del:" + id)
           if (cacheKey) Cache.onDelOneById(cacheKey, id, idKey)
 
-          message.success(count + "条记录被删除")
+          message.success(result + "条记录被删除")
 
           dispatch("refreshList-" + listApi) //删除完毕，发送refreshList，告知ListView去更新
         })

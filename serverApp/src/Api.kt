@@ -167,11 +167,11 @@ fun Routing.composerApi() {
                     val text = when(name){
                         BaseCrudController.Name_rule -> {
                             val e = call.receive<Rule>()
-                            MySerializeJson.encodeToString(DataBox.ok(ruleTreeController.saveRuleInParentRule(e, parentRuleId)))
+                            MySerializeJson.encodeToString(DataBox.ok(ruleTreeController.saveRuleInRule(e, parentRuleId)))
                         }
                         BaseCrudController.Name_ruleGroup -> {
                             val e = call.receive<RuleGroup>()
-                            MySerializeJson.encodeToString(DataBox.ok(ruleTreeController.saveRuleGroupInParentRule(e, parentRuleId)))
+                            MySerializeJson.encodeToString(DataBox.ok(ruleTreeController.saveGroupInRule(e, parentRuleId)))
                         }
                         else -> MySerializeJson.encodeToString(DataBox.ko<Int>("saveSubInRule: not support $name"))
                     }
@@ -192,11 +192,11 @@ fun Routing.composerApi() {
                     val text = when(name){
                         BaseCrudController.Name_rule -> {
                             val e = call.receive<Rule>()
-                            MySerializeJson.encodeToString(DataBox.ok(ruleTreeController.saveRuleInParentRuleGroup(e, parentRuleGroupId)))
+                            MySerializeJson.encodeToString(DataBox.ok(ruleTreeController.saveRuleInGroup(e, parentRuleGroupId)))
                         }
                         BaseCrudController.Name_ruleGroup -> {
                             val e = call.receive<RuleGroup>()
-                            MySerializeJson.encodeToString(DataBox.ok(ruleTreeController.saveRuleGroupInParentRuleGroup(e, parentRuleGroupId)))
+                            MySerializeJson.encodeToString(DataBox.ok(ruleTreeController.saveGroupInGroup(e, parentRuleGroupId)))
                         }
                         else -> MySerializeJson.encodeToString(DataBox.ko<Int>("saveSubInRuleGroup: not support $name"))
                     }
@@ -215,16 +215,16 @@ fun Routing.composerApi() {
                 call.respondBoxKO("delSubInRule, invalid parameter: no name/id")
             else{
                 try {
-                    val count = when(name){
+                    val result = when(name){
                         BaseCrudController.Name_rule -> {
-                            ruleTreeController.removeRuleInParentRule(id, parentRuleId)
+                            ruleTreeController.removeRuleInRule(id, parentRuleId)
                         }
                         BaseCrudController.Name_ruleGroup -> {
-                            ruleTreeController.removeRuleGroupInParentRule(id, parentRuleId)
+                            ruleTreeController.removeGroupInRule(id, parentRuleId)
                         }
-                        else -> 0L
+                        else -> null
                     }
-                    call.respondBoxOK(count)
+                    call.respondBoxOK(result)
                 }catch (e: IllegalArgumentException){
                     e.printStackTrace()
                     call.respondBoxKO("delSubInRule IllegalArgumentException when del: $name")
@@ -239,16 +239,16 @@ fun Routing.composerApi() {
                 call.respondBoxKO("delSubInRuleGroup, invalid parameter: no name/id")
             else{
                 try {
-                    val count = when(name){
+                    val result = when(name){
                         BaseCrudController.Name_rule -> {
-                            ruleTreeController.removeRuleInParentRuleGroup(id, parentRuleGroupId)
+                            ruleTreeController.removeRuleInGroup(id, parentRuleGroupId)
                         }
                         BaseCrudController.Name_ruleGroup -> {
-                            ruleTreeController.removeRuleGroupInParentRuleGroup(id, parentRuleGroupId)
+                            ruleTreeController.removeGroupInGroup(id, parentRuleGroupId)
                         }
-                        else -> 0L
+                        else -> null
                     }
-                    call.respondBoxOK(count)
+                    call.respondBoxOK(result)
                 }catch (e: IllegalArgumentException){
                     e.printStackTrace()
                     call.respondBoxKO("delSubInRuleGroup IllegalArgumentException when del: $name")

@@ -242,7 +242,7 @@ data class Domain(
  * */
 @Serializable
 class RuleCommon(
-    val parentPath: List<String>, //此字段用于前端向上遍历找到父节点数据，根节点id在最前面，当前叶子节点id在最后
+    val posPath: List<String>, //此字段用于前端向上遍历找到父节点数据，根节点id在最前面，当前叶子节点id在最后
     val rule: Rule?,//RuleCommon自身是rule，也就是数据来源Rule
     val ruleGroup: RuleGroup?,//RuleCommon自身是RuleGroup，数据来源RuleGroup
 
@@ -428,6 +428,7 @@ data class RuleAction(
     val id: Int? = null
 )
 
+
 @Serializable
 enum class RuleType{ rule, ruleGroup} //名称将用于RuleCommon中的typedId，http endpoint等
 @Serializable
@@ -437,4 +438,26 @@ class MoveParam(
     val current: RuleIdType, //当前节点
     val oldParent: RuleIdType? = null, //空表示current为顶级节点
     val newParent: RuleIdType? = null //空表示移动到新顶级节点
+)
+
+@Serializable
+class RuleAndGroupdIds(val ruleIds: String?, val groupIds: String?)
+@Serializable
+class MoveResult(
+    val e: RuleAndGroupdIds, //当前节点变更后的两种parentIds
+    val oldParent: RuleAndGroupdIds?,//old parent变更后的两种childrenIds
+    val newParent: RuleAndGroupdIds?//new parent变更后的两种childrenIds
+)
+
+@Serializable
+class DelResult(
+    val count: Long, //总共删除的数量
+    val e:  RuleAndGroupdIds?,
+    val parent: RuleAndGroupdIds?,//parent变更后的两种childrenIds
+)
+
+@Serializable
+class InsertNodeResult(
+    val ruleCommon: RuleCommon, //插入的节点
+    val parent: RuleAndGroupdIds,//parent变更后的两种childrenIds
 )

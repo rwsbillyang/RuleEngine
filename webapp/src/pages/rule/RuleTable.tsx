@@ -203,7 +203,7 @@ export const RuleTable: React.FC = () => {
 
                 <Dropdown key="more" menu={{
                     items: [
-                        { label: (<a onClick={() => { setPath(record.parentPath) }} key="viewOnlyNode">只看当前</a>), key: 'viewOnlyNode' },
+                        { label: (<a onClick={() => { setPath(record.posPath) }} key="viewOnlyNode">只看当前</a>), key: 'viewOnlyNode' },
                         {
                             label: (<a onClick={() => {
                                 if (current.treeData)

@@ -42,7 +42,7 @@ export const MoveIntoNewParentModal: React.FC<{ param?: MoveNodeParam, setParam:
     const p: MoveNodeParamWithParent = {... param, tableProps} 
     const idKey = tableProps.idKey || "typedId"
 
-    const oldParentPath = param.currentRow.parentPath //顶级节点中只有自己的id
+    const oldParentPath = param.currentRow.posPath //顶级节点中只有自己的id
     if (oldParentPath.length > 1) {
         const elemPath = ArrayUtil.getArrayByPathInTree(param.list, oldParentPath, idKey)//树形数据转换成数组
         if (elemPath && elemPath.length > 1) {
@@ -52,17 +52,19 @@ export const MoveIntoNewParentModal: React.FC<{ param?: MoveNodeParam, setParam:
         //旧父节点为模拟根节点
     }
 
-    const currentPathStr = mockRootId + (p.oldParent?.parentPath ? (","+ p.oldParent.parentPath.join(",")) : "")
+    const currentPathStr = mockRootId + (p.currentRow?.posPath ? (","+ p.currentRow.posPath.join(",")) : "")
     const { current } = useRef<{ pathStr: string}>({ pathStr: currentPathStr}) //用于记录选择的父节点
-  
+    
+    //console.log("currentPathStr="+currentPathStr)
+
     const tree = useMemo(()=>{
         const treeData: DefaultOptionType[] = [{
             label: "根节点",
             title: "根节点",
             value: mockRootId, //value为从根节点到自己的typedId
-            children: ArrayUtil.traverseTree(param.list || [], (e) => {
+            children: ArrayUtil.transformTree(param.list || [], (e) => {
                 //在path数组头添加mockRoot，去掉最后一个元素（自己），使path为mockRoot->parent
-                const newPath: string =  mockRootId + "," +  e.parentPath.join(",")//value为从根节点到自己的typedId
+                const newPath: string =  mockRootId + "," +  e.posPath.join(",")//value为从根节点到自己的typedId
                 
                 //自己以及自己的子节点，设置为disabled，避免将自己移动到自己的子节点下，避免循环嵌套
                 const disabled = newPath.indexOf(currentPathStr) >= 0 //e.typedId === param.currentRow.typedId
@@ -119,9 +121,9 @@ export const MoveIntoNewParentModal: React.FC<{ param?: MoveNodeParam, setParam:
                 confirm({
                     title: `确定要移动到新节点下?`,
                     icon: <ExclamationCircleFilled />,
-                    content: `移动节点'${param.currentRow.label}': '${p.oldParent?.label ? p.oldParent.label : "根节点"}' -> '${p.newParent?.label? p.newParent.label :"根节点"}' 下?`,
+                    content: `移动节点'${param.currentRow.label}'， 从'${p.oldParent?.label ? p.oldParent.label : "根节点"}'到'${p.newParent?.label? p.newParent.label :"根节点"}'`,
                     onOk() { 
-                        console.log("param=", p)
+                        //console.log("param=", p)
                         return moveInNewParent(p) 
                     },
                     onCancel() { },
