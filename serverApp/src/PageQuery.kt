@@ -64,7 +64,11 @@ class ParameterQueryParams(
         } else null
         val w2: WhereDeclaration? = typeId?.let { { meta.typeId eq it } }
         val w3: WhereDeclaration? = mapKey?.let { { meta.mapKey like "%${it}%" } }
-        val w4: WhereDeclaration? = domainId?.let { { meta.domainId eq it } }
+        val w4: WhereDeclaration? = if(domainId == null) null else {
+            val self: WhereDeclaration = { meta.domainId eq domainId }
+            val defaultAll: WhereDeclaration =  { meta.domainId.isNull() } //若指定了domainId，也包括那些没指定的domainId的常量
+            self.or(defaultAll)
+        }
         val w5: WhereDeclaration? = categoryId?.let { { meta.categoryId eq it } }
         //pageSize为-1时表示该查询条件下的全部数据
         return SqlPagination(sort, pagination.pageSize, (pagination.current - 1) * pagination.pageSize)
@@ -104,7 +108,11 @@ class ParamCategoryQueryParams(
             { meta.label like "%${label}%" }
         } else null
 
-        val w4: WhereDeclaration? = domainId?.let { { meta.domainId eq it } }
+        val w4: WhereDeclaration? = if(domainId == null) null else {
+            val self: WhereDeclaration = { meta.domainId eq domainId }
+            val defaultAll: WhereDeclaration =  { meta.domainId.isNull() } //若指定了domainId，也包括那些没指定的domainId的常量
+            self.or(defaultAll)
+        }
         //pageSize为-1时表示该查询条件下的全部数据
         return SqlPagination(sort, pagination.pageSize, (pagination.current - 1) * pagination.pageSize)
             .addWhere(w1, w4, lastW)
@@ -277,7 +285,11 @@ class ExpressionQueryParams(
             { meta.label like "%${label}%" }
         } else null
         val w2: WhereDeclaration? = type?.let { { meta.type eq it } }
-        val w3: WhereDeclaration? = domainId?.let { { meta.domainId eq it } }
+        val w3: WhereDeclaration? = if(domainId == null) null else {
+            val self: WhereDeclaration = { meta.domainId eq domainId }
+            val defaultAll: WhereDeclaration =  { meta.domainId.isNull() } //若指定了domainId，也包括那些没指定的domainId的常量
+            self.or(defaultAll)
+        }
 
         return SqlPagination(sort, pagination.pageSize, (pagination.current - 1) * pagination.pageSize)
             .addWhere(w1, w2, w3, lastW)

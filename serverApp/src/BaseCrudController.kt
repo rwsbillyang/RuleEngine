@@ -33,6 +33,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.komapper.core.dsl.Meta
 import org.komapper.core.dsl.expression.WhereDeclaration
+import org.komapper.core.dsl.operator.or
 import org.slf4j.LoggerFactory
 
 
@@ -61,7 +62,7 @@ class BaseCrudController : KoinComponent {
             Name_param -> MySerializeJson.encodeToString(DataBox.ok(service.findPage(Meta.param, params.toSqlPagination()).onEach { it.toBean(service) }))
             Name_paramCategory -> {
                 val setupChildren = (params as ParamCategoryQueryParams).setupChildren
-                val list = service.findPage(
+                var list = service.findPage(
                     Meta.paramCategory,
                     params.toSqlPagination()
                 )
@@ -69,17 +70,21 @@ class BaseCrudController : KoinComponent {
                 val list2 = if(setupChildren){
                     val w1: WhereDeclaration = { Meta.param.categoryId.isNull() }
                     val w2: WhereDeclaration? = if(params.domainId != null) {
-                        { Meta.param.domainId eq params.domainId }
+                        //{ Meta.param.domainId eq params.domainId }
+                        val self: WhereDeclaration = { Meta.param.domainId eq params.domainId }
+                        val defaultAll: WhereDeclaration =  { Meta.param.domainId.isNull() } //若指定了domainId，也包括那些没指定的domainId的常量
+                        self.or(defaultAll)
                     } else null
                     val w3: WhereDeclaration? = if(params.typeId != null) {
                         { Meta.param.typeId eq params.typeId } } else null
                     val uncategoryParams = service.findAll(Meta.param, andWhere(w1,w2,w3)).onEach { it.toBean(service) }
+                    log.info("uncategoryParams.size=${uncategoryParams.size}")
                     if(uncategoryParams.isNotEmpty()){
                         val unCategory = ParamCategory("未分类", null, params.domainId, -1, null, uncategoryParams)
                         if(list.isEmpty()){
                             listOf(unCategory)
                         }else{
-                            list.onEach { it.setupChildren(service) }
+                            list = list.onEach { it.setupChildren(service) }
                                 .toMutableList()
                                 .apply{ add(unCategory) }
                         }
