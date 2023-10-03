@@ -5,6 +5,7 @@ package com.github.rwsbillyang.rule.composer
 import com.github.rwsbillyang.ktorKit.ApiJson.apiJsonBuilder
 import com.github.rwsbillyang.ktorKit.LocalDateTimeAsStringSerializer
 import com.github.rwsbillyang.ktorKit.db.DbType
+import com.github.rwsbillyang.ktorKit.log.LogBackUtil
 import com.github.rwsbillyang.ktorKit.server.AppModule
 import com.github.rwsbillyang.ktorKit.server.defaultInstall
 import com.github.rwsbillyang.ktorKit.server.installCORS
@@ -48,6 +49,16 @@ fun Application.module(testing: Boolean = false) { //"X-Auth-uId", "X-Auth-oId",
     val dbUser = System.getProperty("dbUser") ?: "root"
     val dbPwd = System.getProperty("dbPwd") ?: "123456"
     val withSPA = System.getProperty("withSPA")
+
+    //-DdevMode=prod
+    val isDev = (System.getProperty("dev.mode") ?: "dev") == "dev"
+    if(isDev){
+        LogBackUtil.setupForConsole()
+    }else{
+        LogBackUtil.setupForFile()
+        //LogBackUtil.setupForRollingFile()
+    }
+    log.info("==================isDev=$isDev(default: dev)==================")
 
     val app = this
     val mainModule = AppModule(
