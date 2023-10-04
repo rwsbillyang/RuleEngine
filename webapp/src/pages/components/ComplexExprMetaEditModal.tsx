@@ -71,11 +71,12 @@ export const ComplexExprMetaEditModal: React.FC<{
             //现有表达式选择变化 -> 此处执行 -> newExprId变化 ->  metaList和targetKeys、opId操作符变化 -> UI中transfer变化
 
              //表达式切换  清空（if(newExprId && !v?.exprId)）不做处理
-            if (newExprId && v?.exprId !== newExprId) { 
-                //console.log("=====update newMeta by newExprId=" + newExprId, meta)
-                const expression: BaseExpressionRecord | undefined = Cache.findOne(ExpressionKeyPrefix + domainId, newExprId, "id")
+            if (v?.exprId && v.exprId !== newExprId) { 
+                const expression: BaseExpressionRecord | undefined = Cache.findOne(ExpressionKeyPrefix + domainId, v.exprId, "id")
                 const meta = expression?.metaStr ? JSON.parse(expression?.metaStr) : undefined
                 
+                //console.log("=====update newMeta by v.exprId=" + v.exprId, meta)
+
                 if (!meta) {
                     //打开Rule Edit中，显示基本和复合表达式的 ”编辑“按钮时，将导致两个对话框初始化，从而执行到此处
                     console.log("changed exprId=" + newExprId + ", but no expression or expression.metaStr")
@@ -83,7 +84,12 @@ export const ComplexExprMetaEditModal: React.FC<{
 
                 formRef?.current?.setFieldValue("opId", meta?.opId)
                 setNewMeta(meta || initialMeta)
-                setNewExprId(v?.exprId)
+                setNewExprId(v.exprId)
+            }else if(newExprId && !v?.exprId){//清空
+                //console.log("reset exprId")
+                formRef?.current?.setFieldValue("opId", undefined)
+                setNewMeta(initialMeta)
+                setNewExprId(undefined)
             }
            //opId的修改不至于引起连锁反应，等到onFinish获取值时再更新
         }}

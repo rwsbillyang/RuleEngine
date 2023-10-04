@@ -12,7 +12,7 @@ import md5 from "md5"
 import { Host } from '@/Config';
 import { LogicalOpKey } from './ComplexExprMetaEditModal';
 
-export const ComplexExprTransfer: React.FC<{ domainId?: number, meta?: ComplexExpressionMeta, onSelectedChange: (keys: string[], records?: ExpressionRecord[]) => void }> = ({ domainId, meta, onSelectedChange }) => {
+export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExpressionMeta, onSelectedChange: (keys: string[], records?: ExpressionRecord[]) => void }> = ({ domainId, meta, onSelectedChange }) => {
 
   //transfer left list
   //先getAllExpr加载所有expression记录，在编辑状态下，然后试图从meta中解构出来一些
@@ -30,7 +30,7 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta?: ComplexEx
   }, [targetKeys])
 
   //加载全部expression记录
-  const getAllExpr = () => {
+  const getAllExpr = (meta?: ComplexExpressionMeta) => {
     //console.log("getAllExpr...")
     cachedGet<ExpressionRecord[]>(`${Host}/api/rule/composer/list/expression`, (data) => {
       current.allRecords = data
@@ -38,16 +38,15 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta?: ComplexEx
       data.forEach((e) => destructExpressionRecord(e, data, result))
       
       //console.log("getAllExpr, size=" + data.length + ", after destruct, size=" + result.length)
-      destructMeta(result)
+      destructMeta(result,meta)
     }, { domainId: domainId, pagination: { pageSize: -1, sKey: "id", sort: 1 } }//pageSize: -1为全部加载)
       ,"expression/domain/" + domainId
     )
   }
 
   //解析现有的ComplexExpressionMeta
-  const destructMeta = (result: ExpressionRecord[]) => {
-    if (meta) {
-      //console.log("destructMeta... ")
+  const destructMeta = (result: ExpressionRecord[], meta?: ComplexExpressionMeta) => {
+   // console.log("destructMeta... ")
       //编辑状态下，首次加载使用待编辑的meta?.metaList
       const list = destructComplexMetaList(current.allRecords, meta?.metaList)
 
@@ -58,19 +57,20 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta?: ComplexEx
       }
 
       const list2 = getTargetKeysByMeta(meta)
-      if (list2.length > 0) setTargetKeys(list2)
+      if (list2.length > 0) 
+        setTargetKeys(list2)
+      else 
+        setTargetKeys([])
 
       //console.log("destructMeta done! get size=" + list.length + ", and target keys size=" + list2.length)
-    } else {
-      setTargetKeys([])
-    }
+
     current.allExprList = result
     setExprList(result)
     //console.log("finally,  exprList=", result)
   }
 
   //加载domainId下所有表达式， 用于放置在transfer的左侧， 然后解析现有的ComplexExpressionMeta
-  useEffect(() => { getAllExpr() }, [])
+  useEffect(() => { getAllExpr(meta) }, [meta])
 
 
   //transfer foot
