@@ -160,7 +160,7 @@ export const OperandValueMetaEditor: React.FC<{
                             //value是一个数组，存放的分别是select option的value
                             //单选：[1, 0] 以及 [4]；
                             //console.log("OperandValueMetaEditor paramId, Cascader.onChange: value=", v)
-                            if (v) {
+                            if (v !== undefined) {
                                 const key = paramCategoryAsyncSelectProps.key || ""
                                 const elems: Param[] | undefined = TreeCache.getElementsByPathIdsInTreeFromCache(key, v, "id")
                                 if (!elems || elems.length !== 2) {
@@ -194,7 +194,7 @@ export const OperandValueMetaEditor: React.FC<{
                         options={operandConfig.selectOptions}
                         mode={operandConfig.multiple ? 'multiple' : undefined}
                         onChange={(v) => {
-                            if (v) {
+                            if (v !== undefined) {
                                 onChange({ ...value, constantIds: v, jsonValue: {value: v, _class: "String"} })
                             } else {
                                 onChange({ ...value, constantIds: undefined, jsonValue: undefined })

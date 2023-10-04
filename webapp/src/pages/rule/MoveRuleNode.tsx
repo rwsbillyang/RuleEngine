@@ -52,10 +52,11 @@ export const MoveIntoNewParentModal: React.FC<{ param?: MoveNodeParam, setParam:
         //旧父节点为模拟根节点
     }
 
-    const currentPathStr = mockRootId + (p.currentRow?.posPath ? (","+ p.currentRow.posPath.join(",")) : "")
-    const { current } = useRef<{ pathStr: string}>({ pathStr: currentPathStr}) //用于记录选择的父节点
+    const parentPathStr = p.oldParent ? mockRootId + ","+ p.oldParent.posPath.join(",") : mockRootId
+    const { current } = useRef<{ parentPathStr: string}>({ parentPathStr: parentPathStr}) //用于记录选择的父节点
     
-    //console.log("currentPathStr="+currentPathStr)
+    const currentPathStr = mockRootId + "," + param.currentRow.posPath.join(",")
+    console.log("parentPathStr="+parentPathStr + ", currentPathStr="+currentPathStr)
 
     const tree = useMemo(()=>{
         const treeData: DefaultOptionType[] = [{
@@ -85,14 +86,14 @@ export const MoveIntoNewParentModal: React.FC<{ param?: MoveNodeParam, setParam:
     return <Modal title= {"移动节点：" + param.currentRow.label} 
         open={!!param}
         onOk={() => {
-            if(currentPathStr === current.pathStr){
+            if(parentPathStr === current.parentPathStr){
                 message.warning("请选择不同的节点作为父节点")
                 return
             }
-            if (current.pathStr) {
+            if (current.parentPathStr) {
                 console.log("move into new parent")
 
-                const newParentPath = current.pathStr.split(",") //mockRoot->parent的节点路径
+                const newParentPath = current.parentPathStr.split(",") //mockRoot->parent的节点路径
                 if(newParentPath){
                     if(newParentPath.length === 1){
                         console.log("move into mock root node")
@@ -105,7 +106,7 @@ export const MoveIntoNewParentModal: React.FC<{ param?: MoveNodeParam, setParam:
                                // postData.newParent = {id: newParent.id, type: t }
                                p.newParent = newParent
                             }else{
-                                console.warn("should not come here, not found new parent: path=" + current.pathStr)
+                                console.warn("should not come here, not found new parent: path=" + current.parentPathStr)
                                 message.warning("没找到新的父节点")
                                 return
                             }
@@ -140,10 +141,10 @@ export const MoveIntoNewParentModal: React.FC<{ param?: MoveNodeParam, setParam:
         <TreeSelect
             style={{ width: '100%' }}
             //dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
-            defaultValue={current.pathStr}
+            defaultValue={current.parentPathStr}
             placeholder="选择父节点"
             treeDefaultExpandAll
-            onChange={(v) => current.pathStr = v}
+            onChange={(v) => current.parentPathStr = v}
             treeData={tree}
         />
     </Modal>

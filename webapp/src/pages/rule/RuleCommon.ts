@@ -466,7 +466,7 @@ export function moveInNewParent(moveParam: MoveNodeParamWithParent) {
 
                 //建立与新parent的亲子关系，双方均需修改
                 const flag2 = TreeCache.onAddOneInTree(tableProps.cacheKey, moveParam.currentRow,
-                    moveParam.currentRow.posPath,
+                   moveParam.newParent?.posPath ||[],
                     //因为当前节点变了，需要更新它，以新父节点以及自己的id，构成自己的新path
                     (parent,e, parents) => {
                         //更新自己的path

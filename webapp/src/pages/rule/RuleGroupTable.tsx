@@ -58,6 +58,7 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
             tooltip: "任意一个rule的条件成立则退出",
             valueType: "switch",
             dataIndex: 'exclusive',
+            hideInTable: true,
         },
         {
             title: '状态',
@@ -80,7 +81,7 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
             dataIndex: 'remark',
             valueType: 'textarea',
             ellipsis: true,
-            hideInTable: true,
+            //hideInTable: true,
             hideInSearch: true
         }
     ]

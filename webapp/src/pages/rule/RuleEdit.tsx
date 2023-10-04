@@ -77,6 +77,7 @@ export const RuleEditModal: React.FC<{
         </ProForm.Group>
 
         <ProForm.Group>
+         <ProFormSwitch width="xs" name={"exclusive"} label="排他性" />
             <ProFormSwitch width="xs" name={"enable"} label="状态" />
             <ProFormDigit width="xs" name={"priority"} label="优先级" />
             <ProFormDigit width="xs" name={"threshhold"} label="可信度" />

@@ -139,14 +139,14 @@ export const basicExpressionMeta2String = (meta?: BasicExpressionMeta) => {
         list.push({ key: k, value: meta.operandMetaObj[k] })   //meta.operandValueMap.forEach((v,k)=>{ list.push({key: k, value: v}) })
     }
 
-    const oprand = list.map((e) => operandMeta2String(e.key, e.value)).join(", ")
+    const oprand = list.map((e) => operandMeta2String(e.key, e.value)).filter(e => e !== "").join(", ")
 
     if (meta.param)
-        return `${meta.param.label} '${meta.op?.label}' ${oprand}`
+        return `${meta.param.label}'${meta.op?.label}': ${oprand}`
     else if (meta.mapKey)
-        return `${meta.mapKey} '${meta.op?.label}' ${oprand}`
+        return `${meta.mapKey}'${meta.op?.label}': ${oprand}`
     else
-        return `unknown '${meta.op?.label}' ${oprand}`
+        return `unknown'${meta.op?.label}': ${oprand}`
 }
 
 
@@ -164,7 +164,7 @@ export const complexExpressionMeta2String = (meta?: ComplexExpressionMeta) => {
         } else {
             return basicExpressionMeta2String(e as BasicExpressionMeta)
         }
-    }).join(", ")
+    }).join("; ")
 
     return meta.op?.code + "(" + list + ")"
 }
@@ -178,10 +178,9 @@ export const operandMeta2String = (name: string, operandMeta?: OperandValueMeta)
     if (!operandMeta) return ""
     if (operandMeta.valueType === 'Param') {
         return name + "=" + operandMeta.param?.label + "(" + operandMeta.param?.mapKey + ")"
-    } else if (operandMeta.valueType === 'Constant') {
-        return name + "=" + jsonValue2String(operandMeta.jsonValue)
-    } else if (operandMeta.valueType === 'JsonValue') {
-        return name + "=" + jsonValue2String(operandMeta.jsonValue)
+    } else if (operandMeta.valueType === 'Constant' || operandMeta.valueType === 'JsonValue') {
+        const v = jsonValue2String(operandMeta.jsonValue)
+        return v !== undefined ? name + "=" + v : ""
     } else {
         console.warn("should not come here, wrong operandMeta.valueType =" + operandMeta.valueType)
         return "wrong operandMeta.valueType!!!"
@@ -190,7 +189,7 @@ export const operandMeta2String = (name: string, operandMeta?: OperandValueMeta)
 
 //to human-reading string
 const jsonValue2String = (jsonValue?: JsonValue) => {
-    if (!jsonValue || jsonValue.value === undefined) return ""
+    if (!jsonValue || jsonValue.value === undefined) return undefined
     const value = jsonValue.value
     if (Array.isArray(value)) {
         if(value.length === 0) return "[]"
@@ -222,7 +221,7 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
     const operandValueObj: { [key: string]: OperandValue } = {}
     for (let k in meta.operandMetaObj) {
         const v = operandMeta2OperandValue(meta.operandMetaObj[k])
-        if (v) operandValueObj[k] = v
+        if (v !== undefined) operandValueObj[k] = v
     }
 
     const expr: BasicExpression = {
@@ -249,7 +248,7 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
 }
 
 const extractJsonValue = (jsonValue?: JsonValue) => {
-    if (!jsonValue || !jsonValue.value) return undefined
+    if (!jsonValue || jsonValue.value === undefined) return undefined
     const value = jsonValue.value
     if (Array.isArray(value)) {
         if(value.length === 0) return undefined
@@ -271,7 +270,7 @@ const extractJsonValue = (jsonValue?: JsonValue) => {
  * @returns 
  */
 const operandMeta2OperandValue = (operandMeta?: OperandValueMeta) => {
-    if (!operandMeta) return undefined
+    if (operandMeta === undefined) return undefined
     
     const opvalue: OperandValue = {
         valueType: operandMeta.valueType,
@@ -323,7 +322,7 @@ export function meta2Expr(meta?: BasicExpressionMeta | ComplexExpressionMeta) {
  * 有效信息，用于生成md5作为id
  */
 export const opValue2Md5Msg = (name: string, opValue?: OperandValue) => {
-    if (!opValue) return ""
+    if (opValue === undefined) return ""
     if (opValue.valueType === "Param") return `&${name}.OperandKey=${opValue.key}`
     else return `&${name}.OperandValue=${opValue.value}`
 }
