@@ -399,6 +399,7 @@ interface MoveParamPostData {
     current: RuleIdType, //当前节点
     oldParent?: RuleIdType, //空表示current为顶级节点
     newParent?: RuleIdType //空表示移动到新顶级节点
+    newLevel: number
 }
 
 interface RuleAndGroupdIds{
@@ -425,7 +426,7 @@ export function moveInNewParent(moveParam: MoveNodeParamWithParent) {
         return new Promise((resolve) => { resolve(false) });
     }
     const postData: MoveParamPostData = {
-        current: { id: id, type: type }
+        current: { id: id, type: type }, newLevel: 0
     }
 
     const oldParent = moveParam.oldParent
@@ -438,7 +439,9 @@ export function moveInNewParent(moveParam: MoveNodeParamWithParent) {
     if (newParent) {
         const t = newParent.rule ? RuleName : (newParent.ruleGroup ? RuleGroupName : moveParam.fromTable)
         postData.newParent = { id: newParent.id, type: t }
+        postData.newLevel =  (newParent.level || 0) + 1
     }
+    
 
     return cachedFetchPromise<MoveResult>(`/api/rule/composer/move`, 'POST', postData)
         .then((data) => {
@@ -471,6 +474,8 @@ export function moveInNewParent(moveParam: MoveNodeParamWithParent) {
                     (parent,e, parents) => {
                         //更新自己的path
                         e.posPath = [...(parent.posPath), moveParam.currentRow[tableProps.idKey]]
+                        e.level = postData.newLevel
+        
                         //更新自己的parentIds
                         if(data.e.ruleIds){
                             if(e.rule)e.rule.ruleParentIds = data.e.ruleIds

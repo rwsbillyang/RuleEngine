@@ -379,7 +379,11 @@ class RuleTreeController : KoinComponent {
                             addChild_RuleInGroup(p.current.id, p.newParent.id)
                         }
                     }
-                }else null
+                }else {//到根节点下
+                    parentRuleIds = null
+                    parentGroupIds = null
+                    null
+                }
 
                 // 更新父节点信息
                 service.updateValues(
@@ -427,7 +431,11 @@ class RuleTreeController : KoinComponent {
                             addChild_RuleInGroup(p.current.id, p.newParent.id)
                         }
                     }
-                }else null
+                }else {//到根节点下
+                    parentRuleIds = null
+                    parentGroupIds = null
+                    null
+                }
 
                 log.info("update parentRuleIds=${parentRuleIds}, parentGroupIds=${parentGroupIds} of rule=${p.current.id}")
                 // 更新父节点信息
@@ -436,6 +444,7 @@ class RuleTreeController : KoinComponent {
                     {
                         Meta.rule.ruleParentIds eq parentRuleIds
                         Meta.rule.ruleGroupParentIds eq parentGroupIds
+                        Meta.rule.level eq p.newLevel
                     },
                     { Meta.rule.id eq p.current.id },
                     "rule/${p.current.id}"

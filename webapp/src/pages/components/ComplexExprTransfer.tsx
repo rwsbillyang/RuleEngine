@@ -22,7 +22,8 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExp
 
   //transfer right list
   const [targetKeys, setTargetKeys] = useState<string[]>([]);
-  const [sourceSelectKeys, setSourceSelectedKeys] = useState<string[]>();
+  const [leftSelectedKeys, setLeftSelectedKeys] = useState<string[]>();
+  const [rightSelectedKeys, setRightSelectedKeys] = useState<string[]>();
   const { current } = useRef<{ allRecords: ExpressionRecord[], allExprList: ExpressionRecord[]}>({ allRecords: [], allExprList: []}) //用于从现有记录中查询名称
   
   useMemo(()=>{
@@ -123,10 +124,10 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExp
               }
             }} />}
             {
-              (sourceSelectKeys && sourceSelectKeys.length > 0) && <a onClick={()=>{
-                if(ArrayUtil.removeMany(exprList, sourceSelectKeys, "key")){
+              (leftSelectedKeys && leftSelectedKeys.length > 0) && <a onClick={()=>{
+                if(ArrayUtil.removeMany(exprList, leftSelectedKeys, "key")){
                   setExprList([...exprList])
-                  setSourceSelectedKeys(undefined)
+                  setLeftSelectedKeys(undefined)
                 }
                     
               }}>删除选中</a>
@@ -137,8 +138,8 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExp
     } else
       return (
         <Space>
-          <LogicalExprDropDwon disabled={targetKeys.length < 2} title="添加到左侧" onClick={(op) => {
-            const list = getByIds(exprList, targetKeys, "key")
+          <LogicalExprDropDwon disabled={!rightSelectedKeys || rightSelectedKeys.length < 2} title="添加到左侧" onClick={(op) => {
+            const list = getByIds(exprList, rightSelectedKeys, "key")
             if (list?.length === targetKeys.length) {
               const metaList = list.map((e) => e.meta).filter((e) => !!e) as (BasicExpressionMeta | ComplexExpressionMeta)[]
               const meta: ComplexExpressionMeta = {
@@ -220,7 +221,8 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExp
         const list = getByIds(current.allExprList, sourceSelectedKeys, "key")
         if (list?.length === 1 && list[0].type === "Basic")
         {
-            setBasicRecord1(list[0] as BasicExpressionRecord)
+          const r = list[0] as BasicExpressionRecord
+          setBasicRecord1({...r})
           //  console.log("onSelectChange: left BasicRecord1=", list[0])
         }
         else
@@ -228,14 +230,15 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExp
       } else {
         setBasicRecord1(undefined)
       }
-      setSourceSelectedKeys(sourceSelectedKeys)
+      setLeftSelectedKeys(sourceSelectedKeys)
 
       if (targetSelectedKeys.length === 1) {
         const list = getByIds(current.allExprList, targetSelectedKeys, "key")
+       // console.log("onSelectChange: right BasicRecord2=", list[0])
         if (list?.length === 1 && list[0].type === "Basic")
         { 
-          setBasicRecord2(list[0] as BasicExpressionRecord)
-         // console.log("onSelectChange: right BasicRecord2=", list[0])
+          const r = list[0] as BasicExpressionRecord
+          setBasicRecord2({...r})
         }else
         {
            setBasicRecord2(undefined)
@@ -243,6 +246,7 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExp
       } else {
         setBasicRecord2(undefined)
       }
+      setRightSelectedKeys(targetSelectedKeys)
     }}
 
     render={(item) => {

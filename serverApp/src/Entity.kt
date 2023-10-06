@@ -256,6 +256,7 @@ class RuleCommon(
     val tags: String?,
     val exclusive: Boolean,
     val domainId: Int?,
+    val description: String? = null,
     var domain: Domain? , //前端列表数据需要
     var children: List<RuleCommon> ? = null //为前端构造tree型列表展示，不再使用List<Rule>和List<RuleGroup>，让前端子列表统一
 )
@@ -270,7 +271,9 @@ data class Rule(
     val level: Int? = null,
     val label: String? = null,
     val priority: Int? = null ,
-    val remark: String? = null,
+    val remark: String? = null,//相关信息备注
+    val description: String? = null, //对命中的说明
+    val exprRemark: String? = null,//对表达式的备注说明
     val enable: Boolean = true,
     val tags: String? = null,
     val threshhold: Int? = null, //percent
@@ -303,7 +306,7 @@ data class Rule(
     fun toRuleCommon(service: BaseCrudService?, path: MutableList<String>? = null): RuleCommon  {
         val pair = if(service != null) getChildrenTree(service, path) else null //在新增和修改时无需构建children，因1是没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
         return RuleCommon(
-            pair?.first?: listOf("${RuleType.rule.name}-$id"), this, null, id, "${RuleType.rule.name}-$id", level, label, priority, remark, enable, tags, exclusive, domainId,  domain, pair?.second
+            pair?.first?: listOf("${RuleType.rule.name}-$id"), this, null, id, "${RuleType.rule.name}-$id", level, label, priority, remark, enable, tags, exclusive, domainId, description,  domain, pair?.second
         )
     }
 
@@ -377,7 +380,7 @@ data class RuleGroup(
     fun toRuleCommon(service: BaseCrudService?, path: MutableList<String>? = null): RuleCommon  {
         val pair = if(service != null) getChildrenTree(service, path) else null //在新增和鞭酒修改时无需构建children，因1是没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
         return RuleCommon(
-            pair?.first?: listOf("${RuleType.ruleGroup.name}-$id"), null, this, id, "${RuleType.ruleGroup.name}-$id", level, label, priority, remark, enable, tags, exclusive, domainId, domain, pair?.second
+            pair?.first?: listOf("${RuleType.ruleGroup.name}-$id"), null, this, id, "${RuleType.ruleGroup.name}-$id", level, label, priority, remark, enable, tags, exclusive, domainId, null, domain, pair?.second
         )
     }
 
@@ -436,6 +439,7 @@ class RuleIdType(val id: Int, val type: RuleType)
 @Serializable
 class MoveParam(
     val current: RuleIdType, //当前节点
+    val newLevel: Int, //移动后的节点level
     val oldParent: RuleIdType? = null, //空表示current为顶级节点
     val newParent: RuleIdType? = null //空表示移动到新顶级节点
 )

@@ -87,6 +87,8 @@ fun runTest(service: MyBaseCrudService,gongZhi: Int, dateTime: LocalDateTime){
                 zwPanData.starPosMap[arry[1]]
         }else{
             when(it){
+                "zwPanData" -> zwPanData
+                "gender" -> zwPanData.gender.ordinal
                 "gongName" -> gongStars.name
                 "zhengYao" -> gongStars.zheng14Stars.toSet()
                 "gongZhi" -> gongStars.zhi
@@ -97,7 +99,19 @@ fun runTest(service: MyBaseCrudService,gongZhi: Int, dateTime: LocalDateTime){
             }
         }
     }
-
+    val dataPicker2: (key: String, keyExtra: String?) -> Any? = {it, keyExtra->
+        when(it){
+            "zwPanData" -> zwPanData
+            "gender" -> zwPanData.gender.ordinal
+            "gongName" -> gongStars.name
+            "shenGong" -> zwPanData.gongYuanMapByZhi[zwPanData.shenGong]
+            "yearGan" -> zwPanData.fourZhu.year.gan
+            else -> {
+                System.err.println("not support key=$it, please check")
+                null
+            }
+        }
+    }
 
     val loadChildrenFunc: (parent: Any?) -> List<Any>? = {
         if(it == null) null

@@ -114,6 +114,8 @@ export const RuleEditModal: React.FC<{
                 })} />
         </ProForm.Group>
         <ProFormSelect name={"tagList"} label="标签" fieldProps={{ mode: "tags" }} />
+        <ProFormTextArea name={"exprRemark"} label="表达式备注" tooltip="对表达式的备注说明"/>
+        <ProFormTextArea name={"description"} label="说明" />
         <ProFormTextArea name={"remark"} label="备注" />
     </ModalForm>
 }

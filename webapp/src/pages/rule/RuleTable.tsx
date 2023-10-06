@@ -55,7 +55,6 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
         valueType: "switch",
         dataIndex: 'enable',
     },
-
     {
         title: '优先级',
         tooltip: "值越小越优先执行",
@@ -63,7 +62,6 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
         valueType: "digit",
         hideInSearch: true
     },
-
     {
         title: '标签',
         tooltip: "用于搜索过滤规则",
@@ -77,7 +75,6 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
         hideInTable: true,
         hideInSearch: true
     },
-
     {
         title: 'Then',
         //hideInTable: true,
@@ -128,6 +125,7 @@ export const rubleTableProps = {
             }
             e.exprStr = JSON.stringify(e.expr)
         }
+        if(e.remark?.trim() === "") delete e.remark
 
         //保存它们对应的string信息
         //delete e.meta

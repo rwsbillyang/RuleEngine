@@ -326,7 +326,8 @@ export interface RuleCommon{
     domainId?: number,
     domain?: Domain, //前端列表数据需要
     children?: RuleCommon[],
-    exclusive: boolean
+    exclusive: boolean,
+    description?:string
 }
 
 
@@ -336,6 +337,8 @@ export interface Rule extends BaseRecord {
     label?: string,
     priority?: number,
     remark?: string,
+    description?:string,
+    exprRemark?: string,//对表达式的备注说明
     enable: boolean // default true,
     
     tags?: string,

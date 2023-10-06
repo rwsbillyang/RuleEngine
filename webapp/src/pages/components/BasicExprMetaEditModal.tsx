@@ -72,7 +72,7 @@ export const BasicExprMetaEditModal: React.FC<{
       destroyOnClose: false,
     }}
     onValuesChange={(v) => {
-      console.log("onValuesChange:" + JSON.stringify(v))
+     // console.log("onValuesChange:" + JSON.stringify(v))
      
       const form = formRef?.current
       
@@ -81,7 +81,7 @@ export const BasicExprMetaEditModal: React.FC<{
 
       //表达式切换  清空（if(newExprId && !v?.exprId)）不做处理
       if (v.exprId && newExprId != v.exprId) {
-        console.log("===== exprId changed======")
+       //console.log("===== exprId changed======")
         const expression: BaseExpressionRecord | undefined = Cache.findOne(ExpressionKeyPrefix + domainId, v.exprId, "id")
         const meta: BasicExpressionMeta | undefined = expression?.metaStr ? JSON.parse(expression?.metaStr) : undefined
         
@@ -103,7 +103,7 @@ export const BasicExprMetaEditModal: React.FC<{
     
       //变量切换
       if (v.paramId && newMeta.paramId != v.paramId) { //paramId改变
-        console.log("paramId changed...")
+       // console.log("paramId changed...")
         const param = getParamById(v.paramId, domainId, newMeta.param)
 
         newMeta.paramId = v.paramId
@@ -122,6 +122,10 @@ export const BasicExprMetaEditModal: React.FC<{
         setOpTooltip(undefined)
         setOperandConfigList(undefined)
       }
+      // else if(newMeta.paramId && !v.paramId){//清空
+      //   delete newMeta.paramId
+      //   delete newMeta.param
+      // }
 
       //变量类型切换
       if (v.paramTypeId && newMeta.paramTypeId != v.paramTypeId) { //paramTypeId改变
@@ -141,7 +145,7 @@ export const BasicExprMetaEditModal: React.FC<{
       
       //操作符切换
       if (v.opId && newMeta.opId != v.opId) {
-        console.log("opId changed...")
+       // console.log("opId changed...")
         const op = getOpcodeById(v.opId, newMeta.param?.paramType.id || newMeta.paramType?.id, newMeta)
         newMeta.opId = v.opId
         newMeta.op = op
@@ -448,7 +452,7 @@ const asyncGetOpOptions = (
   const supportOps = param.paramType.supportOps
   if (supportOps && supportOps.length > 0) {
     console.log("get supportOps from param.paramType.supportOps")
-    return new Promise(resolve => resolve(supportOps.map((item) => { return { label: item.label + "(" + item.code + ")", value: item.id } })))
+    return new Promise(resolve => resolve(supportOps.map((item) => { return { label: item.label, value: item.id } })))
   } else {
     return asyncSelectProps2Request<Opcode, OpcodeQueryParams>({ //params为注入的dependencies字段值： {isEnum: true}
       key: OpKeyPrefix + param.paramType.id,//不提供key，则不缓存，每次均从远程请求

@@ -77,11 +77,19 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
             dataIndex: 'tags',
         },
         {
+            title: '说明',
+            dataIndex: 'description',
+            valueType: 'textarea',
+            ellipsis: true,
+            //hideInTable: true,
+            hideInSearch: true
+        },
+        {
             title: '备注',
             dataIndex: 'remark',
             valueType: 'textarea',
             ellipsis: true,
-            //hideInTable: true,
+            hideInTable: true,
             hideInSearch: true
         }
     ]
@@ -189,7 +197,7 @@ export const RuleGroupTable: React.FC = () => {
                 current.treeData = list //记录下当前全部树形数据
                 if (!path) return list
                 const root = ArrayUtil.trimTreeByPath(list, path, rubleGroupTableProps.idKey)
-                console.log("after trim, root=",root)
+                //console.log("after trim, root=",root)
                 return root ? [root] : list
             }}
 
