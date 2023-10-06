@@ -37,7 +37,8 @@ export const OperandValueMetaEditor: React.FC<{
     const [constantLoading, setConstantLoading] = useState(false)
 
     const multiple = operandConfig.multiple
-    // console.log("OperandValueMetaEditor, paramType=",paramType)
+
+   // console.log("OperandValueMetaEditor, constantQueryParams=",constantQueryParams)
 
     //变量加载只是与paramType同类型的变量
     const paramCategoryAsyncSelectProps: MyAsyncSelectProps<ParamCategory, ParamCategoryQueryParams> = {

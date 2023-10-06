@@ -106,6 +106,7 @@ fun runTest(service: MyBaseCrudService,gongZhi: Int, dateTime: LocalDateTime){
             "gongName" -> gongStars.name
             "shenGong" -> zwPanData.gongYuanMapByZhi[zwPanData.shenGong]
             "yearGan" -> zwPanData.fourZhu.year.gan
+            "yearZhi" -> zwPanData.fourZhu.year.zhi
             else -> {
                 System.err.println("not support key=$it, please check")
                 null

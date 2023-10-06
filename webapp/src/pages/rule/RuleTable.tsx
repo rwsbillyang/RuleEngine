@@ -126,7 +126,8 @@ export const rubleTableProps = {
             e.exprStr = JSON.stringify(e.expr)
         }
         if(e.remark?.trim() === "") delete e.remark
-
+        if(e.description?.trim() === "") delete e.description
+        if(e.exprRemark?.trim() === "") delete e.exprRemark
         //保存它们对应的string信息
         //delete e.meta
 

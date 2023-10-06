@@ -401,6 +401,7 @@ const LogicalExprDropDwon: React.FC<{ title?: string, disabled?: boolean, onClic
 
 
   return <Dropdown.Button
+    disabled={disabled}
     menu={{
       items: ops?.map((e) => ({
         label: e.label,
