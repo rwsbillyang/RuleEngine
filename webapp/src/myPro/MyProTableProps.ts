@@ -72,8 +72,13 @@ export interface MyAsyncSelectProps<T extends BaseRecord, Q extends BasePageQuer
 }
 
 
-export const asyncSelectProps2Request = <T extends BaseRecord, Q extends BasePageQuery>(props: MyAsyncSelectProps<T, Q>, params?: any) => {
+export const asyncSelectProps2Request = <T extends BaseRecord, Q extends BasePageQuery>(props: MyAsyncSelectProps<T, Q>, params?: any, method: "GET" | "POST" | "PUT" | "DELETE" = "GET") => {
   //console.log(JSON.stringify(params))
   //const queryStr = query2Params()
-  return cachedFetchPromise(props.url, "GET", props.query, props.key, StorageType.OnlySessionStorage, undefined, (bizData: any) => bizData.map((e: any) => props.convertFunc ? props.convertFunc(e) : e))
+  return cachedFetchPromise(props.url, method, props.query, props.key, StorageType.OnlySessionStorage, undefined, (bizData: any) => bizData.map((e: any) => props.convertFunc ? props.convertFunc(e) : e))
+}
+export const asyncSelect2Request = <T extends BaseRecord>(url: string, key?: string, query?: any, method: "GET" | "POST" | "PUT" | "DELETE" = "GET", convertFunc?: (item: T) => { label: string, value?: string | number | object } ) => {
+  //console.log(JSON.stringify(params))
+  //const queryStr = query2Params()
+  return cachedFetchPromise(url, method, query, key, StorageType.OnlySessionStorage, undefined, (bizData: any) => bizData.map((e: any) => convertFunc ? convertFunc(e) : e))
 }

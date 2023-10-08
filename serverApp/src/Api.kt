@@ -22,6 +22,7 @@ package com.github.rwsbillyang.rule.composer
 
 import com.github.rwsbillyang.ktorKit.apiBox.BatchOperationParams
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.ktorKit.apiBox.PostData
 import com.github.rwsbillyang.ktorKit.server.*
 
 
@@ -83,6 +84,22 @@ fun Routing.composerApi() {
             }
             get<ActionQueryParams>{
                 call.respondBoxJsonText(crudController.findPage(BaseCrudController.Name_action, it))
+            }
+        }
+
+        //临时方案
+        post("/getByIds/{name}"){
+            val name = call.parameters["name"]
+            if(name == null)
+                call.respondBoxKO("invalid parameter: no name or id")
+            else{
+                val ids = call.receive<PostData>().data
+                val ret = crudController.findInIdList(name, ids)
+                if(ret == null){
+                    call.respondBoxKO("not support name: $name")
+                }else{
+                    call.respondBoxJsonText(ret)
+                }
             }
         }
 

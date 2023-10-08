@@ -34,6 +34,8 @@ import org.koin.core.component.inject
 import org.komapper.core.dsl.Meta
 import org.komapper.core.dsl.expression.WhereDeclaration
 import org.komapper.core.dsl.operator.or
+import org.komapper.core.dsl.query.get
+import org.komapper.core.dsl.query.getNotNull
 import org.slf4j.LoggerFactory
 
 
@@ -112,6 +114,26 @@ class BaseCrudController : KoinComponent {
                 log.warn("findPage: Not support $name in findPageList")
                 MySerializeJson.encodeToString(DataBox.ko<Unit>("findPage: Not support $name in findPageList"))
             }
+        }
+    }
+
+    //special case workaround 不考虑其他查询条件，只根据id列表查
+    fun findInIdList(name: String, ids: String) = when(name){
+        Name_constant -> {
+            val list = service.findInList(Meta.constant, ids){
+                Constant(it.getNotNull("label"), it.get("type_id"), it.get("value"), it.get("is_enum")?:false, it.get("remark"), it.get("domain_id"), it.get("id") )
+            }
+            MySerializeJson.encodeToString(DataBox.ok(list.onEach { it.toBean(service) }))
+        }
+        Name_opcode -> {
+            val list = service.findInList(Meta.opcode, ids){
+                Opcode(it.getNotNull("label"), it.getNotNull("code"), it.getNotNull("type"), it.get("operand_config_map_str"), it.get("is_sys")?:false,it.get("domain_id"), it.get("remark"),it.get("id") )
+            }
+            MySerializeJson.encodeToString(DataBox.ok(list.onEach { it.toBean(service) }))
+        }
+        else -> {
+            log.warn("not support $name: findInIdList")
+            null
         }
     }
 

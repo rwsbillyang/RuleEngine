@@ -109,18 +109,34 @@ export const OperandValueMetaEditor: React.FC<{
         //} else if (OperandValueMeta?.valueType === 'Constant') {
         if (EnableParamCategory && (!operandConfig.selectOptions || operandConfig.selectOptions.length === 0)) {
             setConstantLoading(true)
-            cachedFetch<any[]>({
-                method: "GET",
-                url: constantAsyncSelectProps.url,
-                data: constantAsyncSelectProps.query,
-                shortKey: constantAsyncSelectProps.key,
-                onDone: () => { setConstantLoading(false) },
-                onOK: (data) => {
-                    setConstantLoading(false)
-                    //setData(data)
-                    setConstantOptions(data.map((e) => constantAsyncSelectProps.convertFunc ? constantAsyncSelectProps.convertFunc(e) : e))
-                }
-            })
+            if(constantQueryParams.ids){
+                cachedFetch<any[]>({
+                    method: "POST",
+                    url: `${Host}/api/rule/composer/getByIds/constant`,
+                    data: {data: constantQueryParams.ids},
+                    shortKey: constantAsyncSelectProps.key,
+                    onDone: () => { setConstantLoading(false) },
+                    onOK: (data) => {
+                        setConstantLoading(false)
+                        //setData(data)
+                        setConstantOptions(data.map((e) => constantAsyncSelectProps.convertFunc ? constantAsyncSelectProps.convertFunc(e) : e))
+                    }
+                })
+            }else{
+                cachedFetch<any[]>({
+                    method: "GET",
+                    url: constantAsyncSelectProps.url,
+                    data: constantAsyncSelectProps.query,
+                    shortKey: constantAsyncSelectProps.key,
+                    onDone: () => { setConstantLoading(false) },
+                    onOK: (data) => {
+                        setConstantLoading(false)
+                        //setData(data)
+                        setConstantOptions(data.map((e) => constantAsyncSelectProps.convertFunc ? constantAsyncSelectProps.convertFunc(e) : e))
+                    }
+                })
+            }
+            
         }
 
         // }

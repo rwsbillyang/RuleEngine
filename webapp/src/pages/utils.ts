@@ -141,10 +141,10 @@ export const basicExpressionMeta2String = (meta?: BasicExpressionMeta) => {
 
     const oprand = list.map((e) => operandMeta2String(e.key, e.value)).filter(e => e !== "").join(", ")
 
-    if (meta.param)
-        return `${meta.param.label}'${meta.op?.label}': ${oprand}`
-    else if (meta.mapKey)
+    if (meta.mapKey)
         return `${meta.mapKey}'${meta.op?.label}': ${oprand}`
+     else if (meta.param)
+        return `${meta.param.label}'${meta.op?.label}': ${oprand}`
     else
         return `unknown'${meta.op?.label}': ${oprand}`
 }
@@ -271,6 +271,7 @@ const extractJsonValue = (jsonValue?: JsonValue) => {
  */
 const operandMeta2OperandValue = (operandMeta?: OperandValueMeta) => {
     if (operandMeta === undefined) return undefined
+    if(!operandMeta.jsonValue || operandMeta.jsonValue.value === undefined) return undefined
     
     const opvalue: OperandValue = {
         valueType: operandMeta.valueType,

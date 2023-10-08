@@ -3,7 +3,7 @@ import { ModalForm, ProFormCascader, ProFormDependency, ProFormInstance, ProForm
 import { AllParamTypeKey, BasicExpressionMeta, ConstantQueryParams, BaseExpressionRecord, ExpressionQueryParams, Opcode, OpcodeQueryParams, OperandConfig, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, ParamTypeQueryParams, OperandValueMeta, ParamOperandConfigKey, OperandConfigItem } from "../DataType";
 
 import { TreeCache, Cache, deepCopy, ArrayUtil } from "@rwsbillyang/usecache"
-import { asyncSelectProps2Request } from "@/myPro/MyProTableProps";
+import { asyncSelect2Request, asyncSelectProps2Request } from "@/myPro/MyProTableProps";
 import { EnableParamCategory, Host } from "@/Config";
 import { OperandValueMetaEditor } from "./OperandValueMetaEditor";
 import { Space, message } from "antd";
@@ -72,7 +72,7 @@ export const BasicExprMetaEditModal: React.FC<{
       destroyOnClose: false,
     }}
     onValuesChange={(v) => {
-      // console.log("onValuesChange:" + JSON.stringify(v))
+       console.log("onValuesChange:" + JSON.stringify(v))
 
       const form = formRef?.current
 
@@ -122,7 +122,7 @@ export const BasicExprMetaEditModal: React.FC<{
         setOpTooltip(undefined)
         setOperandConfigList(undefined)
       }
-      // else if(newMeta.paramId && !v.paramId){//清空
+      // else if(newMeta.paramId && !v.paramId){//不能准确判断清空，其它字段情况也符合该条件
       //   delete newMeta.paramId
       //   delete newMeta.param
       // }
@@ -169,11 +169,25 @@ export const BasicExprMetaEditModal: React.FC<{
     submitTimeout={2000}
     onFinish={async (values) => {
       newMeta.paramId = values.paramId
+      if(!values.paramId){//因valueChange里面不能准确判断是否清除了paramId，此处补上，若没有了paramId，param也无意义
+        newMeta.param = undefined
+      }
+
       newMeta.paramTypeId = values.paramTypeId
       newMeta.mapKey = values.mapKey
+      
       newMeta.extra = values.extra
+      if(values.extra === "") delete newMeta.extra
+
       newMeta.opId = values.opId
       newMeta._class = values._class
+
+      if (!newMeta.paramTypeId || !newMeta.mapKey) {
+        message.warning("没有选择操作数：类型或者key")
+        return false
+      }
+      
+      if(!newMeta.paramType) newMeta.paramType = getParamTypeById(newMeta.paramTypeId)
 
       if (!newMeta.opId) {
         message.warning("没有选择操作符")
@@ -421,34 +435,15 @@ const asyncGetOpOptions = (
     paramTypeInMeta?: ParamType,
     domainId?: number
   }) => {
-  //console.log("asyncGetOpOptions：domainId=" + domainId + ", paramId=" + paramId)
+  //console.log("asyncGetOpOptions：domainId=" + props.domainId + ", paramId=" + props.paramId)
   const { paramId, paramInMeta, paramTypeId, paramTypeInMeta, domainId } = props
 
   if (paramTypeId) {
-    const paramType: ParamType | undefined = getParamTypeById(paramTypeId, paramTypeInMeta)
-    if (paramType) {
-      const supportOps = paramType.supportOps
-      if (supportOps) {
-        //console.log("get supportOps from paramType.supportOps:",paramType.supportOps)
-        return new Promise(resolve => resolve(supportOps.map((item) => { return { label: item.label + "(" + item.code + ")", value: item.id } })))
-      } else {
-        return asyncSelectProps2Request<Opcode, OpcodeQueryParams>({ //params为注入的dependencies字段值： {isEnum: true}
-          key: OpKeyPrefix + paramTypeId,//不提供key，则不缓存，每次均从远程请求
-          url: `${Host}/api/rule/composer/list/opcode`,
-          query: { ids: paramType.supportOpIds, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
-          convertFunc: (item) => {
-            return { label: item.label, value: item.id }
-          }
-        })
-      }
-    } else {
-      console.warn("MapKey+paramTypeId mode: no paramType by paramTypeId=" + paramTypeId + " in cacheKey=" + AllParamTypeKey + ", nor in meta")
-      return new Promise(resolve => resolve([]))
-    }
+    return getSupportOpsByParamTypeId(paramTypeId, paramTypeInMeta)
   }
 
   if (!paramId && !paramInMeta) {
-    console.log("no paramTypeId, no param/paramId, no paramInMeta, so no ops return")
+    //console.log("new enter? so no ops return")
     return new Promise(resolve => resolve([]))
   }
 
@@ -459,22 +454,47 @@ const asyncGetOpOptions = (
     return new Promise(resolve => resolve([]))
   }
 
-  const supportOps = param.paramType.supportOps
-  if (supportOps && supportOps.length > 0) {
-    console.log("get supportOps from param.paramType.supportOps")
-    return new Promise(resolve => resolve(supportOps.map((item) => { return { label: item.label, value: item.id } })))
-  } else {
-    return asyncSelectProps2Request<Opcode, OpcodeQueryParams>({ //params为注入的dependencies字段值： {isEnum: true}
-      key: OpKeyPrefix + param.paramType.id,//不提供key，则不缓存，每次均从远程请求
-      url: `${Host}/api/rule/composer/list/opcode`,
-      query: { ids: param.paramType.supportOpIds, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
-      convertFunc: (item) => {
-        return { label: item.label, value: item.id }
-      }
-    })
+  if(param.paramType.id){
+    return getSupportOpsByParamTypeId(param.paramType.id, paramTypeInMeta)
+  }else{
+    console.warn("No param.paramType.id, no ops return")
+    return new Promise(resolve => resolve([]))
   }
+
 }
 
+const getSupportOpsByParamTypeId = (paramTypeId: number, paramTypeInMeta?:ParamType) => {
+  const paramType: ParamType | undefined = getParamTypeById(paramTypeId, paramTypeInMeta)
+    if (paramType) {
+      const supportOps = paramType.supportOps
+      if (supportOps) {
+        //console.log("get supportOps from paramType.supportOps:",paramType.supportOps)
+        return new Promise(resolve => resolve(supportOps.map((item) => { return { label: item.label, value: item.id } })))
+      } else {
+        if(paramType.supportOpIds){
+          return asyncSelect2Request<Opcode>(`${Host}/api/rule/composer/getByIds/opcode`,
+          OpKeyPrefix + paramTypeId, {data: paramType.supportOpIds}, "POST",
+           (item) => {
+              return { label: item.label, value: item.id }
+            }
+          )
+        }else{
+          return asyncSelectProps2Request<Opcode, OpcodeQueryParams>({ //params为注入的dependencies字段值： {isEnum: true}
+            key: OpKeyPrefix + paramTypeId,//不提供key，则不缓存，每次均从远程请求
+            url: `${Host}/api/rule/composer/list/opcode`,
+            query: { ids: paramType.supportOpIds, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+            convertFunc: (item) => {
+              return { label: item.label, value: item.id }
+            }
+          })
+        }
+        
+      }
+    } else {
+      console.warn("MapKey+paramTypeId mode: no paramType by paramTypeId=" + paramTypeId + " in cacheKey=" + AllParamTypeKey + ", nor in meta")
+      return new Promise(resolve => resolve([]))
+    }
+}
 /**
  * 调整类型，配置中指定了类型，则使用配置的，否则fallback到变量类型
  */

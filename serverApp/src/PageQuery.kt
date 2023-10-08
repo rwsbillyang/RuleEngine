@@ -27,8 +27,10 @@ import org.komapper.core.dsl.Meta
 import org.komapper.core.dsl.expression.SortExpression
 import org.komapper.core.dsl.expression.WhereDeclaration
 import org.komapper.core.dsl.operator.asc
+import org.komapper.core.dsl.operator.concat
 import org.komapper.core.dsl.operator.desc
 import org.komapper.core.dsl.operator.or
+import org.komapper.core.dsl.query.orderBy
 
 
 @Resource("/param")
@@ -172,7 +174,6 @@ class ValueConstantQueryParams(
     val domainId: Int? = null,
     val typeIds: String? = null,
     val ids: String? = null
-
 ) : IUmiPaginationParams {
     override fun toSqlPagination(): SqlPagination {
         val meta = Meta.constant
@@ -202,7 +203,10 @@ class ValueConstantQueryParams(
         }
         val w4: WhereDeclaration? = isEnum?.let { { meta.isEnum eq it } }
         val w5: WhereDeclaration? = ids?.let { { meta.id inList it.split(",").map { it.toInt() } } }
-        return SqlPagination(sort, pagination.pageSize, (pagination.current - 1) * pagination.pageSize)
+        //去掉sort也不按照inList中的顺序 
+        //to fix: select * from t_constant where id in (4,5,6,22,7) ORDER BY INSTR(',4,5,6,22,7,',CONCAT(',',id,','));
+        //val order = orderBy(instr(ids, meta.concat(',', meta.id, ',')))
+        return SqlPagination(if(ids == null) sort else null, pagination.pageSize, (pagination.current - 1) * pagination.pageSize)
             .addWhere(w5, w2, w3, w4, w1, lastW)
     }
 }
@@ -250,7 +254,7 @@ class OpcodeQueryParams(
         }
 
         //pageSize为-1时表示该查询条件下的全部数据
-        return SqlPagination(sort, pagination.pageSize, (pagination.current - 1) * pagination.pageSize)
+        return SqlPagination(if(ids == null) sort else null, pagination.pageSize, (pagination.current - 1) * pagination.pageSize)
             .addWhere(w3, w1, w2, w4, w5, lastW)
     }
 }

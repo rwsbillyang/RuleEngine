@@ -176,7 +176,7 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
           onReset={searchReset}
           onSubmit={search}
           toolBarRender={myToolBarRender}
-
+          scroll={{scrollToFirstRowOnChange: true}}
         //request?: ( params: U & {pageSize?: number; current?: number; keyword?: string;}, 
         //  sort: Record<string, SortOrder>, 
         //  filter: Record<string, (string | number)[] | null>) => Promise<Partial<RequestData<DataSource>>>;

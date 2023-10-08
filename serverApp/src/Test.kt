@@ -47,11 +47,11 @@ class MyBaseCrudService(): AbstractSqlService(VoidCache()){
 //若需在IDE中运行测试，需将依赖com.github.rwsbillyang:yinyang从 compileOnly 改为：implementationg
 fun main(){
     val service = MyBaseCrudService()
-    //runTest(service, Zhi.Zi, LocalDateTime.now())
+    runTest(service, Zhi.Zi, LocalDateTime.now())
     //testSerialize() //sealed class 不能🈶多个层次的继承
 
 
-    insertZwExt(service)
+   // insertZwExt(service)
    // insertConstants(service)
 }
 
@@ -67,14 +67,14 @@ fun extra2RuleCommon(extra: Any?): RuleCommon?{
     }
 }
 
-fun runTest(service: MyBaseCrudService,gongZhi: Int, dateTime: LocalDateTime){
+fun runTest(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTime){
 
     val zwPanData = ZwPanData.fromLocalDateTime(
         Gender.Female,
         dateTime,
         LunarLeapMonthAdjustMode.Whole)
 
-    val gongStars = zwPanData.gongYuanMapByZhi[gongZhi]!!
+    val gongStars = zwPanData.gongYuanMapByName["命宫"]!!
     println("====check gongStars: ${gongStars.name}======")
 
     val dataPicker: (key: String, keyExtra: String?) -> Any? = {it, keyExtra->
@@ -184,13 +184,13 @@ fun runTest(service: MyBaseCrudService,gongZhi: Int, dateTime: LocalDateTime){
     val collector = ResultTreeCollector{
         val ruleCommon = extra2RuleCommon(it.extra)
         val key = ruleCommon?.typedId?:"?" //if (ruleCommon?.rule != null) "rule-${ruleCommon.id}" else if(ruleCommon?.ruleGroup != null) "group-${ruleCommon.id}" else "?"
-        val data = MyData(key, ruleCommon?.id, ruleCommon?.label, ruleCommon?.remark)
+        val data = MyData(key, ruleCommon?.id, ruleCommon?.label, ruleCommon?.description)
         println("collect $key: ${ruleCommon?.label}")
         Pair(key, data)
     }
 
     val rootList = service.findAll(Meta.ruleGroup, {Meta.ruleGroup.level eq 0})
-    RuleEngine.eval(rootList, dataPicker, loadChildrenFunc, toEvalRule, collector)
+    RuleEngine.eval(rootList, dataPicker2, loadChildrenFunc, toEvalRule, collector)
 
     //println收集的结果
     println("traverseResult: ${collector.resultMap.size}, root.children.size=${collector.root.children.size}")
