@@ -101,7 +101,7 @@ export const BasicExpressionTable: React.FC = () => {
 
       if (!e) return e
       e.meta = e.metaStr ? JSON.parse(e.metaStr) : undefined
-      e.expr = e.exprStr ? JSON.parse(e.exprStr) : undefined
+      //e.expr = e.exprStr ? JSON.parse(e.exprStr) : undefined
       e["paramId"] = e.meta?.paramId || e.meta?.param?.id
       e["opId"] = e.meta?.opId || e.meta?.op?.id
       //console.log("after BasicExpressionTable transformBeforeEdit... e=",e)
@@ -172,7 +172,7 @@ export const ComplexExpressionTable: React.FC = () => {
       //console.log("ComplexExpressionTable: to transformBeforeEdit...")
       if (!e) return e
       e.meta = e.metaStr ? JSON.parse(e.metaStr) : undefined
-      e.expr = e.exprStr ? JSON.parse(e.exprStr) : undefined
+     // e.expr = e.exprStr ? JSON.parse(e.exprStr) : undefined
 
       return e
     }

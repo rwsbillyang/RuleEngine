@@ -38,7 +38,7 @@ import kotlinx.serialization.decodeFromString
 import org.komapper.core.dsl.Meta
 import java.time.LocalDateTime
 
-class MyData(val key:String, val id: Int?, val label: String?, val desc: String?)
+class MyData(val key:String, val id: Int?, val label: String?, val desc: String?, val remark: String?, val exprRemark: String?)
 class MyBaseCrudService(): AbstractSqlService(VoidCache()){
     override val dbSource: SqlDataSource
         get() = SqlDataSource("ruleEngineDb", "127.0.0.1", 3306, "root", "123456")
@@ -99,7 +99,7 @@ fun runTest(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTime){
             }
         }
     }
-    val dataPicker2: (key: String, keyExtra: String?) -> Any? = {it, keyExtra->
+    val dataProvider: (key: String, keyExtra: String?) -> Any? = {it, keyExtra->
         when(it){
             "zwPanData" -> zwPanData
             "gender" -> zwPanData.gender.ordinal
@@ -108,8 +108,8 @@ fun runTest(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTime){
             "yearGan" -> zwPanData.fourZhu.year.gan
             "yearZhi" -> zwPanData.fourZhu.year.zhi
             else -> {
-                System.err.println("not support key=$it, please check")
-                null
+                System.err.println("dataProvider: key=$it, keyExtra=$keyExtra, return key")
+                it
             }
         }
     }
@@ -184,13 +184,14 @@ fun runTest(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTime){
     val collector = ResultTreeCollector{
         val ruleCommon = extra2RuleCommon(it.extra)
         val key = ruleCommon?.typedId?:"?" //if (ruleCommon?.rule != null) "rule-${ruleCommon.id}" else if(ruleCommon?.ruleGroup != null) "group-${ruleCommon.id}" else "?"
-        val data = MyData(key, ruleCommon?.id, ruleCommon?.label, ruleCommon?.description)
+        val data = MyData(key, ruleCommon?.id, ruleCommon?.label,
+            ruleCommon?.description, ruleCommon?.rule?.remark, ruleCommon?.rule?.exprRemark)
         println("collect $key: ${ruleCommon?.label}")
         Pair(key, data)
     }
 
     val rootList = service.findAll(Meta.ruleGroup, {Meta.ruleGroup.level eq 0})
-    RuleEngine.eval(rootList, dataPicker2, loadChildrenFunc, toEvalRule, collector)
+    RuleEngine.eval(rootList, dataProvider, loadChildrenFunc, toEvalRule, collector)
 
     //println收集的结果
     println("traverseResult: ${collector.resultMap.size}, root.children.size=${collector.root.children.size}")

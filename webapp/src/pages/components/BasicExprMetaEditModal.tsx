@@ -210,7 +210,7 @@ export const BasicExprMetaEditModal: React.FC<{
         for (let i = 0; i < oprandConfigList.length; i++) {
           const e = oprandConfigList[i]
           const operandMeta = newMeta.operandMetaObj[e.name]
-          if (e.required && (!operandMeta || (operandMeta.jsonValue?.value === undefined && !operandMeta.paramId))) {
+          if (e.required && (!operandMeta || (operandMeta.jsonValue?.raw === undefined && !operandMeta.paramId))) {
             message.warning(e.label + ": 操作数没有值")
             return false
           }
@@ -369,21 +369,21 @@ export const BasicExprMetaEditModal: React.FC<{
         const keyPrefix = `${exprId}-${paramId}-${paramTypeId}-${opId}-`
         return <>
           {oprandConfigList.filter(e => e.enable).map((e) => {
-            const constantQueryParam = getConstantQueryParams(e, newMeta.param, newMeta.paramType, domainId)
+            const type = newMeta.param?.paramType || newMeta.paramType
             //console.log("keyPrefix="+keyPrefix+",constantQueryParam=",constantQueryParam)
-            return <OperandValueMetaEditor key={keyPrefix + e.name}
-              paramType={adjustParamType(e, newMeta.param, newMeta.paramType)}
+            return type? <OperandValueMetaEditor key={keyPrefix + e.name}
+              paramType={type}
               operandConfig={e}
-              constantQueryParams={constantQueryParam}
+              constantQueryParams={getConstantQueryParams(e, newMeta.param, newMeta.paramType, domainId)}
               domainId={domainId}
               //disabled={!!exprId}
               value={newMeta.operandMetaObj[e.name]}
               onChange={(v) => {
                 newMeta.operandMetaObj[e.name] = v
                 setNewMeta({ ...newMeta })
-              }} />
+              }} />: <div>no type</div>
           })}
-        </>
+        </> 
       }}
     </ProFormDependency>
 
@@ -405,7 +405,7 @@ const defaultOperandValueMeta = (operandConfig: OperandConfig) => {
   if (operandConfig.selectOptions && operandConfig.selectOptions.length) {
     operandMeta.valueType = 'Constant'
     operandMeta.constantIds = operandConfig.defaultSelect
-    operandMeta.jsonValue = { _class: "String", value: operandConfig.defaultSelect }
+    operandMeta.jsonValue = { _class: "String", raw: operandConfig.defaultSelect }
     return operandMeta
   }
   if (operandConfig.contantIds || operandConfig.typeCode) {
@@ -494,15 +494,6 @@ const getSupportOpsByParamTypeId = (paramTypeId: number, paramTypeInMeta?:ParamT
       console.warn("MapKey+paramTypeId mode: no paramType by paramTypeId=" + paramTypeId + " in cacheKey=" + AllParamTypeKey + ", nor in meta")
       return new Promise(resolve => resolve([]))
     }
-}
-/**
- * 调整类型，配置中指定了类型，则使用配置的，否则fallback到变量类型
- */
-const adjustParamType = (operandConfig: OperandConfig, param?: Param, paramType?: ParamType) => {
-  if (operandConfig.typeCode) {//配置中指定了类型，则使用配置的，否则fallback到变量类型
-    return getParamTypeById(typeCode2Id(operandConfig.typeCode), param?.paramType || paramType)
-  } else
-    return param?.paramType || paramType
 }
 
 
@@ -617,3 +608,24 @@ const getConstantQueryParams = (
   return constantQueryParams
 }
 
+/**
+ * 调整类型，配置中指定了类型，则使用配置的，否则fallback到变量类型
+ */
+// const adjustParamType = (operandConfig: OperandConfig, param?: Param, paramType?: ParamType) => {
+//   if (operandConfig.typeCode) {//配置中指定了类型，则使用配置的，否则fallback到变量类型
+//     return getParamTypeById(typeCode2Id(operandConfig.typeCode), param?.paramType || paramType)
+//   } else{
+//     const t = param?.paramType || paramType
+//     if(t){
+//       //必须是系统类型，扩展和自定义类型不支持
+//      if(checkJsonValueClass(t.code)){
+//       return param?.paramType || paramType
+//      }else{
+//       console.warn("wrong type code")
+//      }
+//     }else{
+//       console.warn("no param type code")
+//     }
+//     return undefined 
+//   }
+// }

@@ -118,7 +118,8 @@ export interface LabelValue{
 //export type BasicValueType =  boolean | string | number 
 export interface JsonValue {
     _class: string, //backend ktorkit lib set: classDiscriminator="_class"
-    value?: boolean | string | number  | (string| number)[] | LabelValue | LabelValue[] //有LabelValue是因为常量中枚举常量的值可能需要创建标签
+    raw?: boolean | string | number  | (string| number)[] | LabelValue | LabelValue[] //有LabelValue是因为常量中枚举常量的值可能需要创建标签
+    value?:boolean | string | number  | (string| number)[] | LabelValue | LabelValue[] //旧值
 }
 /**
  * 值常量
@@ -237,7 +238,9 @@ interface ExpressionMetaBase{
     op?: Opcode,
 }
 export interface BasicExpressionMeta extends ExpressionMetaBase{
-    _class: string, //'Bool' | 'Int' | 'Double' | 'Long' | 'String' ....
+    //_class: string, //'Bool' | 'Int' | 'Double' | 'Long' | 'String' ....
+    // opId?: number,
+    // op?: Opcode,
 
     paramId?: number | number[],//与mapKey&paramTypeId二选一
     param?: Param,
@@ -246,9 +249,6 @@ export interface BasicExpressionMeta extends ExpressionMetaBase{
     paramType?: ParamType,
     mapKey?: string,
     extra?: string
-
-    opId?: number,
-    op?: Opcode,
 
      //使用Map<string, OperandValueMeta>时，在parse成对象时得到是object，而不是map
      //现改成object，key为操作数键值，值为OperandValueMeta
@@ -297,7 +297,7 @@ export interface OperandValueMeta {
 export interface OperandValue {
     valueType?: "Param" | "Constant" | "JsonValue" | undefined
     key?: string // for Param type
-    value?: boolean | string | number  | (boolean | string| number)[]
+    value?: JsonValue
 }
 
  

@@ -19,7 +19,7 @@ import { RuleTable } from './pages/rule/RuleTable'
 import { RuleEdit } from './pages/rule/RuleEdit'
 import { ActionTable } from './pages/rule/ActionTable'
 import { RuleGroupTable } from './pages/rule/RuleGroupTable'
-import { EnableParamCategory } from './Config'
+import { EnableDev, EnableParamCategory } from './Config'
 import MyProLayout, { MyProLayoutProps } from './myPro/MyProLayout';
 
 
@@ -32,6 +32,7 @@ import {
   ProfileOutlined,DatabaseOutlined
 } from '@ant-design/icons';
 import { Tooltip, message } from 'antd';
+import { DevHome } from './pages/DevHome';
 
 
 // 实现懒加载的用Suspense包裹 定义函数
@@ -191,8 +192,14 @@ export const AppRoutes: RouteObject[] = [
   {
     path: '/login',
     element: lazyLoad(<NoFoundPage />)
+  },
+  EnableDev? {
+    path: '/dev',
+    element: lazyLoad(<DevHome />)
+  } : {
+    path:"/tmp"
   }
-]
+].filter(e=> e.path !== "/tmp")
 
 
 // const actions: MyRouteObject[] = [

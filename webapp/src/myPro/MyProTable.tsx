@@ -375,8 +375,8 @@ export function saveOne<T extends BaseRecord, ResultType = T>(
       else { console.log("no data return after save") }
       return new Promise((resolve) => { resolve(true) });
     }).catch((err) => {
-      console.warn("exception: " + err)
-      message.error(err)
+      console.warn("exception: " + err.message)
+      message.error(err.message)
     })
 
   return true;

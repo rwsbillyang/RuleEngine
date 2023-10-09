@@ -16,10 +16,14 @@
  * limitations under the License.
  */
 
+@file:UseContextualSerialization(LocalDateTime::class)
+
 package com.github.rwsbillyang.rule.runtime
 
-import kotlinx.serialization.Contextual
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseContextualSerialization
+import java.time.LocalDateTime
 
 /**
  * 一个逻辑表达式构成因素：表达式类型（变量类型决定）、变量（mapKey或记录库中添加的变量记录）、操作码、若干操作数构成
@@ -53,11 +57,13 @@ class OperandConfig(
     val defaultOperandValueType: String? = null, //"Param" | "Constant" | "JsonValue"
     val enable: Boolean = true
 )
+
 @Serializable
 class SelectOption<T>(val label: String, val value: T)
 
 @Serializable
-enum class OperandValueType{Param, Constant,JsonValue } //前端OperandMeta.valueType
+enum class OperandValueType { Param, Constant, JsonValue } //前端OperandMeta.valueType
+
 /**
  * 操作数
  * @param name 操作数名称
@@ -68,12 +74,143 @@ enum class OperandValueType{Param, Constant,JsonValue } //前端OperandMeta.valu
 class Operand(
     val valueType: OperandValueType,
     val key: String? = null, //key: other, start, end, set, e, number, if valueType == ValueType.Param then use key to pick a value
-    @Contextual val value: Any? = null //else use value directly
-){
-    fun real(dataProvider: (key: String, keyExtra:String?) -> Any?, keyExtra: String? = null) = if(valueType == OperandValueType.Param && key != null){
-        dataProvider(key, keyExtra)
-    }else{
-        value
-    }
+    val value: JsonValue? = null //else use value directly
+) {
+    fun raw(dataProvider: (key: String, keyExtra: String?) -> Any?, keyExtra: String? = null) =
+        if (valueType == OperandValueType.Param && key != null) {
+            dataProvider(key, keyExtra)
+        } else {
+            when (value) {
+                is BoolValue -> value.raw
+                is IntValue -> value.raw
+                is LongValue -> value.raw
+                is DoubleValue -> value.raw
+                is StringValue -> value.raw
+                is LocalDateTimeValue -> value.raw
+                is StringSetValue -> value.raw
+                is IntSetValue -> value.raw
+                is LongSetValue -> value.raw
+                is DoubleSetValue -> value.raw
+                is LocalDateTimeSetValue -> value.raw
+                is IntEnumValue -> value.raw
+                is LongEnumValue -> value.raw
+                is DoubleEnumValue -> value.raw
+                is LocalDateTimeEnumValue -> value.raw
+                is StringEnumValue -> value.raw
+                else -> null
+            }
+
+        }
 }
 
+
+/**
+ * 子类的json中会默认增加type字段，值为@SerialName中的
+ * */
+@Serializable
+sealed class JsonValue
+
+
+@Serializable
+@SerialName(IType.Type_Bool)
+class BoolValue(
+    val raw: Boolean
+) : JsonValue()
+
+@Serializable
+@SerialName(IType.Type_Int)
+class IntValue(
+    val raw: Int
+) : JsonValue()
+
+@Serializable
+@SerialName(IType.Type_Long)
+class LongValue(
+    val raw: Long
+) : JsonValue()
+
+@Serializable
+@SerialName(IType.Type_Double)
+class DoubleValue(
+    val raw: Double
+) : JsonValue()
+
+@Serializable
+@SerialName(IType.Type_String)
+class StringValue(
+    val raw: String
+) : JsonValue()
+
+@Serializable
+@SerialName(IType.Type_Datetime)
+class LocalDateTimeValue(
+    val raw: LocalDateTime
+) : JsonValue()
+
+@Serializable
+@SerialName(IType.Type_IntSet)
+class IntSetValue(
+    val raw: Set<Int>
+) : JsonValue()
+
+
+@Serializable
+@SerialName(IType.Type_LongSet)
+class LongSetValue(
+    val raw: Set<Long>
+) : JsonValue()
+
+@Serializable
+@SerialName(IType.Type_DoubleSet)
+class DoubleSetValue(
+    val raw: Set<Double>
+) : JsonValue()
+
+@Serializable
+@SerialName(IType.Type_StringSet)
+class StringSetValue(
+    val raw: Set<String>
+) : JsonValue()
+
+@Serializable
+@SerialName(IType.Type_DateTimeSet)
+class LocalDateTimeSetValue(
+    val raw: Set<LocalDateTime>
+) : JsonValue()
+
+
+// 以下为枚举类型,为枚举增加了枚举名称label
+
+
+//T: Int, Long, Double, String, DateTime
+
+@Serializable
+@SerialName(IType.Type_IntEnum)
+class IntEnumValue(
+    val raw: List<SelectOption<Int>>
+) : JsonValue()
+
+
+@Serializable
+@SerialName(IType.Type_LongEnum)
+class LongEnumValue(
+    val raw: List<SelectOption<Long>>
+) : JsonValue()
+
+@Serializable
+@SerialName(IType.Type_DoubleEnum)
+class DoubleEnumValue(
+    val raw: List<SelectOption<Double>>
+) : JsonValue()
+
+@Serializable
+@SerialName(IType.Type_StringEnum)
+class StringEnumValue(
+    val raw: List<SelectOption<String>>
+) : JsonValue()
+
+@Serializable
+@SerialName(IType.Type_DateTimeEnum)
+class LocalDateTimeEnumValue(
+    val raw: List<SelectOption<LocalDateTime>>
+) : JsonValue()

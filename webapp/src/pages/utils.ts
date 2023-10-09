@@ -189,8 +189,8 @@ export const operandMeta2String = (name: string, operandMeta?: OperandValueMeta)
 
 //to human-reading string
 const jsonValue2String = (jsonValue?: JsonValue) => {
-    if (!jsonValue || jsonValue.value === undefined) return undefined
-    const value = jsonValue.value
+    if (!jsonValue || jsonValue.raw === undefined) return undefined
+    const value = jsonValue.raw
     if (Array.isArray(value)) {
         if(value.length === 0) return "[]"
         if(typeof value[0]  === 'object'){
@@ -220,7 +220,8 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
     }
     const operandValueObj: { [key: string]: OperandValue } = {}
     for (let k in meta.operandMetaObj) {
-        const v = operandMeta2OperandValue(meta.operandMetaObj[k])
+        const v = operandMeta2OperandValue(k, meta.operandMetaObj[k])
+        //if(v === -1) return -1
         if (v !== undefined) operandValueObj[k] = v
     }
 
@@ -247,36 +248,77 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
     return undefined
 }
 
-const extractJsonValue = (jsonValue?: JsonValue) => {
-    if (!jsonValue || jsonValue.value === undefined) return undefined
-    const value = jsonValue.value
-    if (Array.isArray(value)) {
-        if(value.length === 0) return undefined
-        if(typeof value[0]  === 'object'){
-            return (value as LabelValue[]).map((e)=> e.value)
-        }else{
-            return value as boolean[] | string[] | number[]
-        }  
-    } else{
-        if(typeof value  === 'object'){
-            return (value as LabelValue).value
-        }else
-            return value
-    }     
-}
+// const extractJsonValue = (jsonValue?: JsonValue) => {
+//     if (!jsonValue || jsonValue.raw === undefined) return undefined
+//     const value = jsonValue.raw
+//     if (Array.isArray(value)) {
+//         if(value.length === 0) return undefined
+//         if(typeof value[0]  === 'object'){
+//             return (value as LabelValue[]).map((e)=> e.value)
+//         }else{
+//             return value as boolean[] | string[] | number[]
+//         }  
+//     } else{
+//         if(typeof value  === 'object'){
+//             return (value as LabelValue).value
+//         }else
+//             return value
+//     }     
+// }
 /**
  * 将OperandValueMeta转换为纯表达式中的必要字段值
  * @param operandMeta OperandValueMeta
  * @returns 
  */
-const operandMeta2OperandValue = (operandMeta?: OperandValueMeta) => {
+const operandMeta2OperandValue = (name: string, operandMeta?: OperandValueMeta) => {
     if (operandMeta === undefined) return undefined
-    if(!operandMeta.jsonValue || operandMeta.jsonValue.value === undefined) return undefined
+   
+    if(operandMeta.valueType === 'Param'){
+        if(!operandMeta.param || !operandMeta.param.mapKey){
+            console.warn("operandMeta.valueType is'Param', but no param or param.mapKey")
+            return undefined
+        }else{
+            const opvalue: OperandValue = {
+                valueType: operandMeta.valueType,
+                key: operandMeta.param?.mapKey,
+            }
+            return opvalue
+        }
+    }
+
+    const jsonValue = operandMeta.jsonValue
+    if(!jsonValue) return undefined
+
+
+    if(jsonValue.raw === undefined || jsonValue.raw === "") return undefined
+
+    //老字段value改成raw，删除老字段
+    // if(jsonValue.value === undefined || jsonValue.value === "") return undefined
+    // jsonValue.raw = jsonValue.value
+    // delete jsonValue.value  
     
+      
+    if(!checkJsonValueClass(jsonValue._class)){
+        console.warn("wrong jsonValue class:" + jsonValue._class + ", name="+name)
+        //纠正历史数据中的一些错 
+        // if(name === "starSet") jsonValue._class = "StringSet"
+        // if(name === "gongSet") jsonValue._class = "StringSet"
+        // if(name === "zhiSet") jsonValue._class = "IntSet"
+        // if(name === "num"){
+        //     jsonValue._class ="Int"
+        //     jsonValue.raw = +jsonValue.raw
+        // }
+    }
+    
+    if((jsonValue._class === "Int" || jsonValue._class === "Long" || jsonValue._class === "Double") 
+    && typeof jsonValue.raw !== 'number' ){
+        console.warn("wrong jsonValue.raw, not number: " + jsonValue.raw  + ", name="+name)
+        jsonValue.raw = +jsonValue.raw 
+    }
+        
     const opvalue: OperandValue = {
         valueType: operandMeta.valueType,
-        key: operandMeta.param?.mapKey,
-        value: extractJsonValue(operandMeta.jsonValue) 
+        value: jsonValue //extractJsonValue(operandMeta.jsonValue) 
     }
     return opvalue
 }
@@ -317,7 +359,17 @@ export function meta2Expr(meta?: BasicExpressionMeta | ComplexExpressionMeta) {
         return basicMeta2Expr(meta as BasicExpressionMeta)
 }
 
-
+export const checkJsonValueClass = (code: string) => {
+    const codes = ["Bool", "Int", "Double", "Long", "String","DateTime", 
+    "IntSet", "DoubleSet", "LongSet", "StringSet","DateTimeSet",
+    "IntEnum", "DoubleEnum", "LongEnum", "StringEnum","DateTimeEnum"]
+    
+    for(let i = 0; i< codes.length; i++){
+        if(code === codes[i])
+            return true
+    }
+    return false
+}
 
 /***
  * 有效信息，用于生成md5作为id

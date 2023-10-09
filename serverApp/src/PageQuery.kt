@@ -354,7 +354,7 @@ class RuleQueryParams(
         val sort: SortExpression
 
         //一般是根据pagination.sKey进行排序，但此处总是根据id进行排序
-        val sortKey = meta.priority
+        val sortKey = meta.id
         sort = if (pagination.sort == Sort.DESC) sortKey.desc() else sortKey.asc()
         if (lastId != null) {
             val lastT = lastId.toInt()
@@ -398,7 +398,7 @@ class RuleGroupQueryParams(
         val sort: SortExpression
 
         //一般是根据pagination.sKey进行排序，但此处总是根据id进行排序
-        val sortKey = meta.priority
+        val sortKey = meta.id
         sort = if (pagination.sort == Sort.DESC) sortKey.desc() else sortKey.asc()
         if (lastId != null) {
             val lastT = lastId.toInt()

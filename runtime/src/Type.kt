@@ -65,10 +65,10 @@ abstract class SysBasicType<T>: BaseType<T>() {
     override fun supportOperators() = EnumBasicOp.values().map { it.name }
     override fun op(dataProvider: (key: String, keyExtra:String?) -> Any?, key:String?, op: String, operands: Map<String, Operand>, keyExtra: String?)
     = op(op, key?.let { dataProvider(it, keyExtra) as T? },
-        operands["other"]?.real(dataProvider) as T? ,
-        operands["start"]?.real(dataProvider) as T?,
-        operands["end"]?.real(dataProvider) as T?,
-        operands["set"]?.real(dataProvider) as Set<T>?)
+        operands["other"]?.raw(dataProvider) as T? ,
+        operands["start"]?.raw(dataProvider) as T?,
+        operands["end"]?.raw(dataProvider) as T?,
+        operands["set"]?.raw(dataProvider) as Set<T>?)
     abstract fun op(op: String, v0: T?, other: T? = null, start: T? = null, end: T? = null, set: Set<T>? = null): Boolean
 }
 
@@ -76,9 +76,9 @@ abstract class CollectionType<Container: Collection<T>, T>: BaseType<T>() {
     override fun supportOperators() = EnumCollectionOp.values().map { it.name }
     override fun op(dataProvider: (key: String, keyExtra:String?) -> Any?, key:String?, op: String, operands: Map<String, Operand>, keyExtra: String?)
             = op(op, key?.let { dataProvider(it, keyExtra) as Container? },
-        operands["other"]?.real(dataProvider) as Container? ,
-        operands["e"]?.real(dataProvider) as T?, //key所在变量集中是否包含e
-        operands["num"]?.real(dataProvider) as Int?) //key所在变量集与other交集元素个事 与num比较
+        operands["other"]?.raw(dataProvider) as Container? ,
+        operands["e"]?.raw(dataProvider) as T?, //key所在变量集中是否包含e
+        operands["num"]?.raw(dataProvider) as Int?) //key所在变量集与other交集元素个事 与num比较
     fun op(op: String, v0: Container?, other: Container? = null, e: T? = null, num: Int? = null):Boolean{
         if (v0 == null) throw Exception("${code}Type.${op}: no v0")
         return when(EnumCollectionOp.valueOf(op)){
