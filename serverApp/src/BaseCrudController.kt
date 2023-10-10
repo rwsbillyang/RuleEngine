@@ -32,6 +32,7 @@ import kotlinx.serialization.encodeToString
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.komapper.core.dsl.Meta
+import org.komapper.core.dsl.QueryDsl
 import org.komapper.core.dsl.expression.WhereDeclaration
 import org.komapper.core.dsl.operator.or
 import org.komapper.core.dsl.query.get
@@ -55,7 +56,7 @@ class BaseCrudController : KoinComponent {
         const val Name_action = "action"
     }
 
-    private val service: BaseCrudService by inject()
+    val service: BaseCrudService by inject()
 
 
     fun findPage(name: String, params: IUmiPaginationParams): String {
@@ -270,55 +271,7 @@ class BaseCrudController : KoinComponent {
         return count
     }
 
-    /**
-     * 清空类型和操作符表，并从id=1开始添加
-     * */
-    fun initDictDataInDb(): String {
-        //bugfix：未生效 truncate table `t_param_type`;  truncate table `t_opcode`;
-//        QueryDsl.executeScript("truncate table `t_param_type`;");
-//        QueryDsl.executeScript("truncate table `t_opcode`;");
 
-
-        val map = mutableMapOf<String, Opcode>()
-        //将系统内置支持的操作符写入数据库，并构建map
-        EnumBasicOp.values().forEach {
-            if(map[it.name] == null){
-                map[it.name] = service.save(Meta.opcode,  Opcode(it.label, it.name, Opcode.Basic, MySerializeJson.encodeToString(it.operandMap)), true)
-            }
-        }
-
-        EnumCollectionOp.values().forEach {
-            if(map[it.name] == null){
-                map[it.name] = service.save(Meta.opcode,  Opcode(it.label, it.name, Opcode.Collection, MySerializeJson.encodeToString(it.operandMap)), true)
-            }
-        }
-
-        EnumLogicalOp.values().forEach {
-            if(map[it.name] == null){
-                map[it.name] = service.save(Meta.opcode, Opcode(it.label, it.name,  Opcode.Logical, remark = it.remark), true)
-            }
-        }
-
-        //构建内置数据类型并插入库
-        val list = listOf(
-            ParamType(StringType.label,StringType.code,StringType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Basic),
-            ParamType(IntType.label,IntType.code,IntType.supportOperators().mapNotNull { map[it]?.id}.joinToString(","),ParamType.Basic),
-            ParamType(LongType.label,LongType.code,LongType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Basic),
-            ParamType(DoubleType.label,DoubleType.code,DoubleType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Basic),
-            ParamType(DateTimeType.label, DateTimeType.code, DateTimeType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Basic),
-            ParamType(BoolType.label, BoolType.code, BoolType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Basic),
-            ParamType(StringSetType.label, StringSetType.code, StringSetType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Collection),
-            ParamType(IntSetType.label, IntSetType.code, IntSetType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Collection),
-            ParamType(LongSetType.label, LongSetType.code, LongSetType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Collection),
-            ParamType(DoubleSetType.label, DoubleSetType.code, DoubleSetType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Collection),
-            ParamType(DateTimeSetType.label, DateTimeSetType.code, DateTimeSetType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","), ParamType.Collection),
-        )
-        val types = service.batchSave(Meta.paramType, list, true)
-
-        val opsJson = ApiJson.serverSerializeJson.encodeToString(map)
-        val typesJson = ApiJson.serverSerializeJson.encodeToString(types)
-        return "opsJson=$opsJson, typesJson=$typesJson"
-    }
 }
 
 

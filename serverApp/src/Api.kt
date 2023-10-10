@@ -24,6 +24,7 @@ import com.github.rwsbillyang.ktorKit.apiBox.BatchOperationParams
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.ktorKit.apiBox.PostData
 import com.github.rwsbillyang.ktorKit.server.*
+import com.github.rwsbillyang.rule.composer.dev.DevController
 
 
 import io.ktor.server.application.*
@@ -286,7 +287,7 @@ fun Routing.composerApi() {
         //初始化数据库： http://localhost:18000/api/rule/composer/initDb
         //truncate table `t_param_type`;  truncate table `t_operator`;
         get("/initDb"){
-            call.respondBoxOK(crudController.initDictDataInDb())
+            call.respondBoxOK(DevController(crudController.service).initDictDataInDb())
         }
     }
 }

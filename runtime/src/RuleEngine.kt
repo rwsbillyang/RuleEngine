@@ -40,7 +40,7 @@ object RuleEngine {
         rootRules: List<Any>,
         dataProvider: (key: String, keyExtra:String?) -> Any?,
         loadChildrenFunc: (parent: Any?) -> List<Any>?,
-        toEvalRule: (extra: Any) -> EvalRule,
+        toEvalRule: (entity: Any) -> EvalRule,
         collector: ResultTreeCollector<T>?
     )
     {

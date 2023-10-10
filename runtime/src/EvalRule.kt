@@ -24,14 +24,14 @@ package com.github.rwsbillyang.rule.runtime
  * @param exclusive 子节点是否互斥
  * @param action logicalExpr执行结果为true时的动作
  * @param elseAction logicalExpr执行结果为false时的动作
- * @param extra 附属信息，通常是对应的规则或规则组 不同环境中数据库规则实体定义可能不同
+ * @param entity 附属信息，通常是对应的规则或规则组 不同环境中数据库规则实体定义可能不同
  * */
 class EvalRule(
     val logicalExpr: LogicalExpr?,
     val exclusive: Boolean,
     val action: String? = null,
     val elseAction: String? = null,
-    val extra: Any?
+    val entity: Any?
 ){
     /**
      * @param dataProvider 根据key获取对应的变量值
@@ -79,7 +79,7 @@ class EvalRule(
         collector: ResultTreeCollector<T>?
     ): Boolean
     {
-        val children = loadChildrenFunc(extra)?.map{ toEvalRule(it) }
+        val children = loadChildrenFunc(entity)?.map{ toEvalRule(it) }
         if(children == null){
             System.err.println("no loadChildrenFunc, do nothing")
             return false

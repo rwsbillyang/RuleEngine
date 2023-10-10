@@ -1,7 +1,7 @@
 /*
  * Copyright © 2023 rwsbillyang@qq.com
  *
- * Written by rwsbillyang@qq.com at Beijing Time: 2023-09-20 20:32
+ * Written by rwsbillyang@qq.com at Beijing Time: 2023-10-09 17:56
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,13 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.rule.composer
+package com.github.rwsbillyang.rule.composer.dev
 
 
 import com.github.rwsbillyang.ktorKit.cache.VoidCache
 import com.github.rwsbillyang.ktorKit.db.AbstractSqlService
 import com.github.rwsbillyang.ktorKit.db.SqlDataSource
+import com.github.rwsbillyang.rule.composer.*
 import com.github.rwsbillyang.rule.runtime.*
 
 
@@ -40,6 +41,7 @@ import java.time.LocalDateTime
 
 class MyData(val key:String, val id: Int?, val label: String?, val desc: String?, val remark: String?, val exprRemark: String?)
 class MyBaseCrudService(): AbstractSqlService(VoidCache()){
+    //HikariDataSource(optimizedHikariConfig(dbName,userName?:"root",pwd,host,port)),
     override val dbSource: SqlDataSource
         get() = SqlDataSource("ruleEngineDb", "127.0.0.1", 3306, "root", "123456")
 }
@@ -47,12 +49,23 @@ class MyBaseCrudService(): AbstractSqlService(VoidCache()){
 //若需在IDE中运行测试，需将依赖com.github.rwsbillyang:yinyang从 compileOnly 改为：implementationg
 fun main(){
     val service = MyBaseCrudService()
-    runTest(service, Zhi.Zi, LocalDateTime.now())
+   // runTest(service, Zhi.Zi, LocalDateTime.now())
     //testSerialize() //sealed class 不能🈶多个层次的继承
 
 
    // insertZwExt(service)
    // insertConstants(service)
+
+    val sqlLiteHelper = SqlLiteHelper("/Users/bill/git/MingLi/app/src/main/assets/app.db")
+    DevController(service).apply {
+        //createGroupTable(sqlLiteHelper)
+        //migrateGroupIntoSqlLite(sqlLiteHelper)
+
+        //createRuleTable(sqlLiteHelper)
+        migrateRuleIntoSqlLite(sqlLiteHelper, 596)
+    }
+
+    sqlLiteHelper.close()
 }
 
 fun extra2RuleCommon(extra: Any?): RuleCommon?{
@@ -108,7 +121,7 @@ fun runTest(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTime){
             "yearGan" -> zwPanData.fourZhu.year.gan
             "yearZhi" -> zwPanData.fourZhu.year.zhi
             else -> {
-                System.err.println("dataProvider: key=$it, keyExtra=$keyExtra, return key")
+               println("dataProvider: key=$it, keyExtra=$keyExtra, return key")
                 it
             }
         }
@@ -182,7 +195,7 @@ fun runTest(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTime){
 //    }
 
     val collector = ResultTreeCollector{
-        val ruleCommon = extra2RuleCommon(it.extra)
+        val ruleCommon = extra2RuleCommon(it.entity)
         val key = ruleCommon?.typedId?:"?" //if (ruleCommon?.rule != null) "rule-${ruleCommon.id}" else if(ruleCommon?.ruleGroup != null) "group-${ruleCommon.id}" else "?"
         val data = MyData(key, ruleCommon?.id, ruleCommon?.label,
             ruleCommon?.description, ruleCommon?.rule?.remark, ruleCommon?.rule?.exprRemark)

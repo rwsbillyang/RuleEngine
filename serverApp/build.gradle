@@ -151,12 +151,6 @@ dependencies {
     //implementation("commons-codec:commons-codec:$commonsCodecVersion")
 
 
-
-
-
-    implementation("com.github.rwsbillyang:ktorKit:$ktorKitVersion")
-
-
     implementation "mysql:mysql-connector-java:$mysqlConnectorVersion"
     implementation "com.zaxxer:HikariCP:$HikariCPVersion"
 
@@ -169,7 +163,13 @@ dependencies {
     implementation project(":runtime")
     //implementation "com.github.rwsbillyang.rule:runtime:1.0.0"
 
+    implementation("com.github.rwsbillyang:ktorKit:$ktorKitVersion")
+
+    //only for dev
     //compileOnly "com.github.rwsbillyang:yinyang:1.0.0"
     implementation "com.github.rwsbillyang:yinyang:1.0.0"
+    // https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
+    implementation 'org.xerial:sqlite-jdbc:3.43.0.0'
+
 }
 
