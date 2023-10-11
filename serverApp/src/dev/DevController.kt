@@ -309,8 +309,8 @@ class DevController(val service: AbstractSqlService){
             	"tags"	TEXT,
             	"domain_id"	INTEGER,
             	"level"	INTEGER,
-            	"exclusive"	INTEGER,
-            	"enable"	INTEGER,
+            	"exclusive"	INTEGER NOT NULL,
+            	"enable"	INTEGER NOT NULL,
             	"threshhold"	INTEGER
             ); 
         """.trimIndent()
@@ -324,7 +324,7 @@ class DevController(val service: AbstractSqlService){
             CREATE TABLE `RuleGroup` (
               `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
               `label` TEXT NOT NULL,
-              `exclusive` INTEGER,
+              `exclusive` INTEGER NOT NULL,
               `rule_parent_ids` text TEXT,
               `rule_group_parent_ids` TEXT,
               `rule_children_ids` TEXT,
@@ -332,7 +332,7 @@ class DevController(val service: AbstractSqlService){
               `domain_id` INTEGER,
               `tags` TEXT,
               `remark` TEXT,
-              `enable` INTEGER,
+              `enable` INTEGER NOT NULL,
               `priority` INTEGER,
               `level` INTEGER
             )
