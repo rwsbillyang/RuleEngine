@@ -41,10 +41,22 @@ export const OperandValueMetaEditor: React.FC<{
     value?: OperandValueMeta,
     onChange: (v: OperandValueMeta) => void
 }> = ({ paramType, operandConfig, constantQueryParams, domainId, disabled, value, onChange }) => {
-    const jsonValueClass = operandConfig.typeCode || paramType.code
-    if(!checkJsonValueClass(jsonValueClass)){
-        return <div>Not support json value _class: jsonValueClass, please set it in opCode</div>
+    const typeCode = operandConfig.typeCode || ((operandConfig.selectOptions && operandConfig.selectOptions.length > 0) ? "String" : paramType.code )
+    if(!checkJsonValueClass(typeCode)){
+        return <div>{operandConfig.label+": wrong type code=" +typeCode +", please correct it in opCode table"}</div>
     }
+    //console.log("operandConfig=",operandConfig)
+    console.log(operandConfig.label+": typeCode="+typeCode)
+
+
+    //只是bool类型，不用那么多选择
+    // if(typeCode === "Bool"){
+    //     return <Form.Item label={operandConfig.label} tooltip={operandConfig.tooltip} required={operandConfig.required}>
+    //         <Switch style={{ width: '100%' }} disabled={disabled} checked={value?.jsonValue?.raw === true} onChange={(v)=>{
+    //             onChange({...value, jsonValue:{ _class: typeCode, raw: v }})
+    //         }} />
+    //     </Form.Item>
+    // }
 
 
     const [paramOptions, setParamOptions] = useState<DefaultOptionType[]>()
@@ -253,9 +265,9 @@ export const OperandValueMetaEditor: React.FC<{
                                 const constants: Constant[] = []
                                 let jsonValue
                                 if (multiple) {
-                                    jsonValue = getJsonValueFromArrayArray(constants, multiple, v, jsonValueClass, constantAsyncSelectProps.key)
+                                    jsonValue = getJsonValueFromArrayArray(constants, multiple, v, typeCode, constantAsyncSelectProps.key)
                                 } else {
-                                    jsonValue = getJsonValueFromArray(constants, multiple, v, jsonValueClass, constantAsyncSelectProps.key)
+                                    jsonValue = getJsonValueFromArray(constants, multiple, v, typeCode, constantAsyncSelectProps.key)
                                 }
 
                                 onChange({ ...value, constantIds: v, jsonValue: jsonValue })
@@ -269,7 +281,7 @@ export const OperandValueMetaEditor: React.FC<{
             <JsonValueEditor width="20%"
                 value={value?.jsonValue} //TODO: 即使OperandValueMeta.jsonValue被Cascader的onChange更新，此处也仍是旧值
                 onChange={(v) => { onChange({ ...value, jsonValue: v }) }}
-                type={jsonValueClass}
+                type={typeCode}
                 multiple={multiple === true}
 
                 disabled={disabled ? disabled : value?.valueType !== 'JsonValue'} />

@@ -27,10 +27,12 @@ class TreeNode<T>(
 
 /**
  * data（自己任意定义的类型T）收集器，需提供一个命中的EvalRule到T的转换器
- * 最终结果保存在收集器的resultMap中，它是一个有着指向父子节点的树形结构，而root是其起始节点
+ * 最终结果保存在收集器的resultMap中，它是一个有着指向父子节点的树形结构，
+ * 而root是其起始节点,root中的parents将为空，其children是命中的开始节点
  *
  * @param nodeDataPicker 将当前命中的EvalRule转换为Pair，其中第一个为唯一键值，第二个是自定义的data
  * 两个值将被保存到resultMap中，并构建亲子关系节点
+ *
  * */
 class ResultTreeCollector<T>(
     val nodeDataPicker: (EvalRule)-> Pair<String, T>)
@@ -50,7 +52,7 @@ class ResultTreeCollector<T>(
         if(parentRule == null)
         {
             root.children.add(childKey)
-            println("add top key: $childKey")
+            //println("add top key: $childKey")
         }else{
             val pair2 = nodeDataPicker(parentRule)
             val parentKey = pair2.first
@@ -62,7 +64,7 @@ class ResultTreeCollector<T>(
     }
 
     /**
-     * 对结果进行doSth操作
+     * 对结果进行doSth操作, 从rootNode的children开始遍历
      * */
     fun traverseResult(rootNode: TreeNode<T> = root, doSth: (TreeNode<T>) -> Unit){
         rootNode.children.forEach{

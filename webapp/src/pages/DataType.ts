@@ -308,6 +308,7 @@ export interface RuleQueryParams extends BasePageQuery{
     tags?: string,
     threshhold?: number
     level?:number
+    id?: number
 }
 
 export interface RuleCommon{

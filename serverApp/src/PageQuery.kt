@@ -345,7 +345,8 @@ class RuleQueryParams(
     val enable: Boolean? = null,
     val tags: String? = null,
     val level: Int? = null,
-    val threshhold: Int? = null
+    val threshhold: Int? = null,
+    val id: Int? = null
 ) : IUmiPaginationParams {
     override fun toSqlPagination(): SqlPagination {
         val meta = Meta.rule
@@ -364,7 +365,7 @@ class RuleQueryParams(
                 { sortKey greater lastT }
             }
         }
-
+        val w0: WhereDeclaration? = id?.let { { meta.id eq it } }
         val w1: WhereDeclaration? = if (label != null) {
             { meta.label like "%${label}%" }
         } else null
@@ -377,7 +378,7 @@ class RuleQueryParams(
         val w6: WhereDeclaration? = level?.let { { meta.level eq it } }
         //pageSize为-1时表示该查询条件下的全部数据
         return SqlPagination(sort, pagination.pageSize, (pagination.current - 1) * pagination.pageSize)
-            .addWhere(w1, w2, w6,w3, w4, w5, lastW)
+            .addWhere(w0, w1, w2, w6,w3, w4, w5, lastW)
     }
 
 }

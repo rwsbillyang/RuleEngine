@@ -24,6 +24,12 @@ import { MoveIntoNewParentModal, MoveNodeParam } from "./MoveRuleNode"
 
 const ruleColumns: ProColumns<RuleCommon>[] = [
     {
+        title: "ID",
+        dataIndex: 'id',
+        //hideInForm: true,
+        hideInTable: true
+    },
+    {
         title: '名称',
         dataIndex: 'label',
         formItemProps: mustFill

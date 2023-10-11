@@ -34,6 +34,7 @@ import org.koin.core.component.inject
 import org.komapper.core.dsl.Meta
 import org.komapper.core.dsl.QueryDsl
 import org.komapper.core.dsl.expression.WhereDeclaration
+import org.komapper.core.dsl.operator.desc
 import org.komapper.core.dsl.operator.or
 import org.komapper.core.dsl.query.get
 import org.komapper.core.dsl.query.getNotNull
@@ -80,7 +81,7 @@ class BaseCrudController : KoinComponent {
                     } else null
                     val w3: WhereDeclaration? = if(params.typeId != null) {
                         { Meta.param.typeId eq params.typeId } } else null
-                    val uncategoryParams = service.findAll(Meta.param, andWhere(w1,w2,w3)).onEach { it.toBean(service) }
+                    val uncategoryParams = service.findAll(Meta.param, andWhere(w1,w2,w3), Meta.param.id.desc()).onEach { it.toBean(service) }
                     log.info("uncategoryParams.size=${uncategoryParams.size}")
                     if(uncategoryParams.isNotEmpty()){
                         val unCategory = ParamCategory("未分类", null, params.domainId, -1, null, uncategoryParams)

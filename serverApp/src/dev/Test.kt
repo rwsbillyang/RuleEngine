@@ -19,9 +19,11 @@
 package com.github.rwsbillyang.rule.composer.dev
 
 
+
 import com.github.rwsbillyang.ktorKit.cache.VoidCache
 import com.github.rwsbillyang.ktorKit.db.AbstractSqlService
 import com.github.rwsbillyang.ktorKit.db.SqlDataSource
+import com.github.rwsbillyang.ktorKit.db.SqlLiteHelper
 import com.github.rwsbillyang.rule.composer.*
 import com.github.rwsbillyang.rule.runtime.*
 
@@ -41,7 +43,6 @@ import java.time.LocalDateTime
 
 class MyData(val key:String, val id: Int?, val label: String?, val desc: String?, val remark: String?, val exprRemark: String?)
 class MyBaseCrudService(): AbstractSqlService(VoidCache()){
-    //HikariDataSource(optimizedHikariConfig(dbName,userName?:"root",pwd,host,port)),
     override val dbSource: SqlDataSource
         get() = SqlDataSource("ruleEngineDb", "127.0.0.1", 3306, "root", "123456")
 }
@@ -49,23 +50,23 @@ class MyBaseCrudService(): AbstractSqlService(VoidCache()){
 //若需在IDE中运行测试，需将依赖com.github.rwsbillyang:yinyang从 compileOnly 改为：implementationg
 fun main(){
     val service = MyBaseCrudService()
-   // runTest(service, Zhi.Zi, LocalDateTime.now())
+    //runRuleEval(service, Zhi.Zi, LocalDateTime.now())
+    //runRuleExprCheck(service)
+
     //testSerialize() //sealed class 不能🈶多个层次的继承
-
-
-   // insertZwExt(service)
-   // insertConstants(service)
 
     val sqlLiteHelper = SqlLiteHelper("/Users/bill/git/MingLi/app/src/main/assets/app.db")
     DevController(service).apply {
-        //createGroupTable(sqlLiteHelper)
-        //migrateGroupIntoSqlLite(sqlLiteHelper)
+        //println(upsertZwRRtExt())
+        // insertConstants(service)
 
-        //createRuleTable(sqlLiteHelper)
-        migrateRuleIntoSqlLite(sqlLiteHelper, 596)
+//        //createGroupTable(sqlLiteHelper)
+//        //migrateGroupIntoSqlLite(sqlLiteHelper)
+//
+        createRuleTable(sqlLiteHelper)
+        migrateRuleIntoSqlLite(sqlLiteHelper)
     }
-
-    sqlLiteHelper.close()
+//    sqlLiteHelper.close()
 }
 
 fun extra2RuleCommon(extra: Any?): RuleCommon?{
@@ -80,7 +81,7 @@ fun extra2RuleCommon(extra: Any?): RuleCommon?{
     }
 }
 
-fun runTest(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTime){
+fun runRuleEval(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTime){
 
     val zwPanData = ZwPanData.fromLocalDateTime(
         Gender.Female,
@@ -112,17 +113,23 @@ fun runTest(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTime){
             }
         }
     }
-    val dataProvider: (key: String, keyExtra: String?) -> Any? = {it, keyExtra->
-        when(it){
+    val dataProvider: (key: String, keyExtra: String?) -> Any? = {key, keyExtra->
+        when(key){
             "zwPanData" -> zwPanData
-            "gender" -> zwPanData.gender.ordinal
-            "gongName" -> gongStars.name
+            "currentGong" -> gongStars
             "shenGong" -> zwPanData.gongYuanMapByZhi[zwPanData.shenGong]
             "yearGan" -> zwPanData.fourZhu.year.gan
             "yearZhi" -> zwPanData.fourZhu.year.zhi
+            "gender" -> zwPanData.gender.ordinal
             else -> {
-               println("dataProvider: key=$it, keyExtra=$keyExtra, return key")
-                it
+                when(keyExtra){
+                    GongType.classDiscriminator -> zwPanData.gongYuanMapByName[key]
+                    StarType.classDiscriminator -> key
+                    else -> {
+                        System.err.println("dataProvider: key=$key, keyExtra=$keyExtra, return key")
+                        key
+                    }
+                }
             }
         }
     }
@@ -216,6 +223,42 @@ fun runTest(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTime){
 //    }
 }
 
+fun runRuleExprCheck(service: MyBaseCrudService){
+    val zwPanData = ZwPanData.fromLocalDateTime(
+        Gender.Female,
+        LocalDateTime.now(),
+        LunarLeapMonthAdjustMode.Whole)
+
+    val gongStars = zwPanData.gongYuanMapByName["命宫"]!!
+
+    val dataProvider: (key: String, keyExtra: String?) -> Any? = { key, keyExtra ->
+        when (key) {
+            "zwPanData" -> zwPanData
+            "currentGong" -> gongStars
+            "shenGong" -> zwPanData.gongYuanMapByZhi[zwPanData.shenGong]
+            "yearGan" -> zwPanData.fourZhu.year.gan
+            "yearZhi" -> zwPanData.fourZhu.year.zhi
+            "gender" -> zwPanData.gender.ordinal
+            else -> {
+                when (keyExtra) {
+                    GongType.classDiscriminator -> zwPanData.gongYuanMapByName[key]
+                    StarType.classDiscriminator -> key
+                    else -> {
+                        System.err.println("dataProvider: key=$key, keyExtra=$keyExtra")
+                        throw Exception("Not found key in dataProvider: key=$key, keyExtra=$keyExtra")
+                    }
+                }
+            }
+        }
+    }
+    val errList: MutableList<Pair<Int?, String?>> = mutableListOf()
+    DevController(service).checkRuleExprValid(dataProvider, errList, 596)
+    errList.forEach {
+        println("id= " + it.first + ": " + it.second)
+    }
+    println(errList.joinToString(",") { it.first.toString() })
+}
+
 fun testSerialize(){
     val json = "{\"_class\":\"Int\",\"key\":\"pos|紫微\",\"op\":\"in\",\"set\":{\"valueType\":\"Constant\",\"value\":[0,6]}}"
     val expr:LogicalExpr = MySerializeJson.decodeFromString(json)
@@ -225,3 +268,5 @@ fun testSerialize(){
     val expr2:LogicalExpr = MySerializeJson.decodeFromString(json2)
     System.out.println("testSerialize:" + (expr2 is GongExpr))
 }
+
+

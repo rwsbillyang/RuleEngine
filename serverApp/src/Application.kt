@@ -40,7 +40,7 @@ val MySerializeJson = Json {
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) { //"X-Auth-uId", "X-Auth-oId", "X-Auth-unId","X-Auth-CorpId","Authorization"
-    // java -jar -DwithSPA=../webapp/www/ build/libs/RuleComposer-1.0.0-all.jar
+    // java -jar -Ddev.mode=prod -DwithSPA=../webapp/www/ build/libs/RuleComposer-1.0.0-all.jar
     // java -jar -DwithSPA=../webapp/www/ -DdbHost=127.0.0.1 -DdbPort=3306 -DdbName=ruleEngineDb -DdbUser=root -DdbPwd=123456 -DdbHost=127 build/libs/RuleComposer-1.0.0-all.jar
     // nohup java -jar -DwithSPA=../webapp/www/ -DdbHost=127.0.0.1 -DdbPort=3306 -DdbName=ruleEngineDb -DdbUser=root -DdbPwd=123456 -DdbHost=127 build/libs/RuleComposer-1.0.0-all.jar > log/err.txt 2>&1 &
     val dbHost = System.getProperty("dbHost") ?: "127.0.0.1"

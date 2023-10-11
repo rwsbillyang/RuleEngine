@@ -10,6 +10,7 @@ import { Space, message } from "antd";
 import { operandConfigMapStr2List, type2Both, typeCode2Id } from "../utils";
 
 
+
 const ExpressionKeyPrefix = "basicExpression/domain/"
 const ParamKeyPrefix = "param/domain/"
 const ParamCategoryKeyPrefix = "paramCategoryWithChildren/domain/"
@@ -61,6 +62,9 @@ export const BasicExprMetaEditModal: React.FC<{
   //console.log("BasicExprMetaEditModal, meta=", meta)
   //console.log("BasicExprMetaEditModal, newMeta=", newMeta)
 
+
+
+
   return <ModalForm
     formRef={formRef}
     layout="horizontal"
@@ -72,7 +76,7 @@ export const BasicExprMetaEditModal: React.FC<{
       destroyOnClose: false,
     }}
     onValuesChange={(v) => {
-       console.log("onValuesChange:" + JSON.stringify(v))
+       //console.log("onValuesChange:" + JSON.stringify(v))
 
       const form = formRef?.current
 
@@ -105,13 +109,14 @@ export const BasicExprMetaEditModal: React.FC<{
       if (v.paramId && newMeta.paramId != v.paramId) { //paramId改变
         // console.log("paramId changed...")
         const param = getParamById(v.paramId, domainId, newMeta.param)
-
         newMeta.paramId = v.paramId
         newMeta.param = param
         newMeta.paramTypeId = param?.paramType?.id
+        newMeta.paramType = param?.paramType
         newMeta.mapKey = param?.mapKey
         newMeta.extra = param?.extra
         newMeta.opId = undefined
+        newMeta.op = undefined
         newMeta.operandMetaObj = {}
 
         form?.setFieldValue("paramTypeId", param?.paramType?.id)
@@ -134,15 +139,17 @@ export const BasicExprMetaEditModal: React.FC<{
         newMeta.paramType = paramType
         newMeta.paramTypeId = v.id
 
-        newMeta.opId = undefined
-        newMeta.operandMetaObj = {}
-
-        newMeta.param = undefined
-        newMeta.paramId = undefined
         form?.setFieldValue("exprId", undefined)
         form?.setFieldValue("paramId", undefined)
         form?.setFieldValue("opId", undefined)
+        
+        newMeta.paramId = undefined
+        newMeta.param = undefined
+        
+        newMeta.opId = undefined
+        newMeta.op = undefined
 
+        newMeta.operandMetaObj = {}
         setNewExprId(undefined)
         setOpTooltip(undefined)
         setOperandConfigList(undefined)
@@ -150,19 +157,19 @@ export const BasicExprMetaEditModal: React.FC<{
 
       //操作符切换
       if (v.opId && newMeta.opId != v.opId) {
-        // console.log("opId changed...")
-        const op = getOpcodeById(v.opId, newMeta.param?.paramType.id || newMeta.paramType?.id, newMeta)
-        newMeta.opId = v.opId
-        newMeta.op = op
-
-        newMeta.operandMetaObj = {}
-        const list = operandConfigMapStr2List(op?.operandConfigMapStr)?.list
-        list?.forEach((e) => {
-          const v = defaultOperandValueMeta(e)
-          if (v) newMeta.operandMetaObj[e.name] = v
-        })
-        setOperandConfigList(list)
-        setOpTooltip(op?.remark)
+           // console.log("opId changed...")
+           const op = getOpcodeById(v.opId, newMeta.param?.paramType.id || newMeta.paramType?.id, newMeta)
+           newMeta.opId = v.opId
+           newMeta.op = op
+     
+           newMeta.operandMetaObj = {}
+           const list = operandConfigMapStr2List(op?.operandConfigMapStr)?.list
+           list?.forEach((e) => {
+             const v = defaultOperandValueMeta(e)
+             if (v) newMeta.operandMetaObj[e.name] = v
+           })
+           setOperandConfigList(list)
+           setOpTooltip(op?.remark)
       }
 
     }}
@@ -183,6 +190,7 @@ export const BasicExprMetaEditModal: React.FC<{
       newMeta._class = values._class
 
       if (!newMeta.paramTypeId || !newMeta.mapKey) {
+        console.log("newMeta=", newMeta)
         message.warning("没有选择操作数：类型或者key")
         return false
       }
@@ -190,10 +198,12 @@ export const BasicExprMetaEditModal: React.FC<{
       if(!newMeta.paramType) newMeta.paramType = getParamTypeById(newMeta.paramTypeId)
 
       if (!newMeta.opId) {
+        console.log("newMeta=", newMeta)
         message.warning("没有选择操作符")
         return false
       }
       if (!oprandConfigList || oprandConfigList.length === 0) {
+        console.log("newMeta=", newMeta)
         message.warning("没有操作数配置")
         return false
       }
@@ -303,7 +313,7 @@ export const BasicExprMetaEditModal: React.FC<{
             request={() => asyncSelectProps2Request<ParamType, ParamTypeQueryParams>({
               key: AllParamTypeKey,//不提供key，则不缓存
               url: `${Host}/api/rule/composer/list/paramType`,
-              query: { pagination: { pageSize: -1, sKey: "id", sort: -1 } },//pageSize: -1为全部加载
+              query: { pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
               convertFunc: (item) => { return { label: item.label, value: item.id } }
             })} />
           <ProFormText
@@ -608,24 +618,3 @@ const getConstantQueryParams = (
   return constantQueryParams
 }
 
-/**
- * 调整类型，配置中指定了类型，则使用配置的，否则fallback到变量类型
- */
-// const adjustParamType = (operandConfig: OperandConfig, param?: Param, paramType?: ParamType) => {
-//   if (operandConfig.typeCode) {//配置中指定了类型，则使用配置的，否则fallback到变量类型
-//     return getParamTypeById(typeCode2Id(operandConfig.typeCode), param?.paramType || paramType)
-//   } else{
-//     const t = param?.paramType || paramType
-//     if(t){
-//       //必须是系统类型，扩展和自定义类型不支持
-//      if(checkJsonValueClass(t.code)){
-//       return param?.paramType || paramType
-//      }else{
-//       console.warn("wrong type code")
-//      }
-//     }else{
-//       console.warn("no param type code")
-//     }
-//     return undefined 
-//   }
-// }

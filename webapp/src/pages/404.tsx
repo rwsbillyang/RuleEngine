@@ -9,4 +9,3 @@ export const NoFoundPage: React.FC = () => (
     subTitle="Sorry, the page you visited does not exist."
   />
 );
-

@@ -180,7 +180,7 @@ export const OpcodeTable: React.FC = () => {
                 key: "paramType/type/"+params.typeIsSet,//列表页中是全部加载，此处也是全部加载
                 url: `${Host}/api/rule/composer/list/paramType`,
                 query: { isSys: true, type: params.typeIsSet ? "Collection" : undefined, pagination: { pageSize: -1, sKey: "id", sort: -1 } },//pageSize: -1为全部加载
-                convertFunc: (item) => { return { label: item.label, value: item.id } }
+                convertFunc: (item) => { return { label: item.label, value: item.code } }
               })
             },
             {

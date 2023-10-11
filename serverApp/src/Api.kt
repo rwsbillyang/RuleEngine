@@ -281,14 +281,23 @@ fun Routing.composerApi() {
             else
                 call.respondBoxOK(ruleTreeController.moveRuleCommonIntoNewParent(param))
         }
+    }
 
+    val isDev = (System.getProperty("dev.mode") ?: "dev") == "dev"
+    if(isDev){
+        route("/api/dev"){
+            //初始化数据库： http://localhost:18000/api/dev/initDb
+            //truncate table `t_param_type`;  truncate table `t_operator`;
+            get("/initDb"){
+                call.respondBoxOK(DevController(crudController.service).initDictDataInDb())
+            }
 
-
-        //初始化数据库： http://localhost:18000/api/rule/composer/initDb
-        //truncate table `t_param_type`;  truncate table `t_operator`;
-        get("/initDb"){
-            call.respondBoxOK(DevController(crudController.service).initDictDataInDb())
+            //http://localhost:18000/api/dev/setupZw
+            get("/setupZw"){
+                call.respondBoxOK(DevController(crudController.service).upsertZwRRtExt())
+            }
         }
     }
+
 }
 

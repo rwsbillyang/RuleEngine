@@ -24,6 +24,8 @@ import com.github.rwsbillyang.rule.runtime.LogicalExpr
 import kotlinx.serialization.*
 import org.komapper.annotation.*
 import org.komapper.core.dsl.Meta
+import org.komapper.core.dsl.expression.SortExpression
+import org.komapper.core.dsl.operator.desc
 
 
 /**
@@ -185,11 +187,11 @@ data class ParamCategory(
     fun toBean(service: BaseCrudService){
         domain = domainId?.let{service.findOne(Meta.domain, {Meta.domain.id eq it}, "domain/${it}")}
     }
-    fun setupChildren(service: BaseCrudService){
+    fun setupChildren(service: BaseCrudService, sort: SortExpression = Meta.param.id.desc()){
         children = service.findAll(Meta.param,  {
             Meta.param.categoryId eq id
             Meta.param.domainId eq domainId
-        } ).onEach { it.toBean(service) }
+        }, sort).onEach { it.toBean(service) }
     }
 }
 
@@ -279,7 +281,7 @@ data class Rule(
     val threshhold: Int? = null, //percent
 
     val exprId: Int? = null,//if exprId not null, use it 如果exprId非空，则exprStr和metaStr来自Expression记录；否则由前端编辑时提供
-    val exprStr: String? = null,//json string of LogicalExpr
+    val exprStr: String,//json string of LogicalExpr
     val metaStr: String? = null,//json string of ExpressionMeta
 
     val thenAction: String? = null,// if do
@@ -345,7 +347,7 @@ data class Rule(
         return Pair(list, null)
     }
 
-    fun getExpr() = if(exprStr != null) MySerializeJson.decodeFromString<LogicalExpr>(exprStr) else null
+    fun getExpr() = MySerializeJson.decodeFromString<LogicalExpr>(exprStr)
     fun getExprMeta() = if(metaStr != null) MySerializeJson.decodeFromString<ExpressionMeta>(metaStr) else null
 }
 

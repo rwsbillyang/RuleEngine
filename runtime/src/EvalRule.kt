@@ -61,7 +61,7 @@ class EvalRule(
                      return false
                  }
              }catch (e: Exception){
-                 System.err.println(e.message)
+                 System.err.println(e.message + "entity=" + entity)
                  return false
              }
          }else{
