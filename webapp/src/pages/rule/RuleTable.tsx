@@ -18,7 +18,7 @@ import { RuleEditModal } from "./RuleEdit"
 import { Dropdown, message } from "antd"
 import { RuleGroupEditModal, initialValuesRuleGroup, rubleGroupTableProps } from "./RuleGroupTable"
 import { deleteRuleOrGroup } from "./RuleCommon"
-import { basicMeta2Expr, complexMeta2Expr } from "../utils"
+import { basicMeta2Expr, complexMeta2Expr, removeBasicExpressionMetaFields, removeComplexExpressionMetaFields } from "../utils"
 import { ArrayUtil } from "@rwsbillyang/usecache"
 import { MoveIntoNewParentModal, MoveNodeParam } from "./MoveRuleNode"
 
@@ -126,8 +126,10 @@ export const rubleTableProps = {
             e.metaStr = JSON.stringify(e.meta)
             if (e.meta["metaList"]) {
                 e.expr = complexMeta2Expr(e.meta)
+                removeComplexExpressionMetaFields(e.meta)
             } else {
                 e.expr = basicMeta2Expr(e.meta)
+                removeBasicExpressionMetaFields(e.meta)
             }
             e.exprStr = JSON.stringify(e.expr)
         }

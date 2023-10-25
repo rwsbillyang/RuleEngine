@@ -29,9 +29,7 @@ import com.github.rwsbillyang.rule.runtime.*
 import com.github.rwsbillyang.yinyang.core.Gan
 import com.github.rwsbillyang.yinyang.core.Gender
 import com.github.rwsbillyang.yinyang.core.Zhi
-import com.github.rwsbillyang.yinyang.ziwei.GongStars
 import com.github.rwsbillyang.yinyang.ziwei.ZwConstants
-import com.github.rwsbillyang.yinyang.ziwei.ZwPanData
 import com.github.rwsbillyang.yinyang.ziwei.rrt.GongOpEnum
 import com.github.rwsbillyang.yinyang.ziwei.rrt.GongType
 import com.github.rwsbillyang.yinyang.ziwei.rrt.StarOpEnum
@@ -40,7 +38,9 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import org.komapper.core.dsl.Meta
 import org.komapper.core.dsl.QueryDsl
-import java.lang.System.exit
+import ziwei.rrt.ZwPanOpEnum
+import ziwei.rrt.ZwPanType
+
 
 class DevController(val service: AbstractSqlService){
     /**
@@ -98,69 +98,57 @@ class DevController(val service: AbstractSqlService){
 
 
     /**
-     * 添加rule runtime extension: Opcode + ParamType
+     * 添加（若有旧值则更新）rule runtime extension: Opcode + ParamType
      * */
     fun upsertZwRRtExt(): String{
         val domainId = 1
 
-        val map = mutableMapOf<String, Opcode>()
-        //将系统内置支持的操作符写入数据库，并构建map
-        StarOpEnum.values().forEach {
-            if(map[it.name] == null){
-                val old = service.findOne(Meta.opcode, {Meta.opcode.code eq it.name})
-                try {
-                    val operandMap = if(old?.operandConfigMapStr != null){
-                        val oldOperandCfgMap:Map<String, OperandConfig> = MySerializeJson.decodeFromString(old.operandConfigMapStr)
-                        mergeOperandCfgConstantIdsToNew(oldOperandCfgMap, it.operandMap.toMutableMap())
-                    } else it.operandMap
-                    map[it.name] = service.save(Meta.opcode, Opcode(it.label, it.name, Opcode.Ext,
-                        MySerializeJson.encodeToString(operandMap),false, domainId, it.remark, old?.id),
-                        old == null)
-                }catch (e: Exception){
-                    System.err.println("old="+old)
-                    return "Error: " + old
-                }
-            }
-        }
-
-        GongOpEnum.values().forEach {
-            if(map[it.name] == null){
-                val old = service.findOne(Meta.opcode, {Meta.opcode.code eq it.name})
-                try {
-                    val operandMap = if(old?.operandConfigMapStr != null){
-                        val oldOperandCfgMap:Map<String, OperandConfig> = MySerializeJson.decodeFromString(old.operandConfigMapStr)
-                        mergeOperandCfgConstantIdsToNew(oldOperandCfgMap, it.operandMap.toMutableMap())
-                    } else it.operandMap
-                    map[it.name] = service.save(Meta.opcode, Opcode(it.label, it.name, Opcode.Ext,
-                        MySerializeJson.encodeToString(operandMap),false, domainId, it.remark, old?.id),
-                        old == null)
-                }catch (e: Exception){
-                    System.err.println("old="+old)
-                    return "Error: " + old
-                }
-            }
-        }
+        upsertTypeAndOps(StarType.label, StarType.code, StarType.supportOperators(),
+            domainId, StarOpEnum.values().map { Pair(it.name, it) }
+        )
+        upsertTypeAndOps(GongType.label, GongType.code, GongType.supportOperators(),
+            domainId, GongOpEnum.values().map { Pair(it.name, it) }
+        )
+        upsertTypeAndOps(
+            ZwPanType.label, ZwPanType.code, ZwPanType.supportOperators(),
+            domainId, ZwPanOpEnum.values().map { Pair(it.name, it) }
+        )
 
         //构建内置数据类型并插入库
-        val list = listOf(
-            ParamType(
-                StarType.label,
-                StarType.code,
-                StarType.supportOperators().mapNotNull { map[it]?.id }.joinToString(","),
-                ParamType.Ext, false, domainId, findTypeByCode(StarType.code)),
-            ParamType(
-                GongType.label,
-                GongType.code,
-                GongType.supportOperators().mapNotNull { map[it]?.id}.joinToString(","),
-                ParamType.Ext, false, domainId,findTypeByCode(GongType.code)),
-        )
-        list.forEach {
-            service.save(Meta.paramType, it, it.id == null)
-        }
-        //val types = service.batchSave(Meta.paramType, list, true)
-        //println("types= ${MySerializeJson.encodeToString(types)}" )
         println("upsert zw rrt ext done" )
         return "Done"
+    }
+
+    private fun upsertTypeAndOps(paramTypeLabel:String, paramTypeCode: String,
+                                 paramTypeLabelSupportOperators: List<String>,
+                                 domainId: Int, enumOps: List<Pair<String,IExtOpEnum>>): String{
+        val map = mutableMapOf<String, Opcode>()
+        //将系统内置支持的操作符写入数据库，并构建map
+        //若操作符code相同则被后面的type覆盖更新
+        enumOps.forEach {
+            val old = service.findOne(Meta.opcode, {
+                Meta.opcode.code eq it.first
+                Meta.opcode.type eq paramTypeCode //StarType.classDiscriminator
+            })
+            try {
+                //将旧配置中的值域等信息提取出来，不覆盖掉
+                val operandCfgMap = if(old?.operandConfigMapStr != null){
+                    val oldOperandCfgMap:Map<String, OperandConfig> = MySerializeJson.decodeFromString(old.operandConfigMapStr)
+                    mergeOperandCfgConstantIdsToNew(oldOperandCfgMap, it.second.operandCfgMap.toMutableMap())
+                } else it.second.operandCfgMap
+                map[it.first] = service.save(Meta.opcode, Opcode(it.second.label, it.first, paramTypeCode,
+                    MySerializeJson.encodeToString(operandCfgMap),false, domainId, it.second.remark?:paramTypeCode, old?.id),
+                    old == null)
+            }catch (e: Exception){
+                System.err.println("old=$old")
+                return "Error: $old"
+            }
+        }
+
+        val paramType = ParamType(paramTypeLabel, paramTypeCode, paramTypeLabelSupportOperators.mapNotNull { map[it]?.id}.joinToString(","),
+            ParamType.Ext, false, domainId, findParamTypeIdByCode(paramTypeCode))
+        service.save(Meta.paramType, paramType, paramType.id == null)
+        return "Done, upsert"
     }
 
     /**
@@ -180,7 +168,7 @@ class DevController(val service: AbstractSqlService){
     }
 
 
-    private inline fun findTypeByCode(code: String) =
+    private inline fun findParamTypeIdByCode(code: String) =
         service.findOne(Meta.paramType,{ Meta.paramType.code eq code})?.id
 
 
@@ -188,7 +176,7 @@ class DevController(val service: AbstractSqlService){
     fun insertConstants(){
         val domainId = 1
 
-        val intypeId = findTypeByCode(IType.Type_Int)?:-1
+        val intypeId = findParamTypeIdByCode(IType.Type_Int)?:-1
         val gan = Constant("天干", intypeId, MySerializeJson.encodeToString(IntEnumValue(Gan.nameList.mapIndexed{ i, v -> SelectOption(v, i) })), true)
         val zhi = Constant("地支", intypeId, MySerializeJson.encodeToString(IntEnumValue(Zhi.nameList.mapIndexed{ i, v -> SelectOption(v, i) })), true)
         val gender = Constant("性别", intypeId, MySerializeJson.encodeToString(Gender.values().map{ SelectOption(it.label, it.ordinal) }), true)
@@ -197,7 +185,7 @@ class DevController(val service: AbstractSqlService){
         val ret1 = service.batchSave(Meta.constant, listOf(gan, zhi, gender, bright), true)
         println("ret1= ${MySerializeJson.encodeToString(ret1)}" )
 
-        val stringSetTypeId = findTypeByCode(IType.Type_StringSet)?:-1
+        val stringSetTypeId = findParamTypeIdByCode(IType.Type_StringSet)?:-1
         val list = mapOf(
             "十二宫" to Pair(ZwConstants.twelveGongName.toSet(), "逆时针"),
             "正曜" to Pair(ZwConstants.Zheng14Stars, null),

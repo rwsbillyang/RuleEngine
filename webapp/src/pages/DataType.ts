@@ -172,7 +172,7 @@ export interface Param extends LabeldBean {
     paramCategory?: ParamCategory,
 
     valueScopeIds?: string, //值范围来自哪些常量的id
-    valueScopes?: Constant[],
+    valueScopes?: Constant[],//临时值
     constantIds?: number[] //临时保存的值
 }
 export interface ParamQueryParams extends BasePageQuery {
@@ -238,10 +238,6 @@ interface ExpressionMetaBase{
     op?: Opcode,
 }
 export interface BasicExpressionMeta extends ExpressionMetaBase{
-    //_class: string, //'Bool' | 'Int' | 'Double' | 'Long' | 'String' ....
-    // opId?: number,
-    // op?: Opcode,
-
     paramId?: number | number[],//与mapKey&paramTypeId二选一
     param?: Param,
 

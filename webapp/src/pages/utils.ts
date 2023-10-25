@@ -248,6 +248,35 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
     return undefined
 }
 
+//数据量过大，尤其某些复合表达式数据量超过字段存储空间
+export const removeBasicExpressionMetaFields = (meta: BasicExpressionMeta) => {
+    if(meta.param){
+        delete meta.param.domain
+        delete meta.param.domainId
+        delete meta.param.remark
+        delete meta.param.paramCategory
+
+        delete meta.param.paramType.domain
+        delete meta.param.paramType.domainId
+        delete meta.param.paramType.supportOps
+    }
+    if(meta.paramType){
+        delete meta.paramType.domain
+        delete meta.paramType.domainId
+        delete meta.paramType.supportOps
+    } 
+}
+//数据量过大，尤其某些复合表达式数据量超过字段存储空间
+export const removeComplexExpressionMetaFields = (meta: ComplexExpressionMeta) => {
+    meta.metaList.forEach((e) => {
+        if (e._class === "Complex") {
+            removeComplexExpressionMetaFields(e as ComplexExpressionMeta)
+        } else {
+            removeBasicExpressionMetaFields(e as BasicExpressionMeta)
+        }
+    })
+}
+
 // const extractJsonValue = (jsonValue?: JsonValue) => {
 //     if (!jsonValue || jsonValue.raw === undefined) return undefined
 //     const value = jsonValue.raw
