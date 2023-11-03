@@ -168,7 +168,7 @@ class DevController(val service: AbstractSqlService){
     }
 
 
-    private inline fun findParamTypeIdByCode(code: String) =
+    private fun findParamTypeIdByCode(code: String) =
         service.findOne(Meta.paramType,{ Meta.paramType.code eq code})?.id
 
 
@@ -190,7 +190,7 @@ class DevController(val service: AbstractSqlService){
             "十二宫" to Pair(ZwConstants.twelveGongName.toSet(), "逆时针"),
             "正曜" to Pair(ZwConstants.Zheng14Stars, null),
             "辅佐曜" to Pair(ZwConstants.FuZuoStars, null),
-            "四煞" to Pair(ZwConstants.ShaStars, ""),
+            "四煞" to Pair(ZwConstants.FourShaStars, ""),
             "空劫" to Pair(ZwConstants.KongJieStars, null),
             "化曜" to Pair(ZwConstants.FourHua, null),
             "杂曜" to Pair(ZwConstants.ZaStars, null),
@@ -200,10 +200,10 @@ class DevController(val service: AbstractSqlService){
             "桃花诸曜" to Pair(ZwConstants.TaoHuaStars, "廉贞贪狼虽有性质"),
             "文曜" to Pair(ZwConstants.WenStars, null),
             "科名诸曜" to Pair(ZwConstants.KeMingStars, "文曜加上三台八座,恩光天贵, 台辅封诰,天官天福八曜"),
-            "博士12神" to Pair(ZwConstants.BoShi12Stars, null),
-            "长生12神" to Pair(ZwConstants.ZhangSheng12Stars, null),
-            "岁前12星" to Pair(ZwConstants.SuiQian12Stars, null),
-            "将前12星" to Pair(ZwConstants.JiangQian12Stars, null),
+            "博士12神" to Pair(ZwConstants.BoShi12Stars.toSet(), null),
+            "长生12神" to Pair(ZwConstants.ZhangSheng12Stars.toSet(), null),
+            "岁前12星" to Pair(ZwConstants.SuiQian12Stars.toSet(), null),
+            "将前12星" to Pair(ZwConstants.JiangQian12Stars.toSet(), null),
         ).map {
             Constant(it.key, stringSetTypeId,
                 MySerializeJson.encodeToString(StringSetValue(it.value.first)), remark = it.value.second, domainId = domainId)

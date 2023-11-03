@@ -88,7 +88,7 @@ fun runRuleEval(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTim
         dateTime,
         LunarLeapMonthAdjustMode.Whole)
 
-    val gongStars = zwPanData.gongYuanMapByName["命宫"]!!
+    val gongStars = zwPanData.getGongStarsByName("命宫")
     println("====check gongStars: ${gongStars.name}======")
 
     val dataPicker: (key: String, keyExtra: String?) -> Any? = {it, keyExtra->
@@ -104,7 +104,7 @@ fun runRuleEval(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTim
                 "zwPanData" -> zwPanData
                 "gender" -> zwPanData.gender.ordinal
                 "gongName" -> gongStars.name
-                "zhengYao" -> gongStars.zheng14Stars.toSet()
+                "zhengYao" -> gongStars.zheng14Stars?.toSet()
                 "gongZhi" -> gongStars.zhi
                 else -> {
                     System.err.println("not support key=$it, please check")
@@ -117,13 +117,13 @@ fun runRuleEval(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTim
         when(key){
             "zwPanData" -> zwPanData
             "currentGong" -> gongStars
-            "shenGong" -> zwPanData.gongYuanMapByZhi[zwPanData.shenGong]
+            "shenGong" -> zwPanData.getGongStarsByZhi(zwPanData.shenGong)
             "yearGan" -> zwPanData.fourZhu.year.gan
             "yearZhi" -> zwPanData.fourZhu.year.zhi
             "gender" -> zwPanData.gender.ordinal
             else -> {
                 when(keyExtra){
-                    GongType.classDiscriminator -> zwPanData.gongYuanMapByName[key]
+                    GongType.classDiscriminator -> zwPanData.getGongStarsByName(key)
                     StarType.classDiscriminator -> key
                     else -> {
                         System.err.println("dataProvider: key=$key, keyExtra=$keyExtra, return key")
@@ -229,19 +229,19 @@ fun runRuleExprCheck(service: MyBaseCrudService){
         LocalDateTime.now(),
         LunarLeapMonthAdjustMode.Whole)
 
-    val gongStars = zwPanData.gongYuanMapByName["命宫"]!!
+    val gongStars = zwPanData.getGongStarsByName("命宫")
 
     val dataProvider: (key: String, keyExtra: String?) -> Any? = { key, keyExtra ->
         when (key) {
             "zwPanData" -> zwPanData
             "currentGong" -> gongStars
-            "shenGong" -> zwPanData.gongYuanMapByZhi[zwPanData.shenGong]
+            "shenGong" -> zwPanData.getGongStarsByZhi(zwPanData.shenGong)
             "yearGan" -> zwPanData.fourZhu.year.gan
             "yearZhi" -> zwPanData.fourZhu.year.zhi
             "gender" -> zwPanData.gender.ordinal
             else -> {
                 when (keyExtra) {
-                    GongType.classDiscriminator -> zwPanData.gongYuanMapByName[key]
+                    GongType.classDiscriminator -> zwPanData.getGongStarsByName(key)
                     StarType.classDiscriminator -> key
                     else -> {
                         System.err.println("dataProvider: key=$key, keyExtra=$keyExtra")
@@ -265,7 +265,7 @@ fun testSerialize(){
     System.out.println("testSerialize:" + (expr is IntExpression))
 
     val json2 = "{\"_class\":\"GongExpr\",\"key\":\"pos|紫微\",\"op\":\"isVip\"}"
-    val expr2:LogicalExpr = MySerializeJson.decodeFromString(json2)
+    val expr2:IExtExpr = MySerializeJson.decodeFromString(json2)
     System.out.println("testSerialize:" + (expr2 is GongExpr))
 }
 
