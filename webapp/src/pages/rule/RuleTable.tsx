@@ -16,11 +16,12 @@ import { defaultProps, mustFill } from "../moduleTableProps"
 
 import { RuleEditModal } from "./RuleEdit"
 import { Dropdown, message } from "antd"
-import { RuleGroupEditModal, initialValuesRuleGroup, rubleGroupTableProps } from "./RuleGroupTable"
+import { RuleGroupEditModal, initialValuesRuleGroup, rubleGroupTableProps, statusOptions } from "./RuleGroupTable"
 import { deleteRuleOrGroup } from "./RuleCommon"
 import { basicMeta2Expr, complexMeta2Expr, removeBasicExpressionMetaFields, removeComplexExpressionMetaFields } from "../utils"
 import { ArrayUtil } from "@rwsbillyang/usecache"
 import { MoveIntoNewParentModal, MoveNodeParam } from "./MoveRuleNode"
+
 
 const ruleColumns: ProColumns<RuleCommon>[] = [
     {
@@ -58,7 +59,9 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
 
     {
         title: '状态',
-        valueType: "switch",
+        valueType: "select",
+        //valueEnum: {0: "禁用", 1: "可用"},
+        fieldProps:{ options: statusOptions },
         dataIndex: 'enable',
     },
     {
@@ -114,9 +117,9 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
 
 
 export const RuleName = "rule"//typedId以此开头
-export const initialValueRule: Partial<Rule> = { enable: true, priority: 50, threshhold: 100, level: 0 }
+export const initialValueRule: Partial<Rule> = { enable: 1, exclusive: 0, priority: 50, threshhold: 100, level: 0 }
 export const rubleTableProps = {
-    ...defaultProps(RuleName),
+    ...defaultProps(RuleName, false),
     idKey: "typedId",
     editForm: (e) => '/rule/editRule',
     transformBeforeSave: (e) => { //props.editConfig.transform, transform(modify shape) before save

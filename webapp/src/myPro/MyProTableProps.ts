@@ -41,7 +41,7 @@ export interface MyProTableProps<T extends BaseRecord, Q extends BasePageQuery> 
   transformBeforeSave?: (data: T) => T | undefined //提提交保存前对提交的数据进行修改变换
   idKey?: string //primary key, _id for mongoDB doc, id for sql record
   cacheKey?: string //不同的搜索条件initialQuery，应给出不同的缓存键值，如： appId+"/fan/"+scene，否则可能共用列表值
-
+  name: string //cacheKey 可能为空，而搜索条件依赖于cacheKey，当cacheKey为空时需要使用name区别
 
   formColumns?: ProFormColumnsType<T>[] //特殊情形下，使用单独的配置
 }

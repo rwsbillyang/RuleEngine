@@ -300,7 +300,7 @@ export interface OperandValue {
 export interface RuleQueryParams extends BasePageQuery{
     label?: string,
     domainId?: number,
-    enable?: boolean,
+    enable?: number,
     tags?: string,
     threshhold?: number
     level?:number
@@ -318,12 +318,12 @@ export interface RuleCommon{
     label?: string,
     priority?: number ,
     remark?: string,
-    enable: boolean ,
+    enable: number ,
     tags?: string, 
     domainId?: number,
     domain?: Domain, //前端列表数据需要
     children?: RuleCommon[],
-    exclusive: boolean,
+    exclusive: number,
     description?:string
 }
 
@@ -336,7 +336,7 @@ export interface Rule extends BaseRecord {
     remark?: string,
     description?:string,
     exprRemark?: string,//对表达式的备注说明
-    enable: boolean // default true,
+    enable: number // default true,
     
     tags?: string,
     tagList?: string[] //only for front end
@@ -363,7 +363,7 @@ export interface Rule extends BaseRecord {
     ruleGroupParentIds?: string,// json string of RuleGroup.id List,后端维护该值，前端不做任何变动， insert one when create a child in front end
     
 
-    exclusive?: boolean // default false,
+    exclusive?: number // default false,
     //ruleParentIdList?: string[], //only for frontend
     //ruleGroupParentIdList?: string[]//only for frontend
 
@@ -376,16 +376,15 @@ export interface Rule extends BaseRecord {
 export interface RuleGroupQueryParams extends BasePageQuery{
     label?: string,
     domainId?: number,
-    enable?: boolean
+    enable?: number
     level?:0
 }
 export interface RuleGroup extends BaseRecord {
     id: number, //md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
     level: number
     label: string,
-    exclusive: boolean // default true,
-
-    enable: boolean // default true,
+    exclusive: number // default true,
+    enable: number // default true,
     
     tags?: string,
     tagList?: string[] // only for front end

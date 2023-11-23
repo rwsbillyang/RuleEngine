@@ -35,6 +35,8 @@ export const RuleEditModal: React.FC<{
 
     const [condition, setCondition] = useState<{ exprId, meta }>({ exprId: record?.exprId, meta: record?.meta })
 
+    const options = [{value:0, label: "关闭"}, {value:1, label: "打开"}]
+    
     return <ModalForm<Rule> layout="horizontal" initialValues={record}
         title="编辑规则"
         trigger={isAdd ? (currentRow ? <span>子规则</span> : <Button type="primary">新建</Button>) : <a key="editLink">编辑</a>}
@@ -77,8 +79,8 @@ export const RuleEditModal: React.FC<{
         </ProForm.Group>
 
         <ProForm.Group>
-         <ProFormSwitch width="xs" name={"exclusive"} label="排他性" />
-            <ProFormSwitch width="xs" name={"enable"} label="状态" />
+            <ProFormSelect width="xs" name={"exclusive"} fieldProps={{ options: options }} label="排他性" />
+            <ProFormSelect width="xs" name={"enable"} fieldProps={{ options: options }}  label="状态" />
             <ProFormDigit width="xs" name={"priority"} label="优先级" />
             <ProFormDigit width="xs" name={"threshhold"} label="可信度" />
         </ProForm.Group>

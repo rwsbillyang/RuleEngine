@@ -22,7 +22,7 @@ import { ArrayUtil } from "@rwsbillyang/usecache"
 import { MoveIntoNewParentModal, MoveNodeParam } from "./MoveRuleNode"
 
 
-
+export const statusOptions = [{value:0, label: "关闭"}, {value:1, label: "打开"}]
 
 const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup> = 
     [
@@ -56,14 +56,18 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
         {
             title: '排他性',
             tooltip: "任意一个rule的条件成立则退出",
-            valueType: "switch",
+            valueType: "select",
+            //valueEnum: {0: "关闭", 1: "打开"},
+            fieldProps:{ options:statusOptions },
             dataIndex: 'exclusive',
             hideInTable: true,
         },
         {
             title: '状态',
-            valueType: "switch",
             dataIndex: 'enable',
+            valueType: "select",
+            //valueEnum: {0: "禁用", 1: "可用"},
+            fieldProps:{ options: statusOptions },
         },
         {
             title: '优先级',
@@ -95,10 +99,10 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
     ]
 
 
-export const initialValuesRuleGroup: Partial<RuleGroup> = { exclusive: true, enable: true, priority: 50, level: 0 }
+export const initialValuesRuleGroup: Partial<RuleGroup> = { exclusive: 1, enable: 1, priority: 50, level: 0 }
 export const RuleGroupName = "ruleGroup" //typedId以此开头
 export const rubleGroupTableProps = {
-    ...defaultProps(RuleGroupName),
+    ...defaultProps(RuleGroupName, false),
     idKey: "typedId",
     //editForm: (e) => '/rule/editRule',
     transformBeforeSave: (e) => { //props.editConfig.transform, transform(modify shape) before save
