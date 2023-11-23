@@ -140,6 +140,11 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExp
         <Space>
           <LogicalExprDropDwon disabled={!rightSelectedKeys || rightSelectedKeys.length < 2} title="添加到左侧" onClick={(op) => {
             const list = getByIds(exprList, rightSelectedKeys, "key")
+            if(!list || list.length < 2 ){
+              console.log("no selected?")
+              message.info("no selected?")
+              return
+            }
             if (list?.length === targetKeys.length) {
               const metaList = list.map((e) => e.meta).filter((e) => !!e) as (BasicExpressionMeta | ComplexExpressionMeta)[]
               const meta: ComplexExpressionMeta = {

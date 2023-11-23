@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { PlusOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import ProTable, { ProColumns, ProTableProps } from '@ant-design/pro-table';
-import { Cache, BasePageQuery, StorageType, CacheStorage, useCacheList, BaseRecord, UseCacheConfig, cachedFetch, cachedFetchPromise, ArrayUtil } from '@rwsbillyang/usecache';
+import { Cache, BasePageQuery, StorageType, CacheStorage, useCacheList, BaseRecord, UseCacheConfig, cachedFetch, cachedFetchPromise, ArrayUtil, TreeCache } from '@rwsbillyang/usecache';
 import { EditProps, MyProTableProps } from './MyProTableProps';
 import { MyProConfig } from './MyProConfig';
 
@@ -9,11 +9,19 @@ import { LoadMore } from './LoadMore';
 import { BetaSchemaForm, ProFormInstance } from '@ant-design/pro-form';
 import { Button, Modal, message } from 'antd';
 const { confirm } = Modal;
-import useBus, { dispatch } from 'use-bus';
+import useBus, { EventAction, dispatch } from 'use-bus';
 import { Link, useNavigate } from 'react-router-dom';
 import { RouteContext, RouteContextType } from '@ant-design/pro-layout';
 
 
+export interface UpdateTreeNodeParams{
+  e: any
+  posPath: (string | number)[]
+  updateRelation: (parent: any, e: any, parents: any[]) => void
+  idKey: string
+  childrenFieldName: string 
+  debug: boolean
+}
 
 //给currentQuery中的初始值设置到columns中去，以让searchForm有正确的初始值
 //顺带添加一些actions操作
@@ -62,11 +70,11 @@ function applyinitalQuery<T extends BaseRecord, Q extends BasePageQuery = BasePa
  */
 export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BasePageQuery>(props: MyProTableProps<T, Q> & Omit<ProTableProps<T, Q, 'text'>, 'params' | 'request' | 'dataSource'>) => {
 
-  const { isLoading, isError, errMsg, loadMoreState, setQuery, refreshCount, setRefresh, list, setUseCache, setIsLoadMore }
+  const { isLoading, isError, errMsg, loadMoreState, setQuery, refreshCount, setRefresh, list, setList, setUseCache, setIsLoadMore }
     = useCacheList<T, Q>(props.listApi, props.cacheKey, props.initialQuery, props.needLoadMore === false ? false : true)
 
   //从缓存中加载上一次搜索条件，搜索form能实时更新展示出来，通过formRef?.current?.setFieldsValue(current.query)来实现
-  const cachedQueryKey = props.cacheKey + "/cachedQuery"
+  const cachedQueryKey = (props.cacheKey || props.name) + "/cachedQuery"
   const v = CacheStorage.getItem(cachedQueryKey, StorageType.OnlySessionStorage)
   const currentQuery = v ? JSON.parse(v) : props.initialQuery
   const { current } = useRef({ query: { ...currentQuery } as Q })
@@ -79,11 +87,50 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
   //console.log("props=", props)
   //console.log("dataSource=", dataSource)
 
-  //删除后从缓存中刷新
-  useBus('refreshList-' + props.listApi, () => {
-    setRefresh()
-    if (MyProConfig.EnableLog) console.log("recv refreshList notify, refresh=" + refreshCount)
+  //从缓存中刷新
+  useBus('cacheUpdate-' + props.listApi, () => {
+    if (MyProConfig.EnableLog) console.log("recv cacheUpdate notify, refresh=" + refreshCount)
+
+    if (props.cacheKey) setRefresh()
   }, [refreshCount])
+
+  useBus((e: EventAction) => e.type.indexOf("refreshList") >= 0,
+    (e: EventAction) => {
+      const type = e.type.toLowerCase()
+      if (MyProConfig.EnableLog) console.log("recv notify type=" + type)
+      const isTree = type.indexOf("tree") >= 0
+      let flag = false
+      if (isTree) {
+        const p = e.payload as UpdateTreeNodeParams
+        if (type.indexOf("add") >= 0) {
+          flag = TreeCache.onAddOneInTreeList(p.e, p.posPath, p.updateRelation, list, p.idKey, p.childrenFieldName)
+        } else if (type.indexOf("edit") >= 0) {
+          flag = TreeCache.onEditOneInTree(p.e, p.posPath, list, p.idKey, p.childrenFieldName)
+        } else if (type.indexOf("del") >= 0) {
+          flag = TreeCache.onDelOneInTree(p.e, p.posPath, p.updateRelation, list, p.idKey, p.childrenFieldName)
+        } else {
+          console.warn("not support EventAction.type=" + type)
+        }
+      } else {
+        if (type.indexOf("addoredit") >= 0) {
+          if (!Cache.onEditOneInList(e.e, list, "id"))
+            Cache.onAddOneInList(e.e, list)
+          flag = true
+        } else if (type.indexOf("add") >= 0) {
+          Cache.onAddOneInList(e.e, list)
+          flag = true
+        } else if (type.indexOf("edit") >= 0) {
+          flag = Cache.onEditOneInList(e.e, list, "id")
+        } else if (type.indexOf("delbyid") >= 0) {
+          flag = Cache.onDelOneInList(e.id, list, "id")
+        } else if (type.indexOf("del") >= 0) {
+          flag = Cache.onDelOneInList(e.e, list, "id")
+        } else {
+          console.warn("not support EventAction.type=" + type)
+        }
+      }
+      if (flag) setList([...list])
+    }, [list])
 
 
   const resetPagination = () => {
@@ -343,8 +390,8 @@ export function saveOne<T extends BaseRecord, ResultType = T>(
   const onOK = onSaveOK || ((data: ResultType) => {
     message.success('保存成功');
 
+    const myIdKey = idKey || UseCacheConfig.defaultIdentiyKey || "id"
     if (cacheKey) {
-      const myIdKey = idKey || UseCacheConfig.defaultIdentiyKey || "id"
       if (isAdd === undefined) {//未定状态，如Rule的新增也可能是更新
         if (!Cache.onEditOne(cacheKey, data, myIdKey)) {//未找到更新，则按新增处理
           Cache.onAddOne(cacheKey, data)
@@ -354,8 +401,17 @@ export function saveOne<T extends BaseRecord, ResultType = T>(
       } else {
         Cache.onEditOne(cacheKey, data, myIdKey)
       }
-      if (listApi) dispatch("refreshList-" + listApi)
+      if (listApi) dispatch("cacheUpdate-" + listApi)
+    }else{
+      if (isAdd === undefined) {//未定状态，如Rule的新增也可能是更新
+        dispatch({ type: "refreshList-addOrEdit-" + listApi, e: data }) 
+      } else if (isAdd) {
+        dispatch({ type: "refreshList-add-" + listApi, e: data }) 
+      } else {
+        dispatch({ type: "refreshList-edit-" + listApi, e: data }) 
+      }
     }
+    
   })
 
 
@@ -423,11 +479,14 @@ export function deleteOne<T = number>(
         isShowLoading: true,
         onOK: onDelOk || ((result: T) => {
           if (MyProConfig.EnableLog) console.log("successfully del:" + id)
-          if (cacheKey) Cache.onDelOneById(cacheKey, id, idKey)
+          if (cacheKey){
+             Cache.onDelOneById(cacheKey, id, idKey)
+             dispatch("cacheUpdate-" + listApi) //删除完毕，发送refreshList，告知ListView去更新
+          }else{
+            dispatch({ type: "refreshList-delById-" + listApi, id: id }) 
+          }
 
           message.success(result + "条记录被删除")
-
-          dispatch("refreshList-" + listApi) //删除完毕，发送refreshList，告知ListView去更新
         })
       });
     }

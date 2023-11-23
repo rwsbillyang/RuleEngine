@@ -2,7 +2,7 @@ import { UseCacheConfig, TreeCache, cachedFetchPromise } from "@rwsbillyang/usec
 import { Rule, RuleCommon, RuleGroup } from "../DataType"
 import { RuleName, rubleTableProps } from "./RuleTable"
 import { dispatch } from "use-bus"
-import { deleteOne, saveOne } from "@/myPro/MyProTable"
+import { UpdateTreeNodeParams, deleteOne, saveOne } from "@/myPro/MyProTable"
 import { RuleGroupName, rubleGroupTableProps } from "./RuleGroupTable"
 
 import { message } from "antd"
@@ -44,27 +44,34 @@ function getOnInsertNodeOk(fromTable: string, isAdd: boolean, debug: boolean, cu
             if (debug) log = "to refresh ruleGroup table cache after insert node..."
         }
 
+        if (debug) console.log(log)
         //树形遍历，找到树形的根，然后保存到缓存
-        if (cacheKey) {
-            if (debug) console.log(log)
-            if (isAdd) {
+        
+        if (isAdd) {
+            const updateRelation = (parent, e, _) => {
+                e.posPath = [...(parent.posPath), data.ruleCommon[idKey]]//更更新子节点的posPath
+                //更新父节点的childrenIds
+                if (data.parent.ruleIds) {
+                    if (parent.rule) parent.rule.ruleChildrenIds = data.parent.ruleIds
+                    if (parent.ruleGroup) parent.ruleGroup.ruleChildrenIds = data.parent.ruleIds
+                }
+                if (data.parent.groupIds) {
+                    if (parent.rule) parent.rule.ruleGroupChildrenIds = data.parent.groupIds
+                    if (parent.ruleGroup) parent.ruleGroup.ruleGroupChildrenIds = data.parent.groupIds
+                }
+            }
+            if (cacheKey) {
                 //新增时，新增的节点后端为自己的typeId，需前端构建
                 const flag = TreeCache.onAddOneInTree(cacheKey, data.ruleCommon, currentRow.posPath,
                     //更新父节点的childrenIds，更新子节点的posPath，子节点的parentsIds后端返回它时已经更新过
-                    (parent, e, parents) => {
-                        e.posPath = [...(parent.posPath), data.ruleCommon[idKey]]//更更新子节点的posPath
-                         //更新父节点的childrenIds
-                         if(data.parent.ruleIds){
-                            if(parent.rule) parent.rule.ruleChildrenIds = data.parent.ruleIds
-                            if(parent.ruleGroup) parent.ruleGroup.ruleChildrenIds = data.parent.ruleIds
-                         }
-                         if(data.parent.groupIds){
-                            if(parent.rule) parent.rule.ruleGroupChildrenIds = data.parent.groupIds
-                            if(parent.ruleGroup) parent.ruleGroup.ruleGroupChildrenIds = data.parent.groupIds
-                         }
-                    }, idKey)
-                
-                if (flag) dispatch("refreshList-" + listApi) //已更新
+                    updateRelation , idKey)
+
+                if (flag) dispatch("cacheUpdate-" + listApi) //已更新
+            } else {
+                const p: UpdateTreeNodeParams = {
+                    e: data.ruleCommon, posPath: currentRow.posPath, idKey: idKey, updateRelation, childrenFieldName: "children", debug: true
+                }
+                dispatch({ type: "refreshList-addTree-" + listApi, payload: p })
             }
         }
     }
@@ -91,17 +98,23 @@ function getOnUpdateNodeOk(fromTable: string, isAdd: boolean, debug: boolean, cu
         }
 
         //树形遍历，找到树形的根，然后保存到缓存
-        if (cacheKey) {
-            if (debug) console.log(log)
-            if (currentRow.posPath) {
-                //编辑时，节点后端返回从自身开始的parentPath，应该从根节点开始，后更改为自己的typeId，前端恢复原值
-                data.posPath = currentRow.posPath
-                data.children = currentRow.children
-                const flag = TreeCache.onEditOneInTree(cacheKey, data, currentRow.posPath, idKey)
-                if (flag) dispatch("refreshList-" + listApi) //已更新
-            } else console.warn("no path when edit/update")
-            
-        }
+        if (debug) console.log(log)
+        if (currentRow.posPath) {
+            //编辑时，节点后端返回从自身开始的parentPath，应该从根节点开始，后更改为自己的typeId，前端恢复原值
+            data.posPath = currentRow.posPath
+            data.children = currentRow.children
+            if (cacheKey) {
+                const flag = TreeCache.onEditOneInTreeCache(cacheKey, data, currentRow.posPath, idKey)
+                if (flag) dispatch("cacheUpdate-" + listApi) //已更新
+            } else {
+                const p: UpdateTreeNodeParams = {
+                    e: data, posPath: currentRow.posPath, idKey: idKey, updateRelation: () => true, childrenFieldName: "children", debug: false
+                }
+                dispatch({ type: "refreshList-editTree-" + listApi, payload: p }) 
+            }
+
+        } else console.warn("no path when edit/update")
+        
     }
 
     return onSaveOK
@@ -280,32 +293,43 @@ export function deleteRuleOrGroup(
     //刷新缓存
     const onDelOK = (result: DelResult) => {
         message.success(result.count + "条被删除")
-        if (TreeCache.onDelOneInTree(tableProps.cacheKey, item, item.posPath,
-            (parent, e, parents) => {
-                //若节点可以有多个父节点， 则需清除缓存，DelResult不足以反应网状结构联动删除的亲子关系情况
-                if(result.e){//当前子节点的parentId有更新
-                    if(result.e.ruleIds){//父ruleIds需更新
-                        if(e.rule) e.rule.ruleParentIds = result.e.ruleIds //当前子节点是rule
-                        if(e.ruleGroup) e.ruleGroup.ruleParentIds = result.e.ruleIds//当前子节点是ruleGroup
-                    }
-                    if(result.e.groupIds){//父ruleGroupIds需更新
-                        if(e.rule) e.rule.ruleGroupParentIds = result.e.groupIds//当前子节点是rule
-                        if(e.ruleGroup) e.ruleGroup.ruleGroupParentIds = result.e.groupIds//当前子节点是ruleGroup
-                    }
+        const updateRelation = (parent, e, _) => {
+            //若节点可以有多个父节点， 则需清除缓存，DelResult不足以反应网状结构联动删除的亲子关系情况
+            if(result.e){//当前子节点的parentId有更新
+                if(result.e.ruleIds){//父ruleIds需更新
+                    if(e.rule) e.rule.ruleParentIds = result.e.ruleIds //当前子节点是rule
+                    if(e.ruleGroup) e.ruleGroup.ruleParentIds = result.e.ruleIds//当前子节点是ruleGroup
                 }
-                if(result.parent){//父节点的childrenIds有更新
-                    if(result.parent.ruleIds){//父节点的子ruleIds需更新
-                        if(parent.rule) parent.rule.ruleChildrenIds = result.parent.ruleIds //当前子节点是rule
-                        if(parent.ruleGroup) parent.ruleGroup.ruleChildrenIds = result.parent.ruleIds//当前子节点是ruleGroup
-                    }
-                    if(result.parent.groupIds){//父节点的子ruleGroupIds需更新
-                        if(parent.rule) parent.rule.ruleGroupChildrenIds = result.parent.groupIds//当前子节点是rule
-                        if(parent.ruleGroup) parent.ruleGroup.ruleGroupChildrenIds = result.parent.groupIds//当前子节点是ruleGroup
-                    }
+                if(result.e.groupIds){//父ruleGroupIds需更新
+                    if(e.rule) e.rule.ruleGroupParentIds = result.e.groupIds//当前子节点是rule
+                    if(e.ruleGroup) e.ruleGroup.ruleGroupParentIds = result.e.groupIds//当前子节点是ruleGroup
                 }
-            }, tableProps.idKey) ){
-            dispatch("refreshList-" + tableProps.listApi) //删除完毕，发送refreshList，告知ListView去更新
+            }
+            if(result.parent){//父节点的childrenIds有更新
+                if(result.parent.ruleIds){//父节点的子ruleIds需更新
+                    if(parent.rule) parent.rule.ruleChildrenIds = result.parent.ruleIds //当前子节点是rule
+                    if(parent.ruleGroup) parent.ruleGroup.ruleChildrenIds = result.parent.ruleIds//当前子节点是ruleGroup
+                }
+                if(result.parent.groupIds){//父节点的子ruleGroupIds需更新
+                    if(parent.rule) parent.rule.ruleGroupChildrenIds = result.parent.groupIds//当前子节点是rule
+                    if(parent.ruleGroup) parent.ruleGroup.ruleGroupChildrenIds = result.parent.groupIds//当前子节点是ruleGroup
+                }
+            }
         }
+
+        if(tableProps.cacheKey){
+            if (TreeCache.onDelOneInTreeCache(tableProps.cacheKey, item, item.posPath,updateRelation, tableProps.idKey) )
+            {
+                dispatch("cacheUpdate-" + tableProps.listApi) //删除完毕，发送refreshList，告知ListView去更新
+            }
+        }else{
+            const p: UpdateTreeNodeParams = {
+                e: item, posPath: item.posPath, idKey: tableProps.idKey, updateRelation, childrenFieldName: "children", debug: false
+            }
+            dispatch({ type: "refreshList-editTree-" + tableProps.listApi, payload: p }) 
+        }
+        
+        
     }
     const delPrefix = "/api/rule/composer"
 
@@ -449,59 +473,76 @@ export function moveInNewParent(moveParam: MoveNodeParamWithParent) {
                 message.warning("移动节点成功")
                 console.log("successful to move, update cache")
                 const tableProps = moveParam.tableProps
+                const cacheKey = tableProps.cacheKey
 
-                //解除与old parent的亲子关系，双方均需修改
-                const flag1 = TreeCache.onDelOneInTree(tableProps.cacheKey, moveParam.currentRow,
-                    moveParam.currentRow.posPath,
-                    (parent, e, parents) => {
-                        //更新父节点的childrenIds
-                        if(data.oldParent){
-                            if(data.oldParent.ruleIds){
-                                if(parent.rule) parent.rule.ruleChildrenIds = data.oldParent.ruleIds
-                                if(parent.ruleGroup) parent.ruleGroup.ruleChildrenIds = data.oldParent.ruleIds
-                            }
-                            if(data.oldParent.groupIds){
-                                if(parent.rule) parent.rule.ruleGroupChildrenIds = data.oldParent.groupIds
-                                if(parent.ruleGroup) parent.ruleGroup.ruleGroupChildrenIds = data.oldParent.groupIds
-                            }
+                const update1 = (parent, e, parents) => {
+                    //更新父节点的childrenIds
+                    if(data.oldParent){
+                        if(data.oldParent.ruleIds){
+                            if(parent.rule) parent.rule.ruleChildrenIds = data.oldParent.ruleIds
+                            if(parent.ruleGroup) parent.ruleGroup.ruleChildrenIds = data.oldParent.ruleIds
                         }
-                    }, tableProps.idKey)
+                        if(data.oldParent.groupIds){
+                            if(parent.rule) parent.rule.ruleGroupChildrenIds = data.oldParent.groupIds
+                            if(parent.ruleGroup) parent.ruleGroup.ruleGroupChildrenIds = data.oldParent.groupIds
+                        }
+                    }
+                }
 
-                //建立与新parent的亲子关系，双方均需修改
-                const flag2 = TreeCache.onAddOneInTree(tableProps.cacheKey, moveParam.currentRow,
-                   moveParam.newParent?.posPath ||[],
-                    //因为当前节点变了，需要更新它，以新父节点以及自己的id，构成自己的新path
-                    (parent,e, parents) => {
-                        //更新自己的path
-                        e.posPath = [...(parent.posPath), moveParam.currentRow[tableProps.idKey]]
-                        e.level = postData.newLevel
-        
-                        //更新自己的parentIds
-                        if(data.e.ruleIds){
-                            if(e.rule)e.rule.ruleParentIds = data.e.ruleIds
-                            if(e.ruleGroup) e.ruleGroup.ruleParentIds = data.e.ruleIds
+                const update2 = (parent,e, parents) => {
+                    //更新自己的path
+                    e.posPath = [...(parent.posPath), moveParam.currentRow[tableProps.idKey]]
+                    e.level = postData.newLevel
+            
+                    //更新自己的parentIds
+                    if(data.e.ruleIds){
+                        if(e.rule)e.rule.ruleParentIds = data.e.ruleIds
+                        if(e.ruleGroup) e.ruleGroup.ruleParentIds = data.e.ruleIds
+                    }
+                    if(data.e.groupIds){
+                        if(e.rule)e.rule.ruleGroupParentIds = data.e.groupIds
+                        if(e.ruleGroup) e.ruleGroup.ruleGroupParentIds = data.e.groupIds
+                    }
+                    //更新父节点的childrenIds
+                    if(data.newParent){
+                        if(data.newParent.ruleIds){
+                            if(parent.rule) parent.rule.ruleChildrenIds = data.newParent.ruleIds
+                            if(parent.ruleGroup) parent.ruleGroup.ruleChildrenIds = data.newParent.ruleIds
                         }
-                        if(data.e.groupIds){
-                            if(e.rule)e.rule.ruleGroupParentIds = data.e.groupIds
-                            if(e.ruleGroup) e.ruleGroup.ruleGroupParentIds = data.e.groupIds
+                        if(data.newParent.groupIds){
+                            if(parent.rule) parent.rule.ruleGroupChildrenIds = data.newParent.groupIds
+                            if(parent.ruleGroup) parent.ruleGroup.ruleGroupChildrenIds = data.newParent.groupIds
                         }
-                        //更新父节点的childrenIds
-                        if(data.newParent){
-                            if(data.newParent.ruleIds){
-                                if(parent.rule) parent.rule.ruleChildrenIds = data.newParent.ruleIds
-                                if(parent.ruleGroup) parent.ruleGroup.ruleChildrenIds = data.newParent.ruleIds
-                            }
-                            if(data.newParent.groupIds){
-                                if(parent.rule) parent.rule.ruleGroupChildrenIds = data.newParent.groupIds
-                                if(parent.ruleGroup) parent.ruleGroup.ruleGroupChildrenIds = data.newParent.groupIds
-                            }
-                        } 
-                    }, tableProps.idKey)
+                    } 
+                }
 
-                if (flag1 || flag2) {
-                    dispatch("refreshList-" + tableProps.listApi) //发送refreshList，告知ListView去更新
-                } else {
-                    console.warn("fail to onDelOneInTree and onAddOneInTree")
+                if(cacheKey){
+                    //解除与old parent的亲子关系，双方均需修改
+                    const flag1 = TreeCache.onDelOneInTreeCache(cacheKey, moveParam.currentRow,
+                        moveParam.currentRow.posPath,
+                        update1, tableProps.idKey)
+
+                    //建立与新parent的亲子关系，双方均需修改
+                    const flag2 = TreeCache.onAddOneInTree(cacheKey, moveParam.currentRow,
+                    moveParam.newParent?.posPath ||[],
+                        //因为当前节点变了，需要更新它，以新父节点以及自己的id，构成自己的新path
+                        update2, tableProps.idKey)
+
+                    if (flag1 || flag2) {
+                     dispatch("cacheUpdate-" + tableProps.listApi) //发送refreshList，告知ListView去更新
+                    } else {
+                        console.warn("fail to onDelOneInTree and onAddOneInTree")
+                    }
+                }else{
+                    const p1: UpdateTreeNodeParams = {
+                        e: moveParam.currentRow, posPath: moveParam.currentRow.posPath, idKey: tableProps.idKey, updateRelation: update1, childrenFieldName: "children", debug: false
+                    }
+                    dispatch({ type: "refreshList-delTree-" + tableProps.listApi, payload: p1 }) 
+
+                    const p2: UpdateTreeNodeParams = {
+                        e: moveParam.currentRow, posPath: moveParam.newParent?.posPath ||[], idKey: tableProps.idKey, updateRelation: update2, childrenFieldName: "children", debug: false
+                    }
+                    dispatch({ type: "refreshList-addTree-" + tableProps.listApi, payload: p2 }) 
                 }
             } else {
                 console.log("fail to move")

@@ -2,7 +2,7 @@
 
 import { cachedFetchPromise, cachedGet } from "@rwsbillyang/usecache";
 import React from "react";
-import { BasicExpression, BasicExpressionMeta, ComplexExpression, ComplexExpressionMeta, RuleCommon, RuleQueryParams } from "./DataType";
+import { BasicExpression, BasicExpressionMeta, ComplexExpression, ComplexExpressionMeta, Rule, RuleCommon, RuleQueryParams } from "./DataType";
 import { basicMeta2Expr, complexMeta2Expr } from "./utils";
 import { Button } from "antd";
 
@@ -16,7 +16,10 @@ export const DevHome: React.FC = () => (<div>
         <Button onClick={correctExpressionRecord}>Correct Expression</Button>
     </p>
     <p>
-        <Button onClick={() => getRuleAndConvert()}>Correct Rule</Button>
+        <Button onClick={() => getRuleAndConvert(correctRule1)}>Correct Rule</Button>
+    </p>
+    <p>
+        <Button onClick={() => getRuleAndConvert(correctRule2)}>Correct Rule2</Button>
     </p>
 </div>)
 
@@ -56,12 +59,12 @@ function correctExpressionRecord() {
 }
 
 
-function getRuleAndConvert(pageSize = 20, lastId?: number) {
+function getRuleAndConvert(doSth: (ruleCommon: RuleCommon) => Rule | undefined, pageSize = 20, lastId?: number) {
     const query: RuleQueryParams = { pagination: { pageSize: pageSize, sKey: "id", sort: 1, lastId: lastId?.toString() } }
 
     cachedGet<RuleCommon[]>("/api/rule/composer/list/rule", (data) => {
         data.forEach((v) => {
-            const e = correctRule2(v)
+            const e = doSth(v)
             if(e) saveOne(e, "/api/rule/composer/save/rule")
         })
         // if (data.length >= pageSize) {
@@ -116,7 +119,7 @@ function correctRule2(ruleCommon: RuleCommon) {
             }
             e.exprStr = JSON.stringify(e.expr)
            
-            console.log("id=" + e.id + ",rule.expr", e.expr)
+            console.log("id=" + e.id + "ret="+ ret + ", rule.expr", e.expr)
           
             return e
         } else {

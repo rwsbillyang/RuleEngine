@@ -46,7 +46,7 @@ export const OperandValueMetaEditor: React.FC<{
         return <div>{operandConfig.label+": wrong type code=" +typeCode +", please correct it in opCode table"}</div>
     }
     //console.log("operandConfig=",operandConfig)
-    console.log(operandConfig.label+": typeCode="+typeCode)
+    //console.log(operandConfig.label+": typeCode="+typeCode)
 
 
     //只是bool类型，不用那么多选择
