@@ -26,12 +26,7 @@ import com.github.rwsbillyang.ktorKit.db.SqlDataSource
 import com.github.rwsbillyang.ktorKit.db.SqlLiteHelper
 import com.github.rwsbillyang.rule.composer.*
 import com.github.rwsbillyang.rule.runtime.*
-
-
 import com.github.rwsbillyang.yinyang.core.Gender
-import com.github.rwsbillyang.yinyang.core.Zhi
-import com.github.rwsbillyang.yinyang.ziwei.LunarLeapMonthAdjustMode
-
 import com.github.rwsbillyang.yinyang.ziwei.ZwPanData
 import com.github.rwsbillyang.yinyang.ziwei.rrt.*
 import kotlinx.serialization.decodeFromString
@@ -56,17 +51,20 @@ fun main(){
     //testSerialize() //sealed class 不能🈶多个层次的继承
 
     val sqlLiteHelper = SqlLiteHelper("/Users/bill/git/MingLi/app/src/main/assets/app.db")
-    DevController(service).apply {
-        //println(upsertZwRRtExt())
-        // insertConstants(service)
+//    DevController(service).insertConstants()
 
-//        //createGroupTable(sqlLiteHelper)
-//        //migrateGroupIntoSqlLite(sqlLiteHelper)
-//
+    testSqlLiteFind(sqlLiteHelper)
+    /*
+    RuleMigrateController(service).apply {
         createRuleTable(sqlLiteHelper)
         migrateRuleIntoSqlLite(sqlLiteHelper)
+
+        createGroupTable(sqlLiteHelper)
+        migrateGroupIntoSqlLite(sqlLiteHelper)
     }
-//    sqlLiteHelper.close()
+    */
+
+    sqlLiteHelper.close()
 }
 
 fun extra2RuleCommon(extra: Any?): RuleCommon?{
@@ -85,8 +83,7 @@ fun runRuleEval(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTim
 
     val zwPanData = ZwPanData.fromLocalDateTime(
         Gender.Female,
-        dateTime,
-        LunarLeapMonthAdjustMode.Whole)
+        dateTime)
 
     val gongStars = zwPanData.getGongStarsByName("命宫")
     println("====check gongStars: ${gongStars.name}======")
@@ -223,40 +220,26 @@ fun runRuleEval(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTim
 //    }
 }
 
-fun runRuleExprCheck(service: MyBaseCrudService){
-    val zwPanData = ZwPanData.fromLocalDateTime(
-        Gender.Female,
-        LocalDateTime.now(),
-        LunarLeapMonthAdjustMode.Whole)
-
-    val gongStars = zwPanData.getGongStarsByName("命宫")
-
-    val dataProvider: (key: String, keyExtra: String?) -> Any? = { key, keyExtra ->
-        when (key) {
-            "zwPanData" -> zwPanData
-            "currentGong" -> gongStars
-            "shenGong" -> zwPanData.getGongStarsByZhi(zwPanData.shenGong)
-            "yearGan" -> zwPanData.fourZhu.year.gan
-            "yearZhi" -> zwPanData.fourZhu.year.zhi
-            "gender" -> zwPanData.gender.ordinal
-            else -> {
-                when (keyExtra) {
-                    GongType.classDiscriminator -> zwPanData.getGongStarsByName(key)
-                    StarType.classDiscriminator -> key
-                    else -> {
-                        System.err.println("dataProvider: key=$key, keyExtra=$keyExtra")
-                        throw Exception("Not found key in dataProvider: key=$key, keyExtra=$keyExtra")
-                    }
-                }
-            }
-        }
+fun testSqlLiteFind(sqlLiteHelper: SqlLiteHelper){
+    val rs = sqlLiteHelper.find("select * from BirthInfo ORDER BY id DESC LIMIT 1")
+    while (rs.next()) {
+        println("by sql: " + rs.getInt("id"))
     }
-    val errList: MutableList<Pair<Int?, String?>> = mutableListOf()
-    DevController(service).checkRuleExprValid(dataProvider, errList, 596)
-    errList.forEach {
-        println("id= " + it.first + ": " + it.second)
+
+    //"SELECT * FROM $tableName $wherePart"
+    val rs2 = sqlLiteHelper.find("BirthInfo","ORDER BY id DESC LIMIT 1")
+    while (rs2.next()) {
+        println("by tableName and where: " + rs2.getInt("id"))
     }
-    println(errList.joinToString(",") { it.first.toString() })
+
+    //不能查询到任何结果
+    val rs3 = sqlLiteHelper.findBuggy("BirthInfo","id > ?"){
+        it.setInt(1, 5)
+       // it.setInt(2, 1)
+    }
+    while (rs3.next()) {
+        println("by pstmt: " + rs3.getInt("id"))
+    }
 }
 
 fun testSerialize(){

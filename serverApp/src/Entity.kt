@@ -254,9 +254,9 @@ class RuleCommon(
     val label: String?,
     val priority: Int? ,
     val remark: String?,
-    val enable: Boolean ,
+    val enable: Int ,
     val tags: String?,
-    val exclusive: Boolean,
+    val exclusive: Int,
     val domainId: Int?,
     val description: String? = null,
     var domain: Domain? , //前端列表数据需要
@@ -276,7 +276,7 @@ data class Rule(
     val remark: String? = null,//相关信息备注
     val description: String? = null, //对命中的说明
     val exprRemark: String? = null,//对表达式的备注说明
-    val enable: Boolean = true,
+    val enable: Int = 1, //与sqlite一致，因为sqlite中么有boolean
     val tags: String? = null,
     val threshhold: Int? = null, //percent
 
@@ -293,7 +293,7 @@ data class Rule(
     //@Contextual var expr : LogicalExpr? = null,//由exprStr解析或前端提供
     //@Contextual var meta: ExpressionMeta? = null//由metaStr解析或前端提供
 
-    val exclusive: Boolean = false, //chidlren是否互斥
+    val exclusive: Int = 0, //chidlren是否互斥
 
     val ruleChildrenIds: String? = null, // json string of Rule.id List, insert/save one when create a child in front end
     val ruleGroupChildrenIds: String? = null,// json string of RuleGroup.id List, insert one when create a child in front end
@@ -360,9 +360,9 @@ data class RuleGroup(
     val level: Int? = null,
 
     val label: String,
-    val exclusive: Boolean = true,
+    val exclusive: Int = 1,
 
-    val enable: Boolean = true,
+    val enable: Int = 1,
     val tags: String? = null,
     val remark: String? = null,
 

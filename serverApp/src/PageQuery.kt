@@ -342,7 +342,7 @@ class RuleQueryParams(
     override val umi: String? = null,
     val label: String? = null,
     val domainId: Int? = null,
-    val enable: Boolean? = null,
+    val enable: Int? = null,
     val tags: String? = null,
     val level: Int? = null,
     val threshhold: Int? = null,
@@ -389,7 +389,7 @@ class RuleGroupQueryParams(
     override val umi: String? = null,
     val label: String? = null,
     val domainId: Int? = null,
-    val enable: Boolean? = null,
+    val enable: Int? = null,
     val level: Int? = null
 ) : IUmiPaginationParams {
     override fun toSqlPagination(): SqlPagination {
