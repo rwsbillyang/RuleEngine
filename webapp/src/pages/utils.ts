@@ -1,5 +1,5 @@
 import { Cache } from '@rwsbillyang/usecache'
-import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpression, ComplexExpressionMeta, ComplexExpressionRecord, BaseExpressionRecord, JsonValue, OperandConfig, OperandConfigItem, ParamType, OperandValueMeta, OperandValue, LabelValue } from "./DataType"
+import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpression, ComplexExpressionMeta, ComplexExpressionRecord, BaseExpressionRecord, JsonValue, OperandConfig, OperandConfigItem, ParamType, OperandValueMeta, Operand, LabelValue, MiniOperand } from "./DataType"
 
 
 /**
@@ -176,21 +176,21 @@ export const complexExpressionMeta2String = (meta?: ComplexExpressionMeta) => {
  */
 export const operandMeta2String = (name: string, operandMeta?: OperandValueMeta) => {
     if (!operandMeta) return ""
-    if (operandMeta.valueType === 'Param') {
+    if (operandMeta.t === 'P') {
         return name + "=" + operandMeta.param?.label + "(" + operandMeta.param?.mapKey + ")"
-    } else if (operandMeta.valueType === 'Constant' || operandMeta.valueType === 'JsonValue') {
+    } else if (operandMeta.t === 'C' || operandMeta.t === 'J') {
         const v = jsonValue2String(operandMeta.jsonValue)
         return v !== undefined ? name + "=" + v : ""
     } else {
-        console.warn("should not come here, wrong operandMeta.valueType =" + operandMeta.valueType)
+        console.warn("should not come here, wrong operandMeta.valueType =" + operandMeta.t)
         return "wrong operandMeta.valueType!!!"
     }
 }
 
 //to human-reading string
 const jsonValue2String = (jsonValue?: JsonValue) => {
-    if (!jsonValue || jsonValue.raw === undefined) return undefined
-    const value = jsonValue.raw
+    if (!jsonValue || jsonValue.v === undefined) return undefined
+    const value = jsonValue.v
     if (Array.isArray(value)) {
         if(value.length === 0) return "[]"
         if(typeof value[0]  === 'object'){
@@ -212,15 +212,15 @@ const jsonValue2String = (jsonValue?: JsonValue) => {
  * @param meta BasicExpressionMeta
  * @returns 
  */
-export const basicMeta2Expr = (meta?: BasicExpressionMeta) => {
+export const basicMeta2Expr = (meta?: BasicExpressionMeta, toMini: boolean = true) => {
     if (!meta) return undefined
     if (!meta.op) {
         console.log("should not come here: no op")
         return undefined
     }
-    const operandValueObj: { [key: string]: OperandValue } = {}
+    const operandValueObj: { [key: string]: Operand | MiniOperand } = {}
     for (let k in meta.operandMetaObj) {
-        const v = operandMeta2OperandValue(k, meta.operandMetaObj[k])
+        const v = operandMeta2Operand(k, meta.operandMetaObj[k], toMini)
         //if(v === -1) return -1
         if (v !== undefined) operandValueObj[k] = v
     }
@@ -277,41 +277,48 @@ export const removeComplexExpressionMetaFields = (meta: ComplexExpressionMeta) =
     })
 }
 
-// const extractJsonValue = (jsonValue?: JsonValue) => {
-//     if (!jsonValue || jsonValue.raw === undefined) return undefined
-//     const value = jsonValue.raw
-//     if (Array.isArray(value)) {
-//         if(value.length === 0) return undefined
-//         if(typeof value[0]  === 'object'){
-//             return (value as LabelValue[]).map((e)=> e.value)
-//         }else{
-//             return value as boolean[] | string[] | number[]
-//         }  
-//     } else{
-//         if(typeof value  === 'object'){
-//             return (value as LabelValue).value
-//         }else
-//             return value
-//     }     
-// }
+/**
+ * jsonValue.raw是LabelValue构成，则去掉其label
+ */
+const extractIfLabelValue = (jsonValue?: JsonValue) => {
+    if (jsonValue && jsonValue.v){
+        const raw = jsonValue.v
+        if (Array.isArray(raw)) {
+            if(raw.length > 0 && typeof raw[0]  === 'object'){
+                jsonValue.v = (raw as LabelValue[]).map((e)=> e.value)
+            }
+        } else{
+            if(typeof raw  === 'object'){
+                jsonValue.v =  (raw as LabelValue).value
+            }
+        }   
+    }   
+}
 /**
  * 将OperandValueMeta转换为纯表达式中的必要字段值
  * @param operandMeta OperandValueMeta
  * @returns 
  */
-const operandMeta2OperandValue = (name: string, operandMeta?: OperandValueMeta) => {
+const operandMeta2Operand = (name: string, operandMeta?: OperandValueMeta, toMini: boolean = true) => {
     if (operandMeta === undefined) return undefined
    
-    if(operandMeta.valueType === 'Param'){
+    if(operandMeta.t === 'P'){
         if(!operandMeta.param || !operandMeta.param.mapKey){
             console.warn("operandMeta.valueType is'Param', but no param or param.mapKey")
             return undefined
         }else{
-            const opvalue: OperandValue = {
-                valueType: operandMeta.valueType,
-                key: operandMeta.param?.mapKey,
+            if(toMini){
+                const opvalue: MiniOperand = {
+                    k: operandMeta.param?.mapKey,
+                }
+                return opvalue
+            }else{
+                const opvalue: Operand = {
+                    t: operandMeta.t,
+                    key: operandMeta.param?.mapKey,
+                }
+                return opvalue
             }
-            return opvalue
         }
     }
 
@@ -319,13 +326,13 @@ const operandMeta2OperandValue = (name: string, operandMeta?: OperandValueMeta) 
     if(!jsonValue) return undefined
 
 
-    if(jsonValue.raw === undefined || jsonValue.raw === "") return undefined
+    //老字段value改成raw，在改成v，删除老字段
+    // if(jsonValue.raw === undefined || jsonValue.raw === "") return undefined
+    // jsonValue.v = jsonValue.raw
+    // delete jsonValue.raw  
 
-    //老字段value改成raw，删除老字段
-    // if(jsonValue.value === undefined || jsonValue.value === "") return undefined
-    // jsonValue.raw = jsonValue.value
-    // delete jsonValue.value  
-    
+    if(jsonValue.v === undefined || jsonValue.v === "") return undefined
+
       
     if(!checkJsonValueClass(jsonValue._class)){
         console.warn("wrong jsonValue class:" + jsonValue._class + ", name="+name)
@@ -335,21 +342,30 @@ const operandMeta2OperandValue = (name: string, operandMeta?: OperandValueMeta) 
         // if(name === "zhiSet") jsonValue._class = "IntSet"
         // if(name === "num"){
         //     jsonValue._class ="Int"
-        //     jsonValue.raw = +jsonValue.raw
+        //     jsonValue.v = +jsonValue.v
         // }
     }
     
     if((jsonValue._class === "Int" || jsonValue._class === "Long" || jsonValue._class === "Double") 
-    && typeof jsonValue.raw !== 'number' ){
-        console.warn("wrong jsonValue.raw, not number: " + jsonValue.raw  + ", name="+name)
-        jsonValue.raw = +jsonValue.raw 
+    && typeof jsonValue.v !== 'number' ){
+        console.warn("wrong jsonValue.v, not number: " + jsonValue.v  + ", name="+name)
+        jsonValue.v = +jsonValue.v 
     }
-        
-    const opvalue: OperandValue = {
-        valueType: operandMeta.valueType,
-        value: jsonValue //extractJsonValue(operandMeta.jsonValue) 
+    
+    extractIfLabelValue(operandMeta.jsonValue)
+
+    if(toMini){
+        const opvalue: MiniOperand = {
+            j:  jsonValue
+        }
+        return opvalue
+    }else{
+        const opvalue: Operand = {
+            t: operandMeta.t,
+            value:  jsonValue
+        }
+        return opvalue
     }
-    return opvalue
 }
 
 /**
@@ -403,9 +419,9 @@ export const checkJsonValueClass = (code: string) => {
 /***
  * 有效信息，用于生成md5作为id
  */
-export const opValue2Md5Msg = (name: string, opValue?: OperandValue) => {
+export const opValue2Md5Msg = (name: string, opValue?: Operand) => {
     if (opValue === undefined) return ""
-    if (opValue.valueType === "Param") return `&${name}.OperandKey=${opValue.key}`
+    if (opValue.t === "P") return `&${name}.OperandKey=${opValue.key}`
     else return `&${name}.OperandValue=${opValue.value}`
 }
 

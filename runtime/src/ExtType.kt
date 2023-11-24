@@ -35,5 +35,5 @@ interface IExtOpEnum: IEnumOp{
  * */
 interface IExtExpr: LogicalExpr {
     val op: String
-    val operands: Map<String, Operand>
+    val operands: Map<String, MiniOperand>
 }

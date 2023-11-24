@@ -40,7 +40,7 @@ export interface OperandConfig{
     contantIds?: number[], //操作数值域 常量id数组[1,2,3]
     selectOptions?: LabelValue[]
     defaultSelect?: string
-    defaultOperandValueType?:  "Param" | "Constant" | "JsonValue" 
+    defaultOperandValueType?:  "P" | "C" | "J" 
     enable: boolean
 }
 /**
@@ -118,8 +118,8 @@ export interface LabelValue{
 //export type BasicValueType =  boolean | string | number 
 export interface JsonValue {
     _class: string, //backend ktorkit lib set: classDiscriminator="_class"
-    raw?: boolean | string | number  | (string| number)[] | LabelValue | LabelValue[] //有LabelValue是因为常量中枚举常量的值可能需要创建标签
-    value?:boolean | string | number  | (string| number)[] | LabelValue | LabelValue[] //旧值
+    v?: boolean | string | number  | (string| number)[] | LabelValue | LabelValue[] //有LabelValue是因为常量中枚举常量的值可能需要创建标签
+    //raw?:boolean | string | number  | (string| number)[] | LabelValue | LabelValue[] //旧值
 }
 /**
  * 值常量
@@ -265,7 +265,7 @@ export interface Expr {
 export interface BasicExpression extends Expr {
     key: string//值为: BasicExpressionMeta.param.mapKey
     extra?: string //附加信息 协助key进行取值，如来自ParamCategory的附属分类信息
-    operands: {[key: string]: OperandValue}//Map<String, Operand>
+    operands: {[key: string]: Operand | MiniOperand}//Map<String, Operand>
 }
 export interface ComplexExpression extends Expr {
     //op: string
@@ -283,19 +283,22 @@ export interface ComplexExpression extends Expr {
  * @param jsonValue 手工输入的值
  */
 export interface OperandValueMeta {
-    valueType?: "Param" | "Constant" | "JsonValue" | undefined
+    t?: "P" | "C" | "J" | undefined //"Param" | "Constant" | "JsonValue"
     paramId?: number | number[] //为数组时，表示EnableParamCategory = true
     param?: Param
     constantIds?: string | number | (string | number)[] | (string | number)[][] //eg.树形select的option的value 树形单选：[1, "乙"] 以及 [4]；多选选中多个[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
     //constants?: Constant[]
     jsonValue?: JsonValue
 }
-export interface OperandValue {
-    valueType?: "Param" | "Constant" | "JsonValue" | undefined
+export interface Operand {
+    t?: "P" | "C" | "J" | undefined
     key?: string // for Param type
     value?: JsonValue
 }
-
+export interface MiniOperand {
+    k?: string // for Param type
+    j?: JsonValue
+}
  
 export interface RuleQueryParams extends BasePageQuery{
     label?: string,

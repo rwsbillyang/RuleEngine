@@ -35,8 +35,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import org.komapper.core.dsl.Meta
 import org.komapper.core.dsl.QueryDsl
-import ziwei.rrt.ZwPanOpEnum
-import ziwei.rrt.ZwPanType
+
 
 
 /**
@@ -110,10 +109,6 @@ class DevController(val service: AbstractSqlService){
         upsertTypeAndOps(GongType.label, GongType.code, GongType.supportOperators(),
             domainId, GongOpEnum.values().map { Pair(it.name, it) }
         )
-        upsertTypeAndOps(
-            ZwPanType.label, ZwPanType.code, ZwPanType.supportOperators(),
-            domainId, ZwPanOpEnum.values().map { Pair(it.name, it) }
-        )
 
         //构建内置数据类型并插入库
         println("upsert zw rrt ext done" )
@@ -124,8 +119,8 @@ class DevController(val service: AbstractSqlService){
         val domainId = 1
 
         val intypeId = findParamTypeIdByCode(IType.Type_Int)?:-1
-        val gan = Constant("天干", intypeId, MySerializeJson.encodeToString(IntEnumValue(Gan.nameList.mapIndexed{ i, v -> SelectOption(v, i) })), true)
-        val zhi = Constant("地支", intypeId, MySerializeJson.encodeToString(IntEnumValue(Zhi.nameList.mapIndexed{ i, v -> SelectOption(v, i) })), true)
+        val gan = Constant("天干", intypeId, MySerializeJson.encodeToString(LabelIntEnumValue(Gan.nameList.mapIndexed{ i, v -> SelectOption(v, i) })), true)
+        val zhi = Constant("地支", intypeId, MySerializeJson.encodeToString(LabelIntEnumValue(Zhi.nameList.mapIndexed{ i, v -> SelectOption(v, i) })), true)
         val gender = Constant("性别", intypeId, MySerializeJson.encodeToString(Gender.values().map{ SelectOption(it.label, it.ordinal) }), true)
         val bright = Constant("亮暗", intypeId, MySerializeJson.encodeToString(ZwConstants.Brightness.forEach { t, u -> SelectOption(u, t) }), true, domainId = domainId)
 

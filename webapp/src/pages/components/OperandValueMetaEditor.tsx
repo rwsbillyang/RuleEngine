@@ -52,8 +52,8 @@ export const OperandValueMetaEditor: React.FC<{
     //只是bool类型，不用那么多选择
     // if(typeCode === "Bool"){
     //     return <Form.Item label={operandConfig.label} tooltip={operandConfig.tooltip} required={operandConfig.required}>
-    //         <Switch style={{ width: '100%' }} disabled={disabled} checked={value?.jsonValue?.raw === true} onChange={(v)=>{
-    //             onChange({...value, jsonValue:{ _class: typeCode, raw: v }})
+    //         <Switch style={{ width: '100%' }} disabled={disabled} checked={value?.jsonValue?.v === true} onChange={(v)=>{
+    //             onChange({...value, jsonValue:{ _class: typeCode, v: v }})
     //         }} />
     //     </Form.Item>
     // }
@@ -90,12 +90,12 @@ export const OperandValueMetaEditor: React.FC<{
         query: constantQueryParams,
         convertFunc: (item) => {
             if (item.value) item.jsonValue = JSON.parse(item.value)
-            if (item.jsonValue?.raw && Array.isArray(item.jsonValue.raw)) {
+            if (item.jsonValue?.v && Array.isArray(item.jsonValue.v)) {
                 if (item.isEnum) {
                     //某些枚举值，如整数枚举，值可能需要创建标签，LabelValue是因为常量中枚举值类型
-                    return { label: item.label, value: item.id, children: item.jsonValue.raw.map((e) => { return { label: e.label || e.value, value: e.value } }) }
+                    return { label: item.label, value: item.id, children: item.jsonValue.v.map((e) => { return { label: e.label || e.value, value: e.value } }) }
                 } else {
-                    return { label: item.label, value: item.id, children: item.jsonValue.raw.map((e) => { return { label: e.toString(), value: e } }) }
+                    return { label: item.label, value: item.id, children: item.jsonValue.v.map((e) => { return { label: e.toString(), value: e } }) }
                 }
             } else
                 return { label: item.label, value: item.id }
@@ -182,10 +182,10 @@ export const OperandValueMetaEditor: React.FC<{
                 style={{ width: '15%' }}
                 disabled={disabled}
                 allowClear
-                value={value?.valueType || null}
+                value={value?.t || null}
                 //defaultValue={value?.valueType}
                 onChange={(v) => {
-                    onChange({ valueType: v }) //清空原所有的值
+                    onChange({ t: v }) //清空原所有的值
                 }}
                 options={[
                     { label: "使用变量", value: 'Param' },
@@ -200,7 +200,7 @@ export const OperandValueMetaEditor: React.FC<{
                         loading={paramLoading}
                         allowClear
                         value={(value?.paramId as any || null)}
-                        disabled={disabled ? disabled : value?.valueType !== 'Param'}
+                        disabled={disabled ? disabled : value?.t !== 'P'}
                         options={paramOptions}
                         onChange={(v) => {
                             //value是一个数组，存放的分别是select option的value
@@ -226,7 +226,7 @@ export const OperandValueMetaEditor: React.FC<{
                         allowClear
                         value={value?.paramId || null}
                         //defaultValue={value?.paramId}
-                        disabled={disabled ? disabled : value?.valueType !== 'Param'}
+                        disabled={disabled ? disabled : value?.t !== 'P'}
                         options={paramOptions}
                         onChange={(v) => {
                             onChange({ ...value, paramId: v, param: Cache.findOne(paramAsyncSelectProps.key || "", v as number, "id") })
@@ -236,18 +236,18 @@ export const OperandValueMetaEditor: React.FC<{
             {
                 (operandConfig.selectOptions && operandConfig.selectOptions.length > 0) ?
                     <Select value={value?.constantIds as string | number | (string | number)[] || operandConfig.defaultSelect || null}
-                        disabled={disabled ? disabled : value?.valueType !== 'Constant'}
+                        disabled={disabled ? disabled : value?.t !== 'C'}
                         options={operandConfig.selectOptions}
                         mode={operandConfig.multiple ? 'multiple' : undefined}
                         onChange={(v) => {
                             if (v !== undefined) {
-                                onChange({ ...value, constantIds: v, jsonValue: {raw: v, _class: "String"} })
+                                onChange({ ...value, constantIds: v, jsonValue: {v: v, _class: "String"} })
                             } else {
                                 onChange({ ...value, constantIds: undefined, jsonValue: undefined })
                             }
                         }} /> : <Cascader
                         style={{ width: '30%' }}
-                        disabled={disabled ? disabled : value?.valueType !== 'Constant'}
+                        disabled={disabled ? disabled : value?.t !== 'C'}
                         options={constantOptions}
                         multiple={multiple}
                         maxTagCount="responsive"
@@ -284,7 +284,7 @@ export const OperandValueMetaEditor: React.FC<{
                 type={typeCode}
                 multiple={multiple === true}
 
-                disabled={disabled ? disabled : value?.valueType !== 'JsonValue'} />
+                disabled={disabled ? disabled : value?.t !== 'J'} />
         </Space.Compact>
     </Form.Item>
 }
@@ -310,10 +310,10 @@ const getJsonValueFromArray = (constants: Constant[], multiple: boolean, arry: (
         if (arry.length > 1) {//常量是集合或枚举类型，其中的值被选中一个
             if (constant.isEnum) {
                 //arry[1]可能是LabelValue的value
-                jsonValue = { raw: arry[1], _class: paramTypeCode }
+                jsonValue = { v: arry[1], _class: paramTypeCode }
             } else {
                 //arry[1]是各种基本类型
-                jsonValue = { raw: arry[1], _class: paramTypeCode }
+                jsonValue = { v: arry[1], _class: paramTypeCode }
             }
         } else {
             //多选：常量集合或枚举中的类型全部选中 单选：常量的值只是简单的基本类型
@@ -345,7 +345,7 @@ const getJsonValueFromArray = (constants: Constant[], multiple: boolean, arry: (
  */
 const getJsonValueFromArrayArray = (constants: Constant[], multiple: boolean, arrayArray: (string | number)[][], paramTypeCode: string, constantKey?: string) => {
     //console.log("getJsonValueFromArrayArray: arrayArray=" + JSON.stringify(arrayArray))
-    const value = arrayArray.flatMap((e) => getJsonValueFromArray(constants, multiple, e, paramTypeCode, constantKey)?.raw)
+    const value = arrayArray.flatMap((e) => getJsonValueFromArray(constants, multiple, e, paramTypeCode, constantKey)?.v)
     .filter((e) => e !== undefined) as ( (string| number)[] | LabelValue[]) //因为e有可能是单个元素也有可能是数组，故使用flatMap 而不是map
 
     if(value.length === 0){
@@ -353,7 +353,7 @@ const getJsonValueFromArrayArray = (constants: Constant[], multiple: boolean, ar
          return undefined
     }
 
-    const jsonValue: JsonValue = { _class: paramTypeCode, raw: value }
+    const jsonValue: JsonValue = { _class: paramTypeCode, v: value }
 
     //console.log("get jsonValue in arrayArray: ",jsonValue)
 

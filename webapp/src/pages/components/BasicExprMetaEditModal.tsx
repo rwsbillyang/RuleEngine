@@ -220,7 +220,7 @@ export const BasicExprMetaEditModal: React.FC<{
         for (let i = 0; i < oprandConfigList.length; i++) {
           const e = oprandConfigList[i]
           const operandMeta = newMeta.operandMetaObj[e.name]
-          if (e.required && (!operandMeta || (operandMeta.jsonValue?.raw === undefined && !operandMeta.paramId))) {
+          if (e.required && (!operandMeta || (operandMeta.jsonValue?.v === undefined && !operandMeta.paramId))) {
             message.warning(e.label + ": 操作数没有值")
             return false
           }
@@ -409,17 +409,17 @@ export const BasicExprMetaEditModal: React.FC<{
 const defaultOperandValueMeta = (operandConfig: OperandConfig) => {
   const operandMeta: OperandValueMeta = {}
   if (operandConfig.defaultOperandValueType) {
-    operandMeta.valueType = operandConfig.defaultOperandValueType
+    operandMeta.t = operandConfig.defaultOperandValueType
     return operandMeta
   }
   if (operandConfig.selectOptions && operandConfig.selectOptions.length) {
-    operandMeta.valueType = 'Constant'
+    operandMeta.t = 'C'
     operandMeta.constantIds = operandConfig.defaultSelect
-    operandMeta.jsonValue = { _class: "String", raw: operandConfig.defaultSelect }
+    operandMeta.jsonValue = { _class: "String", v: operandConfig.defaultSelect }
     return operandMeta
   }
   if (operandConfig.contantIds || operandConfig.typeCode) {
-    operandMeta.valueType = 'Constant'
+    operandMeta.t = 'C'
     return operandMeta
   }
   return undefined

@@ -16,10 +16,10 @@ export const DevHome: React.FC = () => (<div>
         <Button onClick={correctExpressionRecord}>Correct Expression</Button>
     </p>
     <p>
-        <Button onClick={() => getRuleAndConvert(correctRule1)}>Correct Rule</Button>
+        <Button onClick={() => getRuleAndConvert(correctRule1, 20, 0)}>Correct1 Rule</Button>
     </p>
     <p>
-        <Button onClick={() => getRuleAndConvert(correctRule2)}>Correct Rule2</Button>
+        <Button onClick={() => getRuleAndConvert(correctRule2)}>Correct2 Rule</Button>
     </p>
 </div>)
 
@@ -67,9 +67,9 @@ function getRuleAndConvert(doSth: (ruleCommon: RuleCommon) => Rule | undefined, 
             const e = doSth(v)
             if(e) saveOne(e, "/api/rule/composer/save/rule")
         })
-        // if (data.length >= pageSize) {
-        //     getRuleAndConvert(pageSize, data[data.length - 1].id)
-        // }
+         if (data.length >= pageSize) {
+             getRuleAndConvert(doSth, pageSize, data[data.length - 1].id)
+         }
     }, query)
 }
 
