@@ -287,17 +287,22 @@ fun Routing.composerApi() {
     val isDev = (System.getProperty("dev.mode") ?: "dev") == "dev"
     if(isDev){
         route("/api/dev"){
-            //初始化数据库： http://localhost:18000/api/dev/initDb
+            //初始化数据库： http://localhost:18000/api/dev/initDbMeta
             //truncate table `t_param_type`;  truncate table `t_operator`;
-            get("/initDb"){
-                call.respondBoxOK(DevController(crudController.service).initDictDataInDb())
+            get("/initDbMeta"){
+                call.respondBoxOK(DevController(crudController.service).initMetaDataInDb())
             }
 
-            //http://localhost:18000/api/dev/setupZw
-            get("/setupZw"){
+            //http://localhost:18000/api/dev/upsertZwRRtExt
+            get("/upsertZwRRtExt"){
                 call.respondBoxOK(DevController(crudController.service).upsertZwRRtExt())
             }
+            get("/upsertZwConstants"){
+                call.respondBoxOK(DevController(crudController.service).upsertConstants())
+            }
 
+
+            //============== for App Client ===================//
             //app获取birthInfo最后一条记录的id，然后增量上传，回流到开发环境sqlite数据库
             get("/birthInfoLastId"){
                 call.respondBoxOK(HelpBooksController(crudController.service).getBirthInfoLastId())

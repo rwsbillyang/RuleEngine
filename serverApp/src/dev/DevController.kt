@@ -26,6 +26,7 @@ import com.github.rwsbillyang.rule.runtime.*
 import com.github.rwsbillyang.yinyang.core.Gan
 import com.github.rwsbillyang.yinyang.core.Gender
 import com.github.rwsbillyang.yinyang.core.Zhi
+import com.github.rwsbillyang.yinyang.ziwei.StarCategory
 import com.github.rwsbillyang.yinyang.ziwei.ZwConstants
 import com.github.rwsbillyang.yinyang.ziwei.rrt.GongOpEnum
 import com.github.rwsbillyang.yinyang.ziwei.rrt.GongType
@@ -46,7 +47,7 @@ class DevController(val service: AbstractSqlService){
      * 元数据初始化，包括基本数据类型，以及它们支持的基本操作
      * 清空类型和操作符表，并从id=1开始添加
      * */
-    fun initDictDataInDb(): String {
+    fun initMetaDataInDb(): String {
         //bugfix： truncate table `t_param_type`;  truncate table `t_opcode`;
         service.db.runQuery{
             QueryDsl.executeScript("truncate table `t_param_type`;");
@@ -115,44 +116,73 @@ class DevController(val service: AbstractSqlService){
         return "Done"
     }
 
-    fun insertConstants(){
+    fun upsertConstants(): String{
         val domainId = 1
 
         val intypeId = findParamTypeIdByCode(IType.Type_Int)?:-1
-        val gan = Constant("天干", intypeId, MySerializeJson.encodeToString(LabelIntEnumValue(Gan.nameList.mapIndexed{ i, v -> SelectOption(v, i) })), true)
-        val zhi = Constant("地支", intypeId, MySerializeJson.encodeToString(LabelIntEnumValue(Zhi.nameList.mapIndexed{ i, v -> SelectOption(v, i) })), true)
-        val gender = Constant("性别", intypeId, MySerializeJson.encodeToString(Gender.values().map{ SelectOption(it.label, it.ordinal) }), true)
-        val bright = Constant("亮暗", intypeId, MySerializeJson.encodeToString(ZwConstants.Brightness.forEach { t, u -> SelectOption(u, t) }), true, domainId = domainId)
 
-        val ret1 = service.batchSave(Meta.constant, listOf(gan, zhi, gender, bright), true)
-        println("ret1= ${MySerializeJson.encodeToString(ret1)}" )
+        //需声明为Operand类型，才能输出_class字段
+        var op: Operand = LabelIntEnumValue(Gan.nameList.mapIndexed{ i, v -> SelectOption(v, i) })
+        val gan = Constant("天干", intypeId, MySerializeJson.encodeToString(op), true)
+
+        val op2: Operand = LabelIntEnumValue(Zhi.nameList.mapIndexed{ i, v -> SelectOption(v, i) })
+        val zhi = Constant("地支", intypeId, MySerializeJson.encodeToString(op2), true)
+
+        val op3: Operand = LabelIntEnumValue(Gender.values().map{ SelectOption(it.label, it.ordinal) })
+        val gender = Constant("性别", intypeId, MySerializeJson.encodeToString(op3), true)
+
+        val op4: Operand = LabelIntEnumValue(ZwConstants.Brightness.entries.map { SelectOption(it.value, it.key) })
+        val bright = Constant("亮暗", intypeId, MySerializeJson.encodeToString(op4), true, domainId = domainId)
 
         val stringSetTypeId = findParamTypeIdByCode(IType.Type_StringSet)?:-1
-        val list = mapOf(
-            "十二宫" to Pair(ZwConstants.twelveGongName.toSet(), "逆时针"),
+        val list2 = mapOf(
+            "十二宫垣" to Pair(ZwConstants.twelveGongName.toSet() + "身宫", "逆时针"),
             "正曜" to Pair(ZwConstants.Zheng14Stars, null),
-            "辅佐曜" to Pair(ZwConstants.FuZuoStars, null),
-            "四煞" to Pair(ZwConstants.FourShaStars, ""),
-            "空劫" to Pair(ZwConstants.KongJieStars, null),
+            "辅曜" to Pair(ZwConstants.FuStars, "他力"),
+            "佐曜" to Pair(ZwConstants.ZuoStars, "自力"),
+            "四煞" to Pair(ZwConstants.FourShaStars, null),
             "化曜" to Pair(ZwConstants.FourHua, null),
-            "杂曜" to Pair(ZwConstants.ZaStars, null),
+            "空劫" to Pair(ZwConstants.KongJieStars, null),
             "空曜" to Pair(ZwConstants.KongStars, "指空劫与天空。截空、旬空亦可算作空曜，但力量较弱"),
             "刑曜" to Pair(ZwConstants.XingStars, null),
             "忌曜" to Pair(ZwConstants.JiStars, null),
-            "桃花诸曜" to Pair(ZwConstants.TaoHuaStars, "廉贞贪狼虽有性质"),
+            "桃花" to Pair(ZwConstants.TaoHuaStars, "廉贞贪狼虽有性质"),
             "文曜" to Pair(ZwConstants.WenStars, null),
-            "科名诸曜" to Pair(ZwConstants.KeMingStars, "文曜加上三台八座,恩光天贵, 台辅封诰,天官天福八曜"),
-            "博士12神" to Pair(ZwConstants.BoShi12Stars.toSet(), null),
+            "科名" to Pair(ZwConstants.KeMingStars, "文曜加上三台八座,恩光天贵, 台辅封诰,天官天福八曜"),
+            "杂曜-恶" to Pair(ZwConstants.ZaStars_Bad, null),
+            "杂曜-吉" to Pair(ZwConstants.ZaStars_Good, null),
+            "杂曜" to Pair(ZwConstants.ZaStars, null),
             "长生12神" to Pair(ZwConstants.ZhangSheng12Stars.toSet(), null),
-            "岁前12星" to Pair(ZwConstants.SuiQian12Stars.toSet(), null),
-            "将前12星" to Pair(ZwConstants.JiangQian12Stars.toSet(), null),
         ).map {
+            op = StringSetValue(it.value.first)
             Constant(it.key, stringSetTypeId,
-                MySerializeJson.encodeToString(StringSetValue(it.value.first)), remark = it.value.second, domainId = domainId)
+                MySerializeJson.encodeToString(op), remark = it.value.second, domainId = domainId)
         }
 
-        val ret2 = service.batchSave(Meta.constant, list, true)
-        println("ret2= ${MySerializeJson.encodeToString(ret2)}" )
+        val stringTypeId = findParamTypeIdByCode(IType.Type_String)?:-1
+        //特殊处理，星曜值的前面加前缀，目的解决查询宫支位置时星曜名称重复问题
+        op = LabelStringEnumValue(ZwConstants.BoShi12Stars.map{ SelectOption(it, StarCategory.BoShi12.prefix+it) })
+        val boshi = Constant("博士12神", stringTypeId, MySerializeJson.encodeToString(op), true)
+
+        op = LabelStringEnumValue(ZwConstants.SuiQian12Stars.map{ SelectOption(it, StarCategory.SuiQian12.prefix+it) })
+        val suiqian = Constant("岁前12星", stringTypeId, MySerializeJson.encodeToString(op), true)
+
+        op = LabelStringEnumValue(ZwConstants.JiangQian12Stars.map{ SelectOption(it, StarCategory.JiangQian12.prefix+it) })
+        val jiangqian = Constant("将前12星", stringTypeId, MySerializeJson.encodeToString(op), true)
+
+
+        val list = listOf(gan, zhi, gender, bright) + list2 + listOf(boshi, suiqian, jiangqian)
+
+        var sb = StringBuffer()
+        list.forEach {
+            val oldId = service.findOne(Meta.constant, {Meta.constant.label eq it.label})?.id
+            if(oldId != null){
+                it.id = oldId
+            }
+            service.save(Meta.constant, it, oldId == null)
+            sb.append("upsert done: ${it.label}, id=$oldId\n" )
+        }
+        return sb.toString()
     }
 
 

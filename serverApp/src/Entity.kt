@@ -124,7 +124,7 @@ data class Constant(
     val domainId: Int? = null, //domain.id
 
     @KomapperId @KomapperAutoIncrement
-    val id: Int? = null,
+    var id: Int? = null,
 
     @KomapperIgnore var paramType: ParamType? = null, //typeId 前端列表中需要使用该信息
     @KomapperIgnore var domain: Domain? = null, //domainId 前端列表中需要使用该信息

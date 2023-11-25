@@ -49,6 +49,11 @@ import java.time.LocalDateTime
 //    abstract fun eval(dataProvider: (String) -> Any?): Boolean
 //}
 
+/**
+ * 使用interface代替sealed class可进行外部扩展，
+ * 但需要定义SerializersModule进行polymorphic，且序列化时需将变量声明为接口类型
+ * 参见：https://github.com/Kotlin/kotlinx.serialization/blob/master/docs/polymorphism.md#open-polymorphism
+ * */
 interface LogicalExpr{
     fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?): Boolean
 }
@@ -208,19 +213,4 @@ class DateTimeSetExpression(
 }
 
 
-val ruleRuntimeExprSerializersModule = SerializersModule {
-    polymorphic(LogicalExpr::class){
-        subclass(BoolExpression::class)
-        subclass(IntExpression::class)
-        subclass(LongExpression::class)
-        subclass(DoubleExpression::class)
-        subclass(StringExpression::class)
-        subclass(DatetimeExpression::class)
-        subclass(IntSetExpression::class)
-        subclass(LongSetExpression::class)
-        subclass(DoubleSetExpression::class)
-        subclass(StringSetExpression::class)
-        subclass(DateTimeSetExpression::class)
-        subclass(ComplexExpression::class)
-    }
-}
+

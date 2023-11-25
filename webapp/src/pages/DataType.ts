@@ -116,7 +116,7 @@ export interface LabelValue{
     value: string | number //: Int, Long, Double, String, DateTime
 }
 
-//即Operand
+//JsonValue也被用做Operand
 //export type BasicValueType =  boolean | string | number 
 export interface JsonValue {
     _class: string, //backend ktorkit lib set: classDiscriminator="_class"

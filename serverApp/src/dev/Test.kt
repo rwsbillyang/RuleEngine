@@ -27,10 +27,13 @@ import com.github.rwsbillyang.ktorKit.db.SqlLiteHelper
 import com.github.rwsbillyang.rule.composer.*
 import com.github.rwsbillyang.rule.runtime.*
 import com.github.rwsbillyang.yinyang.core.Gender
+import com.github.rwsbillyang.yinyang.core.Zhi
+import com.github.rwsbillyang.yinyang.ziwei.StarCategory
+import com.github.rwsbillyang.yinyang.ziwei.ZwConstants
 import com.github.rwsbillyang.yinyang.ziwei.ZwPanData
 import com.github.rwsbillyang.yinyang.ziwei.rrt.*
 import kotlinx.serialization.decodeFromString
-
+import kotlinx.serialization.encodeToString
 
 
 import org.komapper.core.dsl.Meta
@@ -44,16 +47,16 @@ class MyBaseCrudService(): AbstractSqlService(VoidCache()){
 
 //若需在IDE中运行测试，需将依赖com.github.rwsbillyang:yinyang从 compileOnly 改为：implementationg
 fun main(){
-    val service = MyBaseCrudService()
-    //runRuleEval(service, Zhi.Zi, LocalDateTime.now())
-    //runRuleExprCheck(service)
+    //val service = MyBaseCrudService()
+    //runRuleEval(service, 0, LocalDateTime.now()) //0 命宫， 1 父母宫 2 福德宫...
 
-    //testSerialize() //sealed class 不能🈶多个层次的继承
+    testSerialize() //sealed class 不能🈶多个层次的继承
 
-    val sqlLiteHelper = SqlLiteHelper("/Users/bill/git/MingLi/app/src/main/assets/app.db")
-//    DevController(service).insertConstants()
 
-    testSqlLiteFind(sqlLiteHelper)
+
+ //   val sqlLiteHelper = SqlLiteHelper("/Users/bill/git/MingLi/app/src/main/assets/app.db")
+
+  //  testSqlLiteFind(sqlLiteHelper)
     /*
     RuleMigrateController(service).apply {
         createRuleTable(sqlLiteHelper)
@@ -64,7 +67,7 @@ fun main(){
     }
     */
 
-    sqlLiteHelper.close()
+ //   sqlLiteHelper.close()
 }
 
 fun extra2RuleCommon(extra: Any?): RuleCommon?{
@@ -79,13 +82,13 @@ fun extra2RuleCommon(extra: Any?): RuleCommon?{
     }
 }
 
-fun runRuleEval(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTime){
+fun runRuleEval(service: MyBaseCrudService, gongNameIndex: Int, dateTime: LocalDateTime){
 
     val zwPanData = ZwPanData.fromLocalDateTime(
         Gender.Female,
         dateTime)
 
-    val gongStars = zwPanData.getGongStarsByName("命宫")
+    val gongStars = zwPanData.getGongStarsByName(ZwConstants.twelveGongName[gongNameIndex])
     println("====check gongStars: ${gongStars.name}======")
 
     val dataPicker: (key: String, keyExtra: String?) -> Any? = {it, keyExtra->
@@ -177,8 +180,8 @@ fun runRuleEval(service: MyBaseCrudService, gongZhi: Int, dateTime: LocalDateTim
 
     val toEvalRule: (extra: Any) -> EvalRule = {
         when (it) {
-            is Rule -> EvalRule(it.getExpr(), it.exclusive, it.thenAction, it.elseAction, it)
-            is RuleGroup -> EvalRule(null, it.exclusive, null, null, it)
+            is Rule -> EvalRule(it.getExpr(), it.exclusive == 1, it.thenAction, it.elseAction, it)
+            is RuleGroup -> EvalRule(null, it.exclusive == 1, null, null, it)
             else -> {
                 System.err.println("toEvalRule: only support Rule/RuleGroup as extra for EvalRule")
                 throw Exception("only support Rule/RuleGroup as extra")
@@ -243,13 +246,23 @@ fun testSqlLiteFind(sqlLiteHelper: SqlLiteHelper){
 }
 
 fun testSerialize(){
-    val json = "{\"_class\":\"Int\",\"key\":\"pos|紫微\",\"op\":\"in\",\"set\":{\"valueType\":\"Constant\",\"value\":[0,6]}}"
-    val expr:LogicalExpr = MySerializeJson.decodeFromString(json)
-    System.out.println("testSerialize:" + (expr is IntExpression))
+//    val json = "{\"_class\":\"Int\",\"key\":\"pos|紫微\",\"op\":\"in\",\"set\":{\"valueType\":\"Constant\",\"value\":[0,6]}}"
+//    val expr:LogicalExpr = MySerializeJson.decodeFromString(json)
+//    System.out.println("testSerialize:" + (expr is IntExpression))
+//
+//    val json2 = "{\"_class\":\"GongExpr\",\"key\":\"pos|紫微\",\"op\":\"isVip\"}"
+//    val expr2:IExtExpr = MySerializeJson.decodeFromString(json2)
+//    System.out.println("testSerialize:" + (expr2 is GongExpr))
 
-    val json2 = "{\"_class\":\"GongExpr\",\"key\":\"pos|紫微\",\"op\":\"isVip\"}"
-    val expr2:IExtExpr = MySerializeJson.decodeFromString(json2)
-    System.out.println("testSerialize:" + (expr2 is GongExpr))
+    val op: Operand = LabelIntEnumValue(Gender.values().map{ SelectOption(it.label, it.ordinal) })
+    println(MySerializeJson.encodeToString(op))//{"_class":"IntEnum","v":[{"label":"女","value":0},{"label":"男","value":1}]}
+
+    val op2 = LabelIntEnumValue(Gender.values().map{ SelectOption(it.label, it.ordinal) })
+    println(MySerializeJson.encodeToString(op2))//{"v":[{"label":"女","value":0},{"label":"男","value":1}]}
+
+//    val str = "{\"v\":[{\"label\":\"博士\",\"value\":\"bs博士\"},{\"label\":\"力士\",\"value\":\"bs力士\"},{\"label\":\"青龙\",\"value\":\"bs青龙\"},{\"label\":\"小耗\",\"value\":\"bs小耗\"},{\"label\":\"将军\",\"value\":\"bs将军\"},{\"label\":\"奏书\",\"value\":\"bs奏书\"},{\"label\":\"飞廉\",\"value\":\"bs飞廉\"},{\"label\":\"喜神\",\"value\":\"bs喜神\"},{\"label\":\"病符\",\"value\":\"bs病符\"},{\"label\":\"大耗\",\"value\":\"bs大耗\"},{\"label\":\"伏兵\",\"value\":\"bs伏兵\"},{\"label\":\"官府\",\"value\":\"bs官府\"}]}"
+//    val b: Operand = MySerializeJson.decodeFromString(str)
+//    println("size=${b.v.size}")
 }
 
 

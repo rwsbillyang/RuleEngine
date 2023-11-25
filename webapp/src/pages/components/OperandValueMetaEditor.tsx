@@ -188,9 +188,9 @@ export const OperandValueMetaEditor: React.FC<{
                     onChange({ t: v }) //清空原所有的值
                 }}
                 options={[
-                    { label: "使用变量", value: 'Param' },
-                    { label: "使用常量", value: 'Constant' },
-                    { label: "手工输入", value: 'JsonValue' }]}
+                    { label: "使用变量", value: 'P' },
+                    { label: "使用常量", value: 'C' },
+                    { label: "手工输入", value: 'J' }]}
             />
 
             {

@@ -89,6 +89,9 @@ class OperandMiniMeta(
 
 /**
  * 子类的json中会默认增加type字段，值为@SerialName中的
+ * 使用interface代替sealed class可进行外部扩展，
+ * 但需要定义SerializersModule进行polymorphic，且序列化时需将变量声明为接口类型
+ * 参见：https://github.com/Kotlin/kotlinx.serialization/blob/master/docs/polymorphism.md#open-polymorphism
  * */
 //@Serializable
 interface Operand{

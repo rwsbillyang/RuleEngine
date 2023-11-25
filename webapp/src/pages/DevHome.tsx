@@ -66,10 +66,11 @@ function getRuleAndConvert(doSth: (ruleCommon: RuleCommon) => Rule | undefined, 
         data.forEach((v) => {
             const e = doSth(v)
             if(e) saveOne(e, "/api/rule/composer/save/rule")
+            else console.log("e is undefined after doSth")
         })
-         if (data.length >= pageSize) {
-             getRuleAndConvert(doSth, pageSize, data[data.length - 1].id)
-         }
+        //  if (data.length >= pageSize) {
+        //      getRuleAndConvert(doSth, pageSize, data[data.length - 1].id)
+        //  }
     }, query)
 }
 
@@ -79,8 +80,12 @@ function doSth_correctRule1(ruleCommon: RuleCommon) {
         e.meta = e.metaStr ? JSON.parse(e.metaStr) : undefined
         if (e.meta) {
             if (e.meta["metaList"]) {
-                e.expr = complexMeta2Expr(e.meta as ComplexExpressionMeta)
+                const m = e.meta as ComplexExpressionMeta
+                //removeFieldInComplexExpressionMeta("starCat", m)
+                e.expr = complexMeta2Expr(m)
             } else {
+                const m = e.meta as BasicExpressionMeta
+                //removeFieldInBasicExpressionMeta("starCat", m)
                 e.expr = basicMeta2Expr(e.meta as BasicExpressionMeta)
                 // if(expr === -1){
                 //     console.log("id="+e.id+", after correct: ", expr, e.meta)
@@ -92,7 +97,6 @@ function doSth_correctRule1(ruleCommon: RuleCommon) {
             e.exprStr = JSON.stringify(e.expr)
             e.metaStr = JSON.stringify(e.meta)
             console.log("id=" + e.id + ",rule.expr", e.expr)
-            //saveOne(e, "/api/rule/composer/save/rule")
             return e
         } else {
             console.log("no metaStr, id=" + e.id)
@@ -164,3 +168,23 @@ function doSth_correctRule2(ruleCommon: RuleCommon) {
     })
     return ret
 }
+
+//私有bug，导致无提交保存动作
+// const removeFieldInBasicExpressionMeta = (field: string, meta: BasicExpressionMeta) =>{
+//     const oprands = meta.operandMetaObj
+//     Object.keys(oprands).forEach((e) => {
+//         if(field === e)
+//         {
+//             delete oprands[field]
+//         }
+//     })
+// } 
+// const removeFieldInComplexExpressionMeta = (field: string, meta: ComplexExpressionMeta) =>{
+//     meta.metaList.forEach((e) => {
+//         if (e._class === "Complex") {
+//              removeFieldInComplexExpressionMeta(field, e as ComplexExpressionMeta)
+//         } else {
+//             removeFieldInBasicExpressionMeta(field, e as BasicExpressionMeta)
+//         }
+//     })
+// } 
