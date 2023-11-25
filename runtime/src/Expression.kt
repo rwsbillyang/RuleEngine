@@ -58,7 +58,7 @@ interface LogicalExpr{
 class BoolExpression(
     val key: String,
     val op: String,
-    val operands: Map<String, MiniOperand>
+    val operands: Map<String, Operand>
 ): LogicalExpr {
     override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
         BoolType.op(dataProvider, key, op, operands)
@@ -72,7 +72,7 @@ class IntExpression(
     //各种other、start、end、set、e、num等固定名称和类型的操作数，
     // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
     // 但前提是必须在OpEnum中正确描述了配置map
-    val operands: Map<String, MiniOperand>
+    val operands: Map<String, Operand>
 ): LogicalExpr {
     override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
         IntType.op(dataProvider, key, op, operands)
@@ -87,7 +87,7 @@ class LongExpression(
     //各种other、start、end、set、e、num等固定名称和类型的操作数，
     // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
     // 但前提是必须在OpEnum中正确描述了配置map
-    val operands: Map<String, MiniOperand>
+    val operands: Map<String, Operand>
 ): LogicalExpr {
     override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
         LongType.op(dataProvider, key, op, operands)
@@ -101,7 +101,7 @@ class DoubleExpression(
     //各种other、start、end、set、e、num等固定名称和类型的操作数，
     // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
     // 但前提是必须在OpEnum中正确描述了配置map
-    val operands: Map<String, MiniOperand>
+    val operands: Map<String, Operand>
 ): LogicalExpr {
     override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
         DoubleType.op(dataProvider, key, op, operands)
@@ -116,7 +116,7 @@ class StringExpression(
     //各种other、start、end、set、e、num等固定名称和类型的操作数，
     // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
     // 但前提是必须在OpEnum中正确描述了配置map
-    val operands: Map<String, MiniOperand>
+    val operands: Map<String, Operand>
 ): LogicalExpr {
     override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
         StringType.op(dataProvider, key, op, operands)
@@ -131,7 +131,7 @@ class DatetimeExpression(
     //各种other、start、end、set、e、num等固定名称和类型的操作数，
     // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
     // 但前提是必须在OpEnum中正确描述了配置map
-    val operands: Map<String, MiniOperand>
+    val operands: Map<String, Operand>
 ): LogicalExpr {
     override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
         DateTimeType.op(dataProvider, key, op, operands)
@@ -145,7 +145,7 @@ class IntSetExpression(
     //各种other、start、end、set、e、num等固定名称和类型的操作数，
     // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
     // 但前提是必须在OpEnum中正确描述了配置map
-    val operands: Map<String, MiniOperand>
+    val operands: Map<String, Operand>
 ): LogicalExpr {
     override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
         IntSetType.op(dataProvider, key, op, operands)
@@ -159,7 +159,7 @@ class LongSetExpression(
     //各种other、start、end、set、e、num等固定名称和类型的操作数，
     // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
     // 但前提是必须在OpEnum中正确描述了配置map
-    val operands: Map<String, MiniOperand>
+    val operands: Map<String, Operand>
 ): LogicalExpr {
     override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
         LongSetType.op(dataProvider, key, op, operands)
@@ -173,7 +173,7 @@ class DoubleSetExpression(
     //各种other、start、end、set、e、num等固定名称和类型的操作数，
     // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
     // 但前提是必须在OpEnum中正确描述了配置map
-    val operands: Map<String, MiniOperand>
+    val operands: Map<String, Operand>
 ): LogicalExpr {
     override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
         DoubleSetType.op(dataProvider, key, op, operands)
@@ -187,7 +187,7 @@ class StringSetExpression(
     //各种other、start、end、set、e、num等固定名称和类型的操作数，
     // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
     // 但前提是必须在OpEnum中正确描述了配置map
-    val operands: Map<String, MiniOperand>
+    val operands: Map<String, Operand>
 ): LogicalExpr {
     override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
         StringSetType.op(dataProvider, key, op, operands)
@@ -201,7 +201,7 @@ class DateTimeSetExpression(
     //各种other、start、end、set、e、num等固定名称和类型的操作数，
     // 由map代替，并且可以是其它任何数据类型，由操作码执行场景取操作数并转换为所需任何类型，
     // 但前提是必须在OpEnum中正确描述了配置map
-    val operands: Map<String, MiniOperand>
+    val operands: Map<String, Operand>
 ): LogicalExpr {
     override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
         DateTimeSetType.op(dataProvider, key, op, operands)

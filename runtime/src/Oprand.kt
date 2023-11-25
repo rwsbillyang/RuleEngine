@@ -40,7 +40,7 @@ import java.time.LocalDateTime
  * @param contantIds 操作数值域，用于创建表达式或规则时，选择输入框过滤常量 UI中创建自定义操作码时需要指定
  * @param selectOptions 操作数值域，不是从远程加载常量，而是指定的选择范围内选
  * @param defaultSelect 操作数值域select默认值
- * @param defaultOperandValueType 前端OperandMeta.valueType: "Param" | "Constant" | "JsonValue"
+ * @param defaultOperandValueType 前端OperandMeta.valueType: "Param" | "Constant" | "Operand"
  * @param enable 一般总是激活状态
  *
  * */
@@ -54,7 +54,7 @@ class OperandConfig(
     val contantIds: List<Int>? = null, //操作数值域，常量id数组[1,2,3]
     val selectOptions: List<SelectOption<String>>? = null,//操作数值域，不是从远程加载常量，而是指定的选择范围内选
     val defaultSelect: String? = null,
-    val defaultOperandValueType: String? = null, //"Param" | "Constant" | "JsonValue"
+    val defaultOperandValueType: String? = null, //"Param" | "Constant" | "Operand"
     val enable: Boolean = true
 )
 
@@ -62,7 +62,7 @@ class OperandConfig(
 class SelectOption<T>(val label: String, val value: T)
 
 @Serializable
-enum class OperandValueType { P, C, J} //前端OperandMeta.t: Param, Constant, JsonValue
+enum class OperandValueType { P, C, J} //前端OperandMeta.t: Param, Constant, Operand
 
 
 /**
@@ -73,10 +73,10 @@ enum class OperandValueType { P, C, J} //前端OperandMeta.t: Param, Constant, J
  * */
 @Deprecated("use MiniOperand instead, only necessary when deserialize OperandMeta")
 @Serializable
-class Operand(
+class OperandMiniMeta(
     val t: OperandValueType,
     val key: String? = null, //key: other, start, end, set, e, number, if valueType == ValueType.Param then use key to pick a value
-    val value: JsonValue? = null //else use value directly
+    val value: Operand? = null //else use value directly
 ) {
     fun raw(dataProvider: (key: String, keyExtra: String?) -> Any?, keyExtra: String? = null) =
         if (t == OperandValueType.P && key != null) {
@@ -91,54 +91,57 @@ class Operand(
  * 子类的json中会默认增加type字段，值为@SerialName中的
  * */
 //@Serializable
-interface JsonValue{
-    val v: Any
+interface Operand{
+    val v: Any //实际的值
+    fun raw(
+        dataProvider: (key: String, keyExtra: String?) -> Any?,
+        keyExtra: String? = null) = if(this is VariableValue) dataProvider(v, keyExtra) else v
 }
 
 
 @Serializable
 @SerialName(IType.Type_Bool)
-class BoolValue(override val v: Boolean) : JsonValue
+class BoolValue(override val v: Boolean) : Operand
 
 @Serializable
 @SerialName(IType.Type_Int)
-class IntValue(override val v: Int) : JsonValue
+class IntValue(override val v: Int) : Operand
 
 @Serializable
 @SerialName(IType.Type_Long)
-class LongValue(override val v: Long) : JsonValue
+class LongValue(override val v: Long) : Operand
 @Serializable
 @SerialName(IType.Type_Double)
-class DoubleValue(override val v: Double) : JsonValue
+class DoubleValue(override val v: Double) : Operand
 
 @Serializable
 @SerialName(IType.Type_String)
-class StringValue(override val v: String) : JsonValue
+class StringValue(override val v: String) : Operand
 
 @Serializable
 @SerialName(IType.Type_Datetime)
-class LocalDateTimeValue(override val v: LocalDateTime) : JsonValue
+class LocalDateTimeValue(override val v: LocalDateTime) : Operand
 
 @Serializable
 @SerialName(IType.Type_IntSet)
-class IntSetValue(override val v: Set<Int>) : JsonValue
+class IntSetValue(override val v: Set<Int>) : Operand
 
 
 @Serializable
 @SerialName(IType.Type_LongSet)
-class LongSetValue(override val v: Set<Long>) : JsonValue
+class LongSetValue(override val v: Set<Long>) : Operand
 
 @Serializable
 @SerialName(IType.Type_DoubleSet)
-class DoubleSetValue(override val v: Set<Double>) : JsonValue
+class DoubleSetValue(override val v: Set<Double>) : Operand
 
 @Serializable
 @SerialName(IType.Type_StringSet)
-class StringSetValue(override val v: Set<String>) : JsonValue
+class StringSetValue(override val v: Set<String>) : Operand
 
 @Serializable
 @SerialName(IType.Type_DateTimeSet)
-class LocalDateTimeSetValue(override val v: Set<LocalDateTime>) : JsonValue
+class LocalDateTimeSetValue(override val v: Set<LocalDateTime>) : Operand
 
 
 // 以下为枚举类型,为枚举增加了枚举名称label
@@ -148,37 +151,31 @@ class LocalDateTimeSetValue(override val v: Set<LocalDateTime>) : JsonValue
 
 @Serializable
 @SerialName(IType.Type_IntEnum)
-class LabelIntEnumValue(override val v: List<SelectOption<Int>>) : JsonValue
+class LabelIntEnumValue(override val v: List<SelectOption<Int>>) : Operand
 
 
 @Serializable
 @SerialName(IType.Type_LongEnum)
-class LabelLongEnumValue(override val v: List<SelectOption<Long>>) : JsonValue
+class LabelLongEnumValue(override val v: List<SelectOption<Long>>) : Operand
 
 @Serializable
 @SerialName(IType.Type_DoubleEnum)
-class LabelDoubleEnumValue(override val v: List<SelectOption<Double>>) : JsonValue
+class LabelDoubleEnumValue(override val v: List<SelectOption<Double>>) : Operand
 
 @Serializable
 @SerialName(IType.Type_StringEnum)
-class LabelStringEnumValue(override val v: List<SelectOption<String>>) : JsonValue
+class LabelStringEnumValue(override val v: List<SelectOption<String>>) : Operand
 
 @Serializable
 @SerialName(IType.Type_DateTimeEnum)
-class LabelLocalDateTimeEnumValue(override val v: List<SelectOption<LocalDateTime>>) : JsonValue
+class LabelLocalDateTimeEnumValue(override val v: List<SelectOption<LocalDateTime>>) : Operand
 
 
 /**
- * 迷你极简操作数，当k(key)非空时,标识变量
- * @param k key 非空时（最高优先级）, 操作数是一个变量,由key标识， 具备
- * @param j 非空时（低优先级），操作数是一个JsonValue（里面包含了类型信息，便于正确地反序列化）
+ *  操作数是一个变量,由v标识
  * */
 @Serializable
-class MiniOperand(
-    val k: String? = null,
-    val v: JsonValue? = null
-) {
-    fun raw(
-        dataProvider: (key: String, keyExtra: String?) -> Any?,
-        keyExtra: String? = null) =  k?.let { dataProvider(k, keyExtra) }?:(v?.v)
-}
+@SerialName(IType.Type_Variable)
+class VariableValue(override val v: String) : Operand
+
+

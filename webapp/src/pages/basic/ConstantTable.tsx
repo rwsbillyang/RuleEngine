@@ -169,7 +169,7 @@ export const ConstantTable: React.FC = () => {
   const transformBeforeSave = (e: Constant) => {
     console.log("transformBeforeSave Constant=", e)
     if (e.typeInfo) {
-      e.jsonValue = { _class: e.typeInfo.label + (e.isEnum ? "Enum" : ""), raw: e.jsonValue?.raw }//若选择枚举，则存储类型为容器。故_class加上Set
+      e.jsonValue = { _class: e.typeInfo.label + (e.isEnum ? "Enum" : ""), v: e.jsonValue?.v }//若选择枚举，则存储类型为容器。故_class加上Set
       e.typeId = +e.typeInfo.value
       delete e.typeInfo
 

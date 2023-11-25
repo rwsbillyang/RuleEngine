@@ -1,5 +1,5 @@
 import { Cascader, Form, Select, Space } from "antd"
-import { Constant, ConstantQueryParams, OperandConfig, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, OperandValueMeta, JsonValue, LabelValue } from "../DataType"
+import { Constant, ConstantQueryParams, OperandConfig, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, OperandMeta, JsonValue, LabelValue } from "../DataType"
 import { JsonValueEditor } from "./JsonValueEditor"
 import React, { useEffect, useState } from "react"
 import { MyAsyncSelectProps } from "@/myPro/MyProTableProps"
@@ -38,8 +38,8 @@ export const OperandValueMetaEditor: React.FC<{
     constantQueryParams: ConstantQueryParams,
     domainId?: number,
     disabled?: boolean, //如果明确指定为true则disable所有
-    value?: OperandValueMeta,
-    onChange: (v: OperandValueMeta) => void
+    value?: OperandMeta,
+    onChange: (v: OperandMeta) => void
 }> = ({ paramType, operandConfig, constantQueryParams, domainId, disabled, value, onChange }) => {
     const typeCode = operandConfig.typeCode || ((operandConfig.selectOptions && operandConfig.selectOptions.length > 0) ? "String" : paramType.code )
     if(!checkJsonValueClass(typeCode)){

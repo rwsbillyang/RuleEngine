@@ -16,10 +16,10 @@ export const DevHome: React.FC = () => (<div>
         <Button onClick={correctExpressionRecord}>Correct Expression</Button>
     </p>
     <p>
-        <Button onClick={() => getRuleAndConvert(correctRule1, 20, 0)}>Correct1 Rule</Button>
+        <Button onClick={() => getRuleAndConvert(doSth_correctRule1, 20, 0)}>Correct1 Rule</Button>
     </p>
     <p>
-        <Button onClick={() => getRuleAndConvert(correctRule2)}>Correct2 Rule</Button>
+        <Button onClick={() => getRuleAndConvert(doSth_correctRule2)}>Correct2 Rule</Button>
     </p>
 </div>)
 
@@ -73,7 +73,7 @@ function getRuleAndConvert(doSth: (ruleCommon: RuleCommon) => Rule | undefined, 
     }, query)
 }
 
-function correctRule1(ruleCommon: RuleCommon) {
+function doSth_correctRule1(ruleCommon: RuleCommon) {
     const e = ruleCommon.rule
     if (e) {
         e.meta = e.metaStr ? JSON.parse(e.metaStr) : undefined
@@ -106,7 +106,7 @@ function correctRule1(ruleCommon: RuleCommon) {
 //Deprecated: 每个自定义paramType使用自己的op，可重名（系统里存在多条记录，因为可能有自己的不同操作数配置），互不覆盖
 //只更新了exprStr，未更新metaStr
 //Star: jian -> huiHe, gongZhao -> zhao, jia -> neibours
-function correctRule2(ruleCommon: RuleCommon) {
+function doSth_correctRule2(ruleCommon: RuleCommon) {
     const e = ruleCommon.rule
     if (e) {
         e.expr = e.exprStr ? JSON.parse(e.exprStr) : undefined

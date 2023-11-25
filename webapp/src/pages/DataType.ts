@@ -115,6 +115,8 @@ export interface LabelValue{
     label?: string,
     value: string | number //: Int, Long, Double, String, DateTime
 }
+
+//即Operand
 //export type BasicValueType =  boolean | string | number 
 export interface JsonValue {
     _class: string, //backend ktorkit lib set: classDiscriminator="_class"
@@ -248,7 +250,7 @@ export interface BasicExpressionMeta extends ExpressionMetaBase{
 
      //使用Map<string, OperandValueMeta>时，在parse成对象时得到是object，而不是map
      //现改成object，key为操作数键值，值为OperandValueMeta
-    operandMetaObj: {[key:string]: OperandValueMeta} 
+    operandMetaObj: {[key:string]: OperandMeta} 
 }
 
 export interface ComplexExpressionMeta  extends ExpressionMetaBase{
@@ -265,7 +267,7 @@ export interface Expr {
 export interface BasicExpression extends Expr {
     key: string//值为: BasicExpressionMeta.param.mapKey
     extra?: string //附加信息 协助key进行取值，如来自ParamCategory的附属分类信息
-    operands: {[key: string]: Operand | MiniOperand}//Map<String, Operand>
+    operands: {[key: string]: OperandMiniMeta | JsonValue}//Map<String, Operand>
 }
 export interface ComplexExpression extends Expr {
     //op: string
@@ -282,7 +284,7 @@ export interface ComplexExpression extends Expr {
  * @param constant 来自常量
  * @param jsonValue 手工输入的值
  */
-export interface OperandValueMeta {
+export interface OperandMeta {
     t?: "P" | "C" | "J" | undefined //"Param" | "Constant" | "JsonValue"
     paramId?: number | number[] //为数组时，表示EnableParamCategory = true
     param?: Param
@@ -290,15 +292,15 @@ export interface OperandValueMeta {
     //constants?: Constant[]
     jsonValue?: JsonValue
 }
-export interface Operand {
+export interface OperandMiniMeta {
     t?: "P" | "C" | "J" | undefined
     key?: string // for Param type
     value?: JsonValue
 }
-export interface MiniOperand {
-    k?: string // for Param type
-    j?: JsonValue
-}
+// export interface MiniOperand {
+//     k?: string // for Param type
+//     j?: JsonValue
+// }
  
 export interface RuleQueryParams extends BasePageQuery{
     label?: string,

@@ -21,7 +21,7 @@
 package com.github.rwsbillyang.rule.composer
 
 import com.github.rwsbillyang.rule.runtime.IType
-import com.github.rwsbillyang.rule.runtime.JsonValue
+import com.github.rwsbillyang.rule.runtime.Operand
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -42,7 +42,7 @@ class BasicExpressionMeta(
     val paramType: ParamType? = null,
     val mapKey: String? = null,
     val extra: String? = null,
-    val operandMetaObj: Map<String, OperandValueMeta >? = null
+    val operandMetaObj: Map<String, OperandMeta >? = null
 ): ExpressionMeta()
 
 @Serializable
@@ -54,13 +54,13 @@ class ComplexExpressionMeta(
 ): ExpressionMeta()
 
 @Serializable
-class OperandValueMeta(
+class OperandMeta(
     val valueType: String , //"Param" | "Constant" | "JsonValue" | undefined
     val paramId: Int? = null,
     val param: Param? = null,
     //val constantIds: Int? = null, //无法与前端对应起来，前端各种类型都有：string | number | (string | number)[] | (string | number)[][] '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
     //val constantIdsStr: String? = null,
-    val jsonValue: JsonValue? = null
+    val jsonValue: Operand? = null
 )
 
 //fun expressionMeta2Expr(metaStr: String?): LogicalExpr? {

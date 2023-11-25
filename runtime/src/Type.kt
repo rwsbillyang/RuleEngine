@@ -33,6 +33,7 @@ interface IType<T>
     val code: String
     fun supportOperators(): List<String>
     companion object{
+        const val Type_Variable = "Var" //变量，即里面的值是变量key
         const val Type_Bool = "Bool" // 将用于各子类表达式的SerialName，以及数据库记录ParamType的code字段
         const val Type_Int = "Int" //("整数"),
         const val Type_Long = "Long" // ("长整数"),
@@ -58,12 +59,12 @@ abstract class BaseType<T>: IType<T> {
     /**
      * @param keyExtra key从dataProvider取值时，作为附属信息协助key取值
      * */
-    abstract fun op(dataProvider: (key: String, keyExtra:String?) -> Any?, key: String, op: String, operands: Map<String, MiniOperand>, keyExtra: String? = null): Boolean
+    abstract fun op(dataProvider: (key: String, keyExtra:String?) -> Any?, key: String, op: String, operands: Map<String, Operand>, keyExtra: String? = null): Boolean
 }
 
 abstract class SysBasicType<T>: BaseType<T>() {
     override fun supportOperators() = EnumBasicOp.values().map { it.name }
-    override fun op(dataProvider: (key: String, keyExtra:String?) -> Any?, key:String, op: String, operands: Map<String, MiniOperand>, keyExtra: String?)
+    override fun op(dataProvider: (key: String, keyExtra:String?) -> Any?, key:String, op: String, operands: Map<String, Operand>, keyExtra: String?)
     = op(op, key?.let { dataProvider(it, keyExtra) as T? },
         operands["other"]?.raw(dataProvider) as T? ,
         operands["start"]?.raw(dataProvider) as T?,
@@ -74,7 +75,7 @@ abstract class SysBasicType<T>: BaseType<T>() {
 
 abstract class CollectionType<Container: Collection<T>, T>: BaseType<T>() {
     override fun supportOperators() = EnumCollectionOp.values().map { it.name }
-    override fun op(dataProvider: (key: String, keyExtra:String?) -> Any?, key:String, op: String, operands: Map<String, MiniOperand>, keyExtra: String?)
+    override fun op(dataProvider: (key: String, keyExtra:String?) -> Any?, key:String, op: String, operands: Map<String, Operand>, keyExtra: String?)
             = op(op, key?.let { dataProvider(it, keyExtra) as Container? },
         operands["other"]?.raw(dataProvider) as Container? ,
         operands["e"]?.raw(dataProvider) as T?, //key所在变量集中是否包含e

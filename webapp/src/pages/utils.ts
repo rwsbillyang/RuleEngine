@@ -1,5 +1,5 @@
 import { Cache } from '@rwsbillyang/usecache'
-import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpression, ComplexExpressionMeta, ComplexExpressionRecord, BaseExpressionRecord, JsonValue, OperandConfig, OperandConfigItem, ParamType, OperandValueMeta, Operand, LabelValue, MiniOperand } from "./DataType"
+import { AllParamTypeKey, BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpression, ComplexExpressionMeta, ComplexExpressionRecord, BaseExpressionRecord, JsonValue, OperandConfig, OperandConfigItem, ParamType, OperandMeta, OperandMiniMeta, LabelValue } from "./DataType"
 
 
 /**
@@ -134,7 +134,7 @@ export const complexExprRecord2String = (expr?: ComplexExpressionRecord) => {
 export const basicExpressionMeta2String = (meta?: BasicExpressionMeta) => {
     if (!meta || meta._class === "Complex") return "暂无"
 
-    const list: { key: string, value: OperandValueMeta | undefined }[] = []
+    const list: { key: string, value: OperandMeta | undefined }[] = []
     for (let k in meta.operandMetaObj) {
         list.push({ key: k, value: meta.operandMetaObj[k] })   //meta.operandValueMap.forEach((v,k)=>{ list.push({key: k, value: v}) })
     }
@@ -174,7 +174,7 @@ export const complexExpressionMeta2String = (meta?: ComplexExpressionMeta) => {
  * @param operandMeta 
  * @returns 
  */
-export const operandMeta2String = (name: string, operandMeta?: OperandValueMeta) => {
+export const operandMeta2String = (name: string, operandMeta?: OperandMeta) => {
     if (!operandMeta) return ""
     if (operandMeta.t === 'P') {
         return name + "=" + operandMeta.param?.label + "(" + operandMeta.param?.mapKey + ")"
@@ -218,7 +218,7 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta, toMini: boolean = tru
         console.log("should not come here: no op")
         return undefined
     }
-    const operandValueObj: { [key: string]: Operand | MiniOperand } = {}
+    const operandValueObj: { [key: string]: OperandMiniMeta | JsonValue } = {}
     for (let k in meta.operandMetaObj) {
         const v = operandMeta2Operand(k, meta.operandMetaObj[k], toMini)
         //if(v === -1) return -1
@@ -299,7 +299,7 @@ const extractIfLabelValue = (jsonValue?: JsonValue) => {
  * @param operandMeta OperandValueMeta
  * @returns 
  */
-const operandMeta2Operand = (name: string, operandMeta?: OperandValueMeta, toMini: boolean = true) => {
+const operandMeta2Operand = (name: string, operandMeta?: OperandMeta, toMini: boolean = true) => {
     if (operandMeta === undefined) return undefined
    
     if(operandMeta.t === 'P'){
@@ -307,15 +307,17 @@ const operandMeta2Operand = (name: string, operandMeta?: OperandValueMeta, toMin
             console.warn("operandMeta.valueType is'Param', but no param or param.mapKey")
             return undefined
         }else{
+            const key = operandMeta.param.mapKey
             if(toMini){
-                const opvalue: MiniOperand = {
-                    k: operandMeta.param?.mapKey,
+                const opvalue: JsonValue = {
+                    _class: "Var",//服务器端  IType.Type_Variable = "Var"
+                    v: key,
                 }
                 return opvalue
             }else{
-                const opvalue: Operand = {
+                const opvalue: OperandMiniMeta = {
                     t: operandMeta.t,
-                    key: operandMeta.param?.mapKey,
+                    key: key,
                 }
                 return opvalue
             }
@@ -355,12 +357,9 @@ const operandMeta2Operand = (name: string, operandMeta?: OperandValueMeta, toMin
     extractIfLabelValue(operandMeta.jsonValue)
 
     if(toMini){
-        const opvalue: MiniOperand = {
-            j:  jsonValue
-        }
-        return opvalue
+        return jsonValue
     }else{
-        const opvalue: Operand = {
+        const opvalue: OperandMiniMeta = {
             t: operandMeta.t,
             value:  jsonValue
         }
@@ -419,7 +418,7 @@ export const checkJsonValueClass = (code: string) => {
 /***
  * 有效信息，用于生成md5作为id
  */
-export const opValue2Md5Msg = (name: string, opValue?: Operand) => {
+export const opValue2Md5Msg = (name: string, opValue?: OperandMiniMeta) => {
     if (opValue === undefined) return ""
     if (opValue.t === "P") return `&${name}.OperandKey=${opValue.key}`
     else return `&${name}.OperandValue=${opValue.value}`

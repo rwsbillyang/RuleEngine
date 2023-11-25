@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { ModalForm, ProFormCascader, ProFormDependency, ProFormInstance, ProFormSelect, ProFormText } from "@ant-design/pro-form";
-import { AllParamTypeKey, BasicExpressionMeta, ConstantQueryParams, BaseExpressionRecord, ExpressionQueryParams, Opcode, OpcodeQueryParams, OperandConfig, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, ParamTypeQueryParams, OperandValueMeta, ParamOperandConfigKey, OperandConfigItem } from "../DataType";
+import { AllParamTypeKey, BasicExpressionMeta, ConstantQueryParams, BaseExpressionRecord, ExpressionQueryParams, Opcode, OpcodeQueryParams, OperandConfig, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, ParamTypeQueryParams, OperandMeta, ParamOperandConfigKey, OperandConfigItem } from "../DataType";
 
 import { TreeCache, Cache, deepCopy, ArrayUtil } from "@rwsbillyang/usecache"
 import { asyncSelect2Request, asyncSelectProps2Request } from "@/myPro/MyProTableProps";
@@ -407,7 +407,7 @@ export const BasicExprMetaEditModal: React.FC<{
  * @param operandConfig 
  */
 const defaultOperandValueMeta = (operandConfig: OperandConfig) => {
-  const operandMeta: OperandValueMeta = {}
+  const operandMeta: OperandMeta = {}
   if (operandConfig.defaultOperandValueType) {
     operandMeta.t = operandConfig.defaultOperandValueType
     return operandMeta
