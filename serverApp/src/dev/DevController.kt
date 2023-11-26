@@ -227,7 +227,7 @@ class DevController(val service: AbstractSqlService){
                 val e = newOperandCfgMap[k]
                 if(e != null){
                     newOperandCfgMap[k] = OperandConfig(e.label, e.tooltip, e.multiple, e.required, e.typeCode,
-                        v.contantIds, e.selectOptions, e.defaultSelect,e.defaultOperandValueType,e.enable)
+                        v.contantIds, e.selectOptions, e.defaultSelect,e.defaultType,e.enable)
                 }
             }
         }

@@ -86,7 +86,7 @@ function doSth_correctRule1(ruleCommon: RuleCommon) {
             } else {
                 const m = e.meta as BasicExpressionMeta
                 //removeFieldInBasicExpressionMeta("starCat", m)
-                e.expr = basicMeta2Expr(e.meta as BasicExpressionMeta)
+                e.expr = basicMeta2Expr(m)
                 // if(expr === -1){
                 //     console.log("id="+e.id+", after correct: ", expr, e.meta)
                 // }else{

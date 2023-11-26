@@ -54,7 +54,7 @@ class OperandConfig(
     val contantIds: List<Int>? = null, //操作数值域，常量id数组[1,2,3]
     val selectOptions: List<SelectOption<String>>? = null,//操作数值域，不是从远程加载常量，而是指定的选择范围内选
     val defaultSelect: String? = null,
-    val defaultOperandValueType: String? = null, //"Param" | "Constant" | "Operand"
+    val defaultType: String? = null, //"Param" | "Constant" | "Operand"
     val enable: Boolean = true
 )
 

@@ -40,7 +40,7 @@ export interface OperandConfig{
     contantIds?: number[], //操作数值域 常量id数组[1,2,3]
     selectOptions?: LabelValue[]
     defaultSelect?: string
-    defaultOperandValueType?:  "P" | "C" | "J" 
+    defaultType?:  "P" | "C" | "J" 
     enable: boolean
 }
 /**
@@ -241,17 +241,21 @@ interface ExpressionMetaBase{
 }
 export interface BasicExpressionMeta extends ExpressionMetaBase{
     paramId?: number | number[],//与mapKey&paramTypeId二选一
-    param?: Param,
+    //param?: Param,//paramType -> opCodeList -> operandCfgList(若operfandCfg更新导致整个需更新，故不能缓存) 
 
     paramTypeId?: number,
-    paramType?: ParamType,
+    //paramType?: ParamType,//paramType -> opCodeList -> operandCfgList(若operfandCfg更新导致整个需更新，故不能缓存) 
     mapKey?: string,
     extra?: string
 
      //使用Map<string, OperandValueMeta>时，在parse成对象时得到是object，而不是map
-     //现改成object，key为操作数键值，值为OperandValueMeta
+     //现改成object，key为操作数键值，值为OperandMeta
     operandMetaObj: {[key:string]: OperandMeta} 
 }
+// export interface BasicExpressionMetaComplete extends BasicExpressionMeta{
+//     param?: Param,//paramType -> opCodeList -> operandCfgList(若operfandCfg更新导致整个需更新，故不能缓存) 
+//     paramType?: ParamType,//paramType -> opCodeList -> operandCfgList(若operfandCfg更新导致整个需更新，故不能缓存) 
+// }
 
 export interface ComplexExpressionMeta  extends ExpressionMetaBase{
     _class: "Complex",
