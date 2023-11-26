@@ -251,20 +251,27 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta, toMini: boolean = tru
 //数据量过大，尤其某些复合表达式数据量超过字段存储空间
 export const removeBasicExpressionMetaFields = (meta: BasicExpressionMeta) => {
     if(meta.param){
-        delete meta.param.domain
-        delete meta.param.domainId
-        delete meta.param.remark
-        delete meta.param.paramCategory
+        delete  meta.param
+        // delete meta.param.domain
+        // delete meta.param.domainId
+        // delete meta.param.remark
+        // delete meta.param.paramCategory
 
-        delete meta.param.paramType.domain
-        delete meta.param.paramType.domainId
-        delete meta.param.paramType.supportOps
+        // delete meta.param.paramType.domain
+        // delete meta.param.paramType.domainId
+        // delete meta.param.paramType.supportOps
     }
     if(meta.paramType){
-        delete meta.paramType.domain
-        delete meta.paramType.domainId
-        delete meta.paramType.supportOps
+        delete meta.paramType
+        // delete meta.paramType.domain
+        // delete meta.paramType.domainId
+        // delete meta.paramType.supportOps
     } 
+    if(meta.op){
+        delete meta.op.domain
+        // delete meta.op.operandConfigList
+        // delete meta.op.operandConfigMapStr
+    }
 }
 //数据量过大，尤其某些复合表达式数据量超过字段存储空间
 export const removeComplexExpressionMetaFields = (meta: ComplexExpressionMeta) => {

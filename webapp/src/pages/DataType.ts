@@ -241,10 +241,10 @@ interface ExpressionMetaBase{
 }
 export interface BasicExpressionMeta extends ExpressionMetaBase{
     paramId?: number | number[],//与mapKey&paramTypeId二选一
-    //param?: Param,//paramType -> opCodeList -> operandCfgList(若operfandCfg更新导致整个需更新，故不能缓存) 
+    param?: Param,//paramType -> opCodeList -> operandCfgList(若operfandCfg更新导致整个需更新，故不能缓存: 存储时去掉该字段) 
 
     paramTypeId?: number,
-    //paramType?: ParamType,//paramType -> opCodeList -> operandCfgList(若operfandCfg更新导致整个需更新，故不能缓存) 
+    paramType?: ParamType,//paramType -> opCodeList -> operandCfgList(若operfandCfg更新导致整个需更新，故不能缓存: 存储时去掉该字段) 
     mapKey?: string,
     extra?: string
 

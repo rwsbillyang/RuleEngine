@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, {  useState } from "react";
 import { ModalForm, ProFormDependency, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-form";
-import { AllDomainKey, AllParamTypeKey, BasicExpressionRecord, Domain, DomainQueryParams, ExpressionQueryParams, ParamType, ParamTypeQueryParams } from "../DataType";
+import { AllDomainKey,  BasicExpressionRecord, Domain, DomainQueryParams, ExpressionQueryParams } from "../DataType";
 
 import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps";
 import { Host } from "@/Config";
@@ -27,18 +27,6 @@ export const BaiscExpressionRecordEditor: React.FC<{
   const [meta, setMeta] = useState(record?.meta)
 
   //console.log("BaiscExpressionRecordEditor, record=", record)
-
-  //加载 all paramType 后面需要
-  useEffect(() => {
-    asyncSelectProps2Request<ParamType, ParamTypeQueryParams>({
-      key: AllParamTypeKey,//不提供key，则不缓存
-      url: `${Host}/api/rule/composer/list/paramType`,
-      query: { pagination: { pageSize: -1, sKey: "id", sort: -1 } },//pageSize: -1为全部加载
-      //convertFunc: (item) => { return { label: item.code, value: item.id } }
-    })//.then(() => console.log("get AllParamType done"))
-  }, [])
-
-
 
   return <ModalForm<BasicExpressionRecord> initialValues={record} layout="horizontal"
     title="基本表达式"

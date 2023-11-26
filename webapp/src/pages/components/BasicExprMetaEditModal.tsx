@@ -408,8 +408,8 @@ export const BasicExprMetaEditModal: React.FC<{
  */
 const defaultOperandValueMeta = (operandConfig: OperandConfig) => {
   const operandMeta: OperandMeta = {}
-  if (operandConfig.defaultOperandValueType) {
-    operandMeta.t = operandConfig.defaultOperandValueType
+  if (operandConfig.defaultType) {
+    operandMeta.t = operandConfig.defaultType
     return operandMeta
   }
   if (operandConfig.selectOptions && operandConfig.selectOptions.length) {
@@ -515,7 +515,7 @@ const getSupportOpsByParamTypeId = (paramTypeId: number, paramTypeInMeta?:ParamT
  */
 const getOpcodeById = (opId?: number, paramTypeId?: number, meta?: BasicExpressionMeta) => {
   let opcode: Opcode | undefined = Cache.findOne(OpKeyPrefix + paramTypeId, opId, "id")
-  opcode = ArrayUtil.findOne(getParamTypeById(paramTypeId, meta?.paramType)?.supportOps || [], opId, "id")
+  if(!opcode) opcode = ArrayUtil.findOne(getParamTypeById(paramTypeId, meta?.paramType)?.supportOps || [], opId, "id")
   if (!opcode) opcode = meta?.op
   return opcode
 }

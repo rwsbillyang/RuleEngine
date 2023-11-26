@@ -14,7 +14,7 @@ import { BaiscExpressionRecordEditor } from "../components/BaiscExpressionRecord
 import { defaultProps } from "../moduleTableProps"
 import { UseCacheConfig } from "@rwsbillyang/usecache"
 import { ComplexExpressionRecordEditor } from "../components/ComplexExpressionRecordEditor"
-import { basicMeta2Expr, complexMeta2Expr } from "../utils"
+import { basicMeta2Expr, complexMeta2Expr, removeBasicExpressionMetaFields, removeComplexExpressionMetaFields } from "../utils"
 import { Tabs, TabsProps } from "antd"
 import { lazyLoad } from "@/AppRoutes"
 
@@ -83,6 +83,7 @@ export const BasicExpressionTable: React.FC = () => {
       //所以保存时放到meta中，同时给meta中的other start等赋值
       //此转换函数再saveOne中执行
       //console.log("BasicExpressionTable: to transform...")
+      if(e.meta) removeBasicExpressionMetaFields(e.meta)
       e.metaStr = JSON.stringify(e.meta)
       e.exprStr = JSON.stringify(basicMeta2Expr(e.meta))
 
@@ -158,9 +159,10 @@ export const ComplexExpressionTable: React.FC = () => {
       //所以保存时放到meta中，同时给meta中的other start等赋值
       //此转换函数再saveOne中执行
       // console.log("ComplexExpressionTable: to transformBeforeSave...")
+      if(e.meta) removeComplexExpressionMetaFields(e.meta)
       e.metaStr = JSON.stringify(e.meta)
       e.exprStr = JSON.stringify(complexMeta2Expr(e.meta))
-
+      
       delete e["domain"]
       delete e["meta"]
       delete e["expr"]

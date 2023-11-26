@@ -126,7 +126,6 @@ export const rubleTableProps = {
         e.tags = e.tagList?.join(",")
 
         if (e.meta) {
-            e.metaStr = JSON.stringify(e.meta)
             if (e.meta["metaList"]) {
                 e.expr = complexMeta2Expr(e.meta)
                 removeComplexExpressionMetaFields(e.meta)
@@ -134,6 +133,7 @@ export const rubleTableProps = {
                 e.expr = basicMeta2Expr(e.meta)
                 removeBasicExpressionMetaFields(e.meta)
             }
+            e.metaStr = JSON.stringify(e.meta)
             e.exprStr = JSON.stringify(e.expr)
         }
         if(e.remark?.trim() === "") delete e.remark
