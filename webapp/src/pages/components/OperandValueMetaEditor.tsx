@@ -234,15 +234,15 @@ export const OperandValueMetaEditor: React.FC<{
 
             {
                 (operandConfig.selectOptions && operandConfig.selectOptions.length > 0) ?
-                    <Select value={value?.constantIds as string | number | (string | number)[] || operandConfig.defaultSelect || null}
+                    <Select value={value?.constIds as string | number | (string | number)[] || operandConfig.defaultSelect || null}
                         disabled={disabled ? disabled : value?.t !== 'C'}
                         options={operandConfig.selectOptions}
                         mode={operandConfig.multiple ? 'multiple' : undefined}
                         onChange={(v) => {
                             if (v !== undefined) {
-                                onChange({ ...value, constantIds: v, jsonValue: {v: v, _class: "String"} })
+                                onChange({ ...value, constIds: v, jsonValue: {v: v, _class: "String"} })
                             } else {
-                                onChange({ ...value, constantIds: undefined, jsonValue: undefined })
+                                onChange({ ...value, constIds: undefined, jsonValue: undefined })
                             }
                         }} /> : <Cascader
                         style={{ width: '30%' }}
@@ -251,7 +251,7 @@ export const OperandValueMetaEditor: React.FC<{
                         multiple={multiple}
                         maxTagCount="responsive"
                         allowClear
-                        value={value?.constantIds as any || null}
+                        value={value?.constIds as any || null}
                         loading={constantLoading}
                         onChange={(v) => {
                             //value是一个数组，存放的分别是select option的value
@@ -269,9 +269,9 @@ export const OperandValueMetaEditor: React.FC<{
                                     jsonValue = getJsonValueFromArray(constants, multiple, v, typeCode, constantAsyncSelectProps.key)
                                 }
 
-                                onChange({ ...value, constantIds: v, jsonValue: jsonValue })
+                                onChange({ ...value, constIds: v, jsonValue: jsonValue })
                             } else {
-                                onChange({ ...value, constantIds: undefined, jsonValue: undefined })
+                                onChange({ ...value, constIds: undefined, jsonValue: undefined })
                             }
                         }}
                     />

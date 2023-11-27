@@ -58,7 +58,7 @@ class OperandMeta(
     val valueType: String , //"Param" | "Constant" | "JsonValue" | undefined
     val paramId: Int? = null,
     val param: Param? = null,
-    //val constantIds: Int? = null, //无法与前端对应起来，前端各种类型都有：string | number | (string | number)[] | (string | number)[][] '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
+    //val constIds: Int? = null, //无法与前端对应起来，前端各种类型都有：string | number | (string | number)[] | (string | number)[][] '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
     //val constantIdsStr: String? = null,
     val jsonValue: Operand? = null
 )

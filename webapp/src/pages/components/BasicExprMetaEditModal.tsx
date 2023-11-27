@@ -423,7 +423,7 @@ const defaultOperandValueMeta = (operandConfig: OperandConfig) => {
   }
   if (operandConfig.selectOptions && operandConfig.selectOptions.length) {
     operandMeta.t = 'C'
-    operandMeta.constantIds = operandConfig.defaultSelect
+    operandMeta.constIds = operandConfig.defaultSelect
     operandMeta.jsonValue = { _class: "String", v: operandConfig.defaultSelect }
     return operandMeta
   }

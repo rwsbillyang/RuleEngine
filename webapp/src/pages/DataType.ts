@@ -292,7 +292,7 @@ export interface OperandMeta {
     t?: "P" | "C" | "J" | undefined //"Param" | "Constant" | "JsonValue"
     paramId?: number | number[] //为数组时，表示EnableParamCategory = true
     param?: Param
-    constantIds?: string | number | (string | number)[] | (string | number)[][] //eg.树形select的option的value 树形单选：[1, "乙"] 以及 [4]；多选选中多个[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
+    constIds?: string | number | (string | number)[] | (string | number)[][] //eg.树形select的option的value 树形单选：[1, "乙"] 以及 [4]；多选选中多个[[1, '甲'],[1, '乙'],[1, '丁']]，多选全部选中：[[1]]
     //constants?: Constant[]
     jsonValue?: JsonValue
 }
