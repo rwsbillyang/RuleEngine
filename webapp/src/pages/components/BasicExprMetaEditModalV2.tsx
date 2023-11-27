@@ -81,6 +81,7 @@ export const BasicExprMetaEditModalV2: React.FC<{
     const paramType =  getParamTypeById(ref.current.paramTypeList, newMeta.paramTypeId) || getParamById(ref.current.paramList, newMeta.paramId)?.paramType
     if(paramType){
       newMeta.paramType = paramType
+      newMeta.type = paramType.code
       if(paramType.supportOps){
         setOpcodeOptions(paramType.supportOps.map((item) => { return { label: item.label, value: item.id } }))
 
@@ -98,8 +99,12 @@ export const BasicExprMetaEditModalV2: React.FC<{
               if (v) newMeta.operandMetaObj[e.name] = v
             })
           }
+        }else{
+          console.log("updateOpAndOperandsIfParamTypeChanged: not found op,  newMeta.opId="+ newMeta.opId)
         }
       }
+    }else{
+      console.log("updateOpAndOperandsIfParamTypeChanged: not found paramType, newMeta.paramTypeId=" + newMeta.paramTypeId)
     }
   }
 
@@ -139,7 +144,8 @@ export const BasicExprMetaEditModalV2: React.FC<{
 
         newMeta.paramTypeId = meta?.paramTypeId || param?.paramType?.id
         newMeta.paramType = getParamTypeById(ref.current.paramTypeList, newMeta.paramTypeId, meta?.paramType || param?.paramType) 
-        
+        newMeta.type = param?.paramType?.code || newMeta.paramType?.code
+
         newMeta.mapKey = meta?.mapKey || param?.mapKey
         newMeta.extra = meta?.extra || param?.extra
         newMeta.opId = meta?.opId
@@ -170,6 +176,7 @@ export const BasicExprMetaEditModalV2: React.FC<{
         newMeta.param = param
         newMeta.paramTypeId = param?.paramType?.id
         newMeta.paramType = param?.paramType
+        newMeta.type = param?.paramType?.code
         newMeta.mapKey = param?.mapKey
         newMeta.extra = param?.extra
         newMeta.opId = undefined
@@ -192,10 +199,11 @@ export const BasicExprMetaEditModalV2: React.FC<{
 
       //变量类型切换
       if (v.paramTypeId && newMeta.paramTypeId != v.paramTypeId) { //paramTypeId改变
-        console.log("paramTypeId changed...")
+        console.log("paramTypeId changed, v.id= " + v.paramTypeId)
         const paramType = getParamTypeById(ref.current.paramTypeList, v.paramTypeId, newMeta.paramType)
         newMeta.paramType = paramType
-        newMeta.paramTypeId = v.id
+        newMeta.paramTypeId = v.paramTypeId
+        newMeta.type = paramType?.code
 
         form?.setFieldValue("exprId", undefined)
         form?.setFieldValue("paramId", undefined)
@@ -206,12 +214,12 @@ export const BasicExprMetaEditModalV2: React.FC<{
         
         newMeta.opId = undefined
         newMeta.op = undefined
+        
+        updateOpAndOperandsIfParamTypeChanged()
 
         newMeta.operandMetaObj = {}
         setNewExprId(undefined)
         setOpTooltip(undefined)
-
-        updateOpAndOperandsIfParamTypeChanged()
       }
 
       //操作符切换
@@ -261,11 +269,7 @@ export const BasicExprMetaEditModalV2: React.FC<{
         message.warning("没有选择操作符")
         return false
       }
-      if (!oprandConfigList || oprandConfigList.length === 0) {
-        console.log("newMeta=", newMeta)
-        message.warning("没有操作数配置")
-        return false
-      }
+   
       //变量本身是否必须
       // if (!paramCfg || (paramCfg && paramCfg.required)) {
       //   if (!newMeta.paramId && (!newMeta.mapKey || newMeta.paramTypeId === undefined)) {
@@ -274,7 +278,11 @@ export const BasicExprMetaEditModalV2: React.FC<{
       //     return false
       //   }
       // }
-
+      if (!oprandConfigList) {
+        console.log("newMeta=", newMeta)
+        message.warning("没有操作数配置")
+        return false
+      }
       if (oprandConfigList.length > 0) {
         for (let i = 0; i < oprandConfigList.length; i++) {
           const e = oprandConfigList[i]
@@ -449,7 +457,7 @@ const defaultOperandValueMeta = (operandConfig: OperandConfig) => {
   }
   if (operandConfig.selectOptions && operandConfig.selectOptions.length) {
     operandMeta.t = 'C'
-    operandMeta.constantIds = operandConfig.defaultSelect
+    operandMeta.constIds = operandConfig.defaultSelect
     operandMeta.jsonValue = { _class: "String", v: operandConfig.defaultSelect }
     return operandMeta
   }

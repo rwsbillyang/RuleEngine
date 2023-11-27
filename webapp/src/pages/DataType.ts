@@ -248,6 +248,8 @@ export interface BasicExpressionMeta extends ExpressionMetaBase{
     mapKey?: string,
     extra?: string
 
+    type?: string //param.paramType or paramType中的code
+
      //使用Map<string, OperandValueMeta>时，在parse成对象时得到是object，而不是map
      //现改成object，key为操作数键值，值为OperandMeta
     operandMetaObj: {[key:string]: OperandMeta} 

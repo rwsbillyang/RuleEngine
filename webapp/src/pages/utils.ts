@@ -231,20 +231,20 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta, toMini: boolean = tru
         op: meta.op.code,
         operands: operandValueObj
     }
-    if (meta.mapKey && meta.paramType) {
-        expr._class = meta.paramType.code
+    if(meta.type){
+        expr._class = meta.type
+    }
+    if (meta.mapKey) {
         expr.key = meta.mapKey
         expr.extra = meta.extra
         return expr
-    }
-    if (meta.param) {
-        expr._class = meta.param.paramType.code
+    }else if (meta.param) {
         expr.key = meta.param.mapKey
         expr.extra = meta.param.extra
         return expr
     }
     
-    console.warn("should not come here: please check meta.param, meta.mapKey/meta.paramType")
+    console.warn("should not come here: please check meta.type or meta.mapKey")
     return undefined
 }
 
@@ -270,6 +270,7 @@ export const removeBasicExpressionMetaFields = (meta: BasicExpressionMeta) => {
     if(meta.op){
         //delete meta.op
         delete meta.op.domain
+        delete meta.op.remark
         delete meta.op.operandConfigList
         delete meta.op.operandConfigMapStr
     }
@@ -444,7 +445,8 @@ export const opValue2Md5Msg = (name: string, opValue?: OperandMiniMeta) => {
  * @param obj 
  * @returns 
  */
-export function sortedConcat(obj: any) {
+export function sortedConcat(obj?: any) {
+    if(!obj) return "{}"
     const keys = Object.keys(obj).sort()
 
     let str = "{"

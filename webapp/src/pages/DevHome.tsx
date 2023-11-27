@@ -16,7 +16,7 @@ export const DevHome: React.FC = () => (<div>
         <Button onClick={correctExpressionRecord}>Correct Expression</Button>
     </p>
     <p>
-        <Button onClick={() => loopQueryRulePage(doSth_correctRule1, 20, 0)}>Correct1 Rule</Button>
+        <Button onClick={() => loopQueryRulePage(doSth_correctRule1, 20, 20)}>Correct1 Rule</Button>
     </p>
     <p>
         <Button onClick={() => loopQueryRulePage(doSth_correctRule2)}>Correct2 Rule</Button>
@@ -68,9 +68,9 @@ function loopQueryRulePage(doSth: (ruleCommon: RuleCommon) => Rule | undefined, 
             if(e) saveOne(e, "/api/rule/composer/save/rule")
             else console.log("e is undefined after doSth")
         })
-        //  if (data.length >= pageSize) {
-        //      getRuleAndConvert(doSth, pageSize, data[data.length - 1].id)
-        //  }
+         if (data.length >= pageSize) {
+            loopQueryRulePage(doSth, pageSize, data[data.length - 1].id)
+         }
     }, query)
 }
 
@@ -81,19 +81,19 @@ function doSth_correctRule1(ruleCommon: RuleCommon) {
         if (e.meta) {
             if (e.meta["metaList"]) {
                 const m = e.meta as ComplexExpressionMeta
-                removeComplexExpressionMetaFields(m)
-                removeComplexExpressionMetaInOperands(m,"starCat")
                 e.expr = complexMeta2Expr(m)
+                removeComplexExpressionMetaInOperands(m,"starCat")
+                removeComplexExpressionMetaFields(m)
             } else {
                 const m = e.meta as BasicExpressionMeta
-                removeBasicExpressionMetaFields(m)
-                removeBasicExpressionMetaFieldsInOperands(m, "starCat")
                 e.expr = basicMeta2Expr(m)
+                removeBasicExpressionMetaFieldsInOperands(m, "starCat")
+                removeBasicExpressionMetaFields(m)
             }
             e.metaStr = JSON.stringify(e.meta)
             e.exprStr = JSON.stringify(e.expr)
             
-            console.log("id=" + e.id + ",rule.expr", e.expr)
+            //console.log("id=" + e.id + ",rule.expr", e.expr)
 
             return e
         } else {

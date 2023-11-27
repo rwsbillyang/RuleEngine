@@ -48,7 +48,7 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExp
 
   //解析现有的ComplexExpressionMeta
   const destructMeta = (result: ExpressionRecord[], meta?: ComplexExpressionMeta) => {
-   // console.log("destructMeta... ")
+    console.log("destructMeta... ")
       //编辑状态下，首次加载使用待编辑的meta?.metaList
       const list = destructComplexMetaList(current.allRecords, meta?.metaList)
 
@@ -64,11 +64,11 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExp
       else 
         setTargetKeys([])
 
-      //console.log("destructMeta done! get size=" + list.length + ", and target keys size=" + list2.length)
+      console.log("destructMeta done! get size=" + list.length + ", and target keys size=" + list2.length)
 
     current.allExprList = result
     setExprList(result)
-    //console.log("finally,  exprList=", result)
+    console.log("finally,  exprList=", result)
   }
 
   //加载domainId下所有表达式， 用于放置在transfer的左侧， 然后解析现有的ComplexExpressionMeta
@@ -121,7 +121,7 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExp
                 }
                 if(flag) setTargetKeys([...targetKeys])
                 setExprList([...exprList])
-                //setBasicRecord1
+       
               }
             }} />}
             {
@@ -146,33 +146,29 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExp
               message.info("no selected?")
               return
             }
-            if (list?.length === targetKeys.length) {
-              const metaList = list.map((e) => e.meta).filter((e) => !!e) as (BasicExpressionMeta | ComplexExpressionMeta)[]
-              const meta: ComplexExpressionMeta = {
-                _class: "Complex",
-                op: op,
-                opId: op.id,
-                metaList: metaList
-              }
-              const mockExpr: ComplexExpressionRecord = {
-                label: "临时",
-                type: "Complex",
-                meta: meta,
-                key: md5(sortedConcat(meta2Expr(meta)))
-              }
+            
+            const metaList = list.map((e) => e.meta).filter((e) => !!e) as (BasicExpressionMeta | ComplexExpressionMeta)[]
+            const meta: ComplexExpressionMeta = {
+              _class: "Complex",
+              op: op,
+              opId: op.id,
+              metaList: metaList
+            }
+            const mockExpr: ComplexExpressionRecord = {
+              label: "临时",
+              type: "Complex",
+              meta: meta,
+              key: md5(sortedConcat(meta2Expr(meta)))
+            }
 
-              if (pushIfNotPresent(exprList, mockExpr, "key")) //metaList.push(meta)
-              {
-                setExprList([...exprList])
-                setTargetKeys([])
-                console.log("successful to add one complexExpressionMeta to left")
-              } else {
-                console.log("left already exsit")
-                message.info("左侧已存在相同条件")
-              }
-
+            if (pushIfNotPresent(exprList, mockExpr, "key")) //metaList.push(meta)
+            {
+              setExprList([...exprList])
+              setTargetKeys([])
+              console.log("successful to add one complexExpressionMeta to left")
             } else {
-              console.warn("fail to get metaList from targetKeys=", targetKeys)
+              console.log("left already exsit")
+              message.info("左侧已存在相同条件")
             }
 
           }} />
@@ -229,7 +225,7 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExp
         {
           const r = list[0] as BasicExpressionRecord
           setBasicRecord1({...r})
-          //  console.log("onSelectChange: left BasicRecord1=", list[0])
+          console.log("onSelectChange: left BasicRecord1=", list[0])
         }
         else
           setBasicRecord1(undefined)
