@@ -27,12 +27,9 @@ import com.github.rwsbillyang.ktorKit.db.SqlLiteHelper
 import com.github.rwsbillyang.rule.composer.*
 import com.github.rwsbillyang.rule.runtime.*
 import com.github.rwsbillyang.yinyang.core.Gender
-import com.github.rwsbillyang.yinyang.core.Zhi
-import com.github.rwsbillyang.yinyang.ziwei.StarCategory
 import com.github.rwsbillyang.yinyang.ziwei.ZwConstants
 import com.github.rwsbillyang.yinyang.ziwei.ZwPanData
 import com.github.rwsbillyang.yinyang.ziwei.rrt.*
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 
 
@@ -47,26 +44,13 @@ class MyBaseCrudService(): AbstractSqlService(VoidCache()){
 
 //若需在IDE中运行测试，需将依赖com.github.rwsbillyang:yinyang从 compileOnly 改为：implementationg
 fun main(){
-    //val service = MyBaseCrudService()
-    //runRuleEval(service, 0, LocalDateTime.now()) //0 命宫， 1 父母宫 2 福德宫...
+    val service = MyBaseCrudService()
+    runRuleEval(service, 0, LocalDateTime.now()) //0 命宫， 1 父母宫 2 福德宫...
 
-    testSerialize() //sealed class 不能🈶多个层次的继承
-
-
+  //  testSerialize() //sealed class 不能🈶多个层次的继承
 
  //   val sqlLiteHelper = SqlLiteHelper("/Users/bill/git/MingLi/app/src/main/assets/app.db")
-
   //  testSqlLiteFind(sqlLiteHelper)
-    /*
-    RuleMigrateController(service).apply {
-        createRuleTable(sqlLiteHelper)
-        migrateRuleIntoSqlLite(sqlLiteHelper)
-
-        createGroupTable(sqlLiteHelper)
-        migrateGroupIntoSqlLite(sqlLiteHelper)
-    }
-    */
-
  //   sqlLiteHelper.close()
 }
 
@@ -180,10 +164,17 @@ fun runRuleEval(service: MyBaseCrudService, gongNameIndex: Int, dateTime: LocalD
 
     val toEvalRule: (extra: Any) -> EvalRule = {
         when (it) {
-            is Rule -> EvalRule(it.getExpr(), it.exclusive == 1, it.thenAction, it.elseAction, it)
+            is Rule ->{
+                try {
+                    EvalRule(it.getExpr(), it.exclusive == 1, it.thenAction, it.elseAction, it)
+                }catch (e: Exception){
+                    println("Exception=${e.message}, it.id=${it.id}")
+                    throw e
+                }
+            }
             is RuleGroup -> EvalRule(null, it.exclusive == 1, null, null, it)
             else -> {
-                System.err.println("toEvalRule: only support Rule/RuleGroup as extra for EvalRule")
+                System.err.println("toEvalRule: only support Rule/RuleGroup as extra for EvalRule： ${it.toString()}")
                 throw Exception("only support Rule/RuleGroup as extra")
             }
         }
@@ -210,7 +201,9 @@ fun runRuleEval(service: MyBaseCrudService, gongNameIndex: Int, dateTime: LocalD
         Pair(key, data)
     }
 
-    val rootList = service.findAll(Meta.ruleGroup, {Meta.ruleGroup.level eq 0})
+    val rootList = service.findAll(Meta.ruleGroup, {Meta.ruleGroup.label eq "太微赋"}
+        //{Meta.ruleGroup.level eq 0}
+    )
     RuleEngine.eval(rootList, dataProvider, loadChildrenFunc, toEvalRule, collector)
 
     //println收集的结果
@@ -222,6 +215,8 @@ fun runRuleEval(service: MyBaseCrudService, gongNameIndex: Int, dateTime: LocalD
 //        println("key=${k} v=${v.data?.label}, v.parents=${v.parents.joinToString(",")},v.children=${v.children.joinToString(",")}")
 //    }
 }
+
+
 
 fun testSqlLiteFind(sqlLiteHelper: SqlLiteHelper){
     val rs = sqlLiteHelper.find("select * from BirthInfo ORDER BY id DESC LIMIT 1")

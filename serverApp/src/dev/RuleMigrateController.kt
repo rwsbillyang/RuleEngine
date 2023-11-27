@@ -31,6 +31,19 @@ import kotlinx.serialization.encodeToString
 import org.komapper.core.dsl.Meta
 import java.time.LocalDateTime
 
+
+fun main(){
+    val service = MyBaseCrudService()
+    val sqlLiteHelper = SqlLiteHelper("/Users/bill/git/MingLi/app/src/main/assets/app.db")
+    RuleMigrateController(service).apply {
+        createRuleTable(sqlLiteHelper)
+        migrateRuleIntoSqlLite(sqlLiteHelper)
+
+        createGroupTable(sqlLiteHelper)
+        migrateGroupIntoSqlLite(sqlLiteHelper)
+    }
+    sqlLiteHelper.close()
+}
 /**
  * 将docker中的MySQL8中的Rule和RuleGroup，迁移到MingLi app的assets中的sqlite app.db中
  * */
@@ -162,6 +175,24 @@ class RuleMigrateController(val service: AbstractSqlService) {
         println("Done!")
     }
 
+    //test 太微赋 valid
+    fun testExprDeserialize(service: MyBaseCrudService){
+        service.findAll(Meta.ruleGroup, {Meta.ruleGroup.label eq "太微赋"}
+            //{Meta.ruleGroup.level eq 0}
+        ).forEach {
+            val list = it.ruleChildrenIds?.split(",")
+            if(!list.isNullOrEmpty()){
+                service.findAll(Meta.rule, {Meta.rule.id inList list.map{it.toInt()} }).forEach {
+                    try {
+                        it.getExpr()
+                    }catch (e: Exception){
+                        System.err.println("it.getExpr() Exception=${e.message}, it.id=${it.id}")
+                    }
+                }
+            }
+        }
+
+    }
 
 
     fun runRuleExprCheck(){
