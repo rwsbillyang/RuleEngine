@@ -8,7 +8,7 @@ import { Button, Form, message } from "antd";
 
 import { saveOne } from "@/myPro/MyProTable";
 import { basicExpressionMeta2String} from "../utils";
-import { BasicExprMetaEditModal } from "./BasicExprMetaEditModal";
+import { BasicExprMetaEditModalV2 } from "./BasicExprMetaEditModalV2";
 
 
 /***
@@ -80,7 +80,7 @@ export const BaiscExpressionRecordEditor: React.FC<{
     <ProFormDependency name={["domainId"]}>
       {({ domainId }) => {
         return <Form.Item label="表达式" required>
-          {basicExpressionMeta2String(meta)} <BasicExprMetaEditModal onDone={setMeta} //不使用cannotChooseOne表示可以在现有基础上修改 快速创建
+          {basicExpressionMeta2String(meta)} <BasicExprMetaEditModalV2 onDone={setMeta} //不使用cannotChooseOne表示可以在现有基础上修改 快速创建
             domainId={domainId} meta={meta} />
         </Form.Item>
       }}

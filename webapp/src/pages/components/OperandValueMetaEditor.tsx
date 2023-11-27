@@ -45,10 +45,7 @@ export const OperandValueMetaEditor: React.FC<{
     if(!checkJsonValueClass(typeCode)){
         return <div>{operandConfig.label+": wrong type code=" +typeCode +", please correct it in opCode table"}</div>
     }
-    //console.log("operandConfig=",operandConfig)
-    //console.log(operandConfig.label+": typeCode="+typeCode)
-
-
+  
     //只是bool类型，不用那么多选择
     // if(typeCode === "Bool"){
     //     return <Form.Item label={operandConfig.label} tooltip={operandConfig.tooltip} required={operandConfig.required}>
@@ -66,7 +63,9 @@ export const OperandValueMetaEditor: React.FC<{
 
     const multiple = operandConfig.multiple
     
-
+   // console.log("OperandMeta=",value)
+     //console.log("operandConfig=",operandConfig)
+    //console.log(operandConfig.label+": typeCode="+typeCode)
    // console.log("OperandValueMetaEditor, constantQueryParams=",constantQueryParams)
 
     //变量加载只是与paramType同类型的变量

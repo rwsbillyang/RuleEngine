@@ -12,7 +12,7 @@ import { RuleName } from "./RuleTable"
 
 import {  saveRuleOrGroup } from "./RuleCommon"
 import { basicExpressionMeta2String, complexExpressionMeta2String } from "../utils"
-import { BasicExprMetaEditModal } from "../components/BasicExprMetaEditModal"
+import { BasicExprMetaEditModalV2 } from "../components/BasicExprMetaEditModalV2"
 import { ComplexExprMetaEditModal } from "../components/ComplexExprMetaEditModal"
 
 
@@ -90,7 +90,7 @@ export const RuleEditModal: React.FC<{
             {({ domainId }) => {
                 return <>
                     <Form.Item label="基本条件" tooltip="基本条件和复合条件二选一">
-                        {basicExpressionMeta2String(condition.meta)} <BasicExprMetaEditModal onDone={(meta, exprId) => setCondition({ meta, exprId })}
+                        {basicExpressionMeta2String(condition.meta)} <BasicExprMetaEditModalV2 onDone={(meta, exprId) => setCondition({ meta, exprId })}
                             domainId={domainId} exprId={condition.exprId} meta={condition.meta?._class === "Basic" ? condition.meta : undefined} />
                     </Form.Item>
                     <Form.Item label="复合条件" tooltip="基本条件和复合条件二选一">
@@ -182,7 +182,7 @@ export const RuleEdit = () => {
             {({ domainId }) => {
                 return <>
                     <Form.Item label="基本条件" tooltip="基本条件和复合条件二选一">
-                        {basicExpressionMeta2String(condition.meta)} <BasicExprMetaEditModal onDone={(meta, exprId) => setCondition({ meta, exprId })}
+                        {basicExpressionMeta2String(condition.meta)} <BasicExprMetaEditModalV2 onDone={(meta, exprId) => setCondition({ meta, exprId })}
                             domainId={domainId} exprId={condition.exprId} meta={condition.meta} />
                     </Form.Item>
                     <Form.Item label="复合条件" tooltip="基本条件和复合条件二选一">

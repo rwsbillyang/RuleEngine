@@ -3,7 +3,7 @@
 import { cachedFetchPromise, cachedGet } from "@rwsbillyang/usecache";
 import React from "react";
 import { BasicExpression, BasicExpressionMeta, ComplexExpression, ComplexExpressionMeta, Rule, RuleCommon, RuleQueryParams } from "./DataType";
-import { basicMeta2Expr, complexMeta2Expr } from "./utils";
+import { basicMeta2Expr, complexMeta2Expr, removeBasicExpressionMetaFields, removeComplexExpressionMetaFields } from "./utils";
 import { Button } from "antd";
 
 //import { testTreeSearch } from "@/myPro/TreeUtil";
@@ -16,10 +16,10 @@ export const DevHome: React.FC = () => (<div>
         <Button onClick={correctExpressionRecord}>Correct Expression</Button>
     </p>
     <p>
-        <Button onClick={() => getRuleAndConvert(doSth_correctRule1, 20, 0)}>Correct1 Rule</Button>
+        <Button onClick={() => loopQueryRulePage(doSth_correctRule1, 20, 0)}>Correct1 Rule</Button>
     </p>
     <p>
-        <Button onClick={() => getRuleAndConvert(doSth_correctRule2)}>Correct2 Rule</Button>
+        <Button onClick={() => loopQueryRulePage(doSth_correctRule2)}>Correct2 Rule</Button>
     </p>
 </div>)
 
@@ -59,7 +59,7 @@ function correctExpressionRecord() {
 }
 
 
-function getRuleAndConvert(doSth: (ruleCommon: RuleCommon) => Rule | undefined, pageSize = 20, lastId?: number) {
+function loopQueryRulePage(doSth: (ruleCommon: RuleCommon) => Rule | undefined, pageSize = 20, lastId?: number) {
     const query: RuleQueryParams = { pagination: { pageSize: pageSize, sKey: "id", sort: 1, lastId: lastId?.toString() } }
 
     cachedGet<RuleCommon[]>("/api/rule/composer/list/rule", (data) => {
@@ -81,22 +81,20 @@ function doSth_correctRule1(ruleCommon: RuleCommon) {
         if (e.meta) {
             if (e.meta["metaList"]) {
                 const m = e.meta as ComplexExpressionMeta
-                //removeFieldInComplexExpressionMeta("starCat", m)
+                removeComplexExpressionMetaFields(m)
+                removeComplexExpressionMetaInOperands(m,"starCat")
                 e.expr = complexMeta2Expr(m)
             } else {
                 const m = e.meta as BasicExpressionMeta
-                //removeFieldInBasicExpressionMeta("starCat", m)
+                removeBasicExpressionMetaFields(m)
+                removeBasicExpressionMetaFieldsInOperands(m, "starCat")
                 e.expr = basicMeta2Expr(m)
-                // if(expr === -1){
-                //     console.log("id="+e.id+", after correct: ", expr, e.meta)
-                // }else{
-                //     e.expr = expr
-                // }
-
             }
-            e.exprStr = JSON.stringify(e.expr)
             e.metaStr = JSON.stringify(e.meta)
+            e.exprStr = JSON.stringify(e.expr)
+            
             console.log("id=" + e.id + ",rule.expr", e.expr)
+
             return e
         } else {
             console.log("no metaStr, id=" + e.id)
@@ -169,22 +167,22 @@ function doSth_correctRule2(ruleCommon: RuleCommon) {
     return ret
 }
 
-//私有bug，导致无提交保存动作
-// const removeFieldInBasicExpressionMeta = (field: string, meta: BasicExpressionMeta) =>{
-//     const oprands = meta.operandMetaObj
-//     Object.keys(oprands).forEach((e) => {
-//         if(field === e)
-//         {
-//             delete oprands[field]
-//         }
-//     })
-// } 
-// const removeFieldInComplexExpressionMeta = (field: string, meta: ComplexExpressionMeta) =>{
-//     meta.metaList.forEach((e) => {
-//         if (e._class === "Complex") {
-//              removeFieldInComplexExpressionMeta(field, e as ComplexExpressionMeta)
-//         } else {
-//             removeFieldInBasicExpressionMeta(field, e as BasicExpressionMeta)
-//         }
-//     })
-// } 
+//bug，导致无提交保存动作
+const removeBasicExpressionMetaFieldsInOperands = (meta: BasicExpressionMeta, field: string) =>{
+    const oprands = meta.operandMetaObj
+    Object.keys(oprands).forEach(key => {
+        if(field === key)
+        {
+            delete oprands[key]
+        }
+    })
+} 
+const removeComplexExpressionMetaInOperands = (meta: ComplexExpressionMeta, field: string) =>{
+    meta.metaList.forEach((e) => {
+        if (e._class === "Complex") {
+            removeComplexExpressionMetaInOperands(e as ComplexExpressionMeta, field)
+        } else {
+            removeBasicExpressionMetaFieldsInOperands(e as BasicExpressionMeta, field)
+        }
+    })
+} 

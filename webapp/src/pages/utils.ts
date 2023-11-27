@@ -268,9 +268,10 @@ export const removeBasicExpressionMetaFields = (meta: BasicExpressionMeta) => {
         // delete meta.paramType.supportOps
     } 
     if(meta.op){
+        //delete meta.op
         delete meta.op.domain
-        // delete meta.op.operandConfigList
-        // delete meta.op.operandConfigMapStr
+        delete meta.op.operandConfigList
+        delete meta.op.operandConfigMapStr
     }
 }
 //数据量过大，尤其某些复合表达式数据量超过字段存储空间

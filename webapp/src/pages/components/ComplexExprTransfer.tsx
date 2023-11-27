@@ -5,12 +5,13 @@ import { TransferDirection, TransferListProps } from 'antd/es/transfer';
 import { cachedGet, ArrayUtil } from "@rwsbillyang/usecache"
 
 import { BasicExpression, BasicExpressionMeta, BasicExpressionRecord, ComplexExpressionMeta, ComplexExpressionRecord, ExpressionMeta, ExpressionRecord, Opcode } from '../DataType';
-import { BasicExprMetaEditModal } from './BasicExprMetaEditModal';
+import { BasicExprMetaEditModalV2 } from './BasicExprMetaEditModalV2';
 import { basicExpressionMeta2String, basicMeta2Expr, complexExpressionMeta2String, complexMeta2Expr, meta2Expr, sortedConcat } from '../utils';
 
 import md5 from "md5"
 import { Host } from '@/Config';
 import { LogicalOpKey } from './ComplexExprMetaEditModal';
+
 
 export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExpressionMeta, onSelectedChange: (keys: string[], records?: ExpressionRecord[]) => void }> = ({ domainId, meta, onSelectedChange }) => {
 
@@ -81,7 +82,7 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExp
     if (!info || info?.direction === 'left') {
       return (
         <Space>
-          <BasicExprMetaEditModal title="添加基本表达式" triggerName="添加基本表达式" domainId={domainId}
+          <BasicExprMetaEditModalV2 title="添加基本表达式" triggerName="添加基本表达式" domainId={domainId}
             onDone={(v) => {
               console.log("create basicRecord done, get v=",v)
               const mockExpr: BasicExpressionRecord = { 
@@ -98,7 +99,7 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExp
               }
             }} />
 
-          {basicRecord1 && <BasicExprMetaEditModal cannotChooseOne={true} triggerName="编辑当前选中" domainId={domainId} meta={basicRecord1.meta}
+          {basicRecord1 && <BasicExprMetaEditModalV2 cannotChooseOne={true} triggerName="编辑当前选中" domainId={domainId} meta={basicRecord1.meta}
             onDone={(v) => {
               console.log("left basicRecord1 edit done, get v=",v)
               //key and meta被替换成新值
@@ -175,7 +176,7 @@ export const ComplexExprTransfer: React.FC<{ domainId?: number, meta: ComplexExp
             }
 
           }} />
-          {basicRecord2 && <BasicExprMetaEditModal cannotChooseOne={true} triggerName="编辑当前选中" domainId={domainId} meta={basicRecord2.meta}
+          {basicRecord2 && <BasicExprMetaEditModalV2 cannotChooseOne={true} triggerName="编辑当前选中" domainId={domainId} meta={basicRecord2.meta}
             onDone={(v) => {
               console.log("right basicRecord2 edit done, get v=",v)
                //key and meta被替换成新值
