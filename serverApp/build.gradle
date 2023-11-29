@@ -1,51 +1,39 @@
+//gradle wrapper 生成gradle wrapper及脚本
+// gradle build   
 buildscript {
     repositories {
         mavenLocal()
-        //maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
+        maven { url 'https://mirrors.cloud.tencent.com/gradle/'}
+		maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
+		maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+		maven { url 'https://maven.aliyun.com/nexus/content/groups/public' }
+		maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' }
+		maven { url 'https://maven.aliyun.com/repository/jcenter' }
+		maven { url 'https://maven.aliyun.com/repository/google' }
         mavenCentral()
-        maven { url "https://plugins.gradle.org/m2/" }
-        maven { url = uri("https://maven.pkg.jetbrains.space/public/p/ktor/eap") }
-        gradlePluginPortal()
         maven { url 'https://jitpack.io' }
-        google()
+        maven { url "https://maven.pkg.jetbrains.space/public/p/ktor/eap"}
         //jcenter()
+        google()
     }
 
-    dependencies {
-        classpath "net.sf.proguard:proguard-gradle:$proguardVersion"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
-        //classpath 'com.github.jengelman.gradle.plugins:shadow:7.1.2'
-        //classpath 'gradle.plugin.com.github.jengelman.gradle.plugins:shadow:7.1.2'
-        classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
-        classpath "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:${ksp_version}"
-    }
 }
 
-apply plugin: 'kotlin'
-apply plugin: 'application'
-apply plugin: 'kotlinx-serialization'
-apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin:  'com.google.devtools.ksp' //version "$ksp_version"
+plugins {
+    id 'application'
+	alias libs.plugins.kotlin
+	alias libs.plugins.kotlin.serialization
+	alias libs.plugins.devtools.ksp
+	alias libs.plugins.shadow
+}
 
-//plugins { id 'com.github.johnrengelman.shadow' version '7.1.2'}
-//plugins {
-//    id 'application'
-//    id 'kotlin'  version "$kotlin_version"
-//    id 'kotlinx-serialization' version "$kotlinx_serialization_version"
-//    id 'com.github.johnrengelman.shadow' version "$shadowVersion"
-//    id 'com.google.devtools.ksp' version "$ksp_version"
-//}
+
+group 'com.github.rwsbillyang' //必须放在plugins后面，否则报错
+version "1.0.0"
 
 
 //application { mainClass = 'io.ktor.server.netty.EngineMain'}
 mainClassName = "io.ktor.server.netty.EngineMain"
-
-
-group 'com.github.rwsbillyang.rule'
-version "1.0.0"
-
-
 
 shadowJar {
     //minimize()
@@ -55,28 +43,71 @@ shadowJar {
 }
 
 
-sourceCompatibility = "$jdkVersion"
-targetCompatibility = "$jdkVersion"
+dependencies {
+    implementation libs.kotlin.stdlib.jdk8
+    implementation libs.kotlin.serialization.json
 
-compileKotlin {
-    kotlinOptions.jvmTarget = "$jdkVersion"
-}
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "$jdkVersion"
+    implementation libs.logback.classic
+
+    implementation libs.ktor.serialization
+    implementation libs.ktor.serialization.kotlinx.json
+
+    implementation libs.ktor.server.netty
+    implementation libs.ktor.server.cors
+    implementation libs.ktor.server.data.conversion
+    implementation libs.ktor.server.forwarded.header
+    implementation libs.ktor.server.partial.content
+    implementation libs.ktor.server.auto.head.response
+    implementation libs.ktor.server.status.pages
+    implementation libs.ktor.server.call.logging
+    implementation libs.ktor.server.content.negotiation
+    //implementation libs.ktor.server.call.id
+    implementation libs.ktor.server.resources
+	testImplementation libs.ktor.server.tests
+    testImplementation libs.ktor.server.test.host
+    testImplementation libs.kotlin.test.junit
+
+    implementation libs.koin.core
+    testImplementation libs.koin.test
+    implementation libs.koin.ktor
+    implementation libs.koin.logger
+    
+	implementation libs.caffeine
+    testImplementation libs.caffeine
+    
+    implementation libs.mysql.connector.java
+    implementation libs.hikariCP
+
+    implementation platform(libs.komapper.platform)
+    ksp platform(libs.komapper.platform)
+    implementation libs.komapper.starter.jdbc
+    implementation libs.komapper.dialect.mysql.jdbc
+    ksp libs.komapper.processor
+
+    implementation project(":runtime")
+    //implementation "com.github.rwsbillyang.rule:runtime:1.0.0"
+
+    implementation libs.ktorKit
+
+    //only for dev
+    //compileOnly "com.github.rwsbillyang:yinyang:1.0.0"
+    implementation "com.github.rwsbillyang:yinyang:1.0.0"
+    implementation 'org.xerial:sqlite-jdbc:3.43.0.0'
+
 }
 
-// 指定编码格式
-[compileJava,compileTestJava,javadoc]*.options*.encoding = 'UTF-8'
-repositories {
-    mavenLocal()
-    //maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
-    mavenCentral()
-    maven { url "https://plugins.gradle.org/m2/" }
-    maven { url = uri("https://maven.pkg.jetbrains.space/public/p/ktor/eap") }
-    gradlePluginPortal()
-    maven { url 'https://jitpack.io' }
-    google()
-    //jcenter()
+kotlin {
+    sourceSets.main {
+        kotlin.srcDir("build/generated/ksp/main/kotlin")
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    sourceCompatibility = "1.8"
+    targetCompatibility = "11" //komapper要求java11
 }
 
 sourceSets {
@@ -84,92 +115,5 @@ sourceSets {
     test.kotlin.srcDirs = test.java.srcDirs = ['test']
     main.resources.srcDirs = ['resources']
     test.resources.srcDirs = ['testresources']
-}
-// Use KSP Generated sources
-sourceSets.main {
-    java.srcDirs("build/generated/ksp/main/kotlin")
-}
-kotlin {
-    sourceSets.main {
-        kotlin.srcDir("build/generated/ksp/main/kotlin")
-    }
-}
-
-dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
-    testImplementation("io.ktor:ktor-server-tests:$ktor_version")
-
-    implementation("ch.qos.logback:logback-classic:$logback_version")
-
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinx_serialization_version") // JVM dependency
-    implementation("io.ktor:ktor-serialization:$ktor_version")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
-
-    implementation("io.ktor:ktor-server-netty:$ktor_version")
-    //implementation("io.ktor:ktor-server-auth:$ktor_version")
-    implementation("io.ktor:ktor-server-auth-jwt:$ktor_version")
-    implementation("io.ktor:ktor-server-cors:$ktor_version")
-    implementation("io.ktor:ktor-server-data-conversion:$ktor_version")
-    implementation("io.ktor:ktor-server-forwarded-header:$ktor_version")
-    implementation("io.ktor:ktor-server-partial-content:$ktor_version")
-    implementation("io.ktor:ktor-server-auto-head-response:$ktor_version")
-    implementation("io.ktor:ktor-server-status-pages:$ktor_version")
-    implementation("io.ktor:ktor-server-call-logging:$ktor_version")
-    //implementation("io.ktor:ktor-server-websockets:$ktor_version")
-    implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
-    implementation("io.ktor:ktor-server-call-id:$ktor_version")
-    implementation("io.ktor:ktor-server-resources:$ktor_version")
-
-//    implementation "io.ktor:ktor-client-core-jvm:$ktor_version"
-//    implementation "io.ktor:ktor-client-cio-jvm:$ktor_version"
-//    implementation "io.ktor:ktor-client-content-negotiation:$ktor_version"
-//    implementation("io.ktor:ktor-client-logging-jvm:$ktor_version")
-//    implementation "io.ktor:ktor-client-encoding:$ktor_version"
-
-
-    testImplementation("io.ktor:ktor-server-test-host:$ktor_version")
-    testImplementation "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
-
-    implementation "io.insert-koin:koin-core:$koin_version"
-    testImplementation "io.insert-koin:koin-test:$koin_version"
-    implementation "io.insert-koin:koin-ktor:$koin_version"
-    implementation "io.insert-koin:koin-logger-slf4j:$koin_version"
-    //implementation "io.insert-koin:koin-annotations:$koin_ksp_version"
-//        ksp "io.insert-koin:koin-ksp-compiler:$koin_ksp_version"
-
-    implementation ("com.github.jershell:kbson:$kbson_version")
-//    implementation ("org.litote.kmongo:kmongo-coroutine-serialization:$kmongo_version")
-
-    testImplementation "com.github.ben-manes.caffeine:caffeine:$caffeineVersion"
-    implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
-
-    // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
-    //compileOnly("org.apache.commons:commons-lang3:$commonsLang3Version")
-
-    //commons-codec 1.13 会报 base64异常，1.10，1.15没有问题
-    // https://mvnrepository.com/artifact/commons-codec/commons-codec
-    //implementation("commons-codec:commons-codec:$commonsCodecVersion")
-
-
-    implementation "mysql:mysql-connector-java:$mysqlConnectorVersion"
-    implementation "com.zaxxer:HikariCP:$HikariCPVersion"
-
-    implementation(platform("org.komapper:komapper-platform:$komapperVersion"))
-    ksp(platform("org.komapper:komapper-platform:$komapperVersion"))
-    implementation("org.komapper:komapper-starter-jdbc:$komapperVersion")
-    implementation("org.komapper:komapper-dialect-mysql-jdbc:$komapperVersion")
-    ksp("org.komapper:komapper-processor")
-
-    implementation project(":runtime")
-    //implementation "com.github.rwsbillyang.rule:runtime:1.0.0"
-
-    implementation("com.github.rwsbillyang:ktorKit:$ktorKitVersion")
-
-    //only for dev
-    //compileOnly "com.github.rwsbillyang:yinyang:1.0.0"
-    implementation "com.github.rwsbillyang:yinyang:1.0.0"
-    // https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
-    implementation 'org.xerial:sqlite-jdbc:3.43.0.0'
-
 }
 
