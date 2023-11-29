@@ -1,1 +1,36 @@
-rootProject.name = "runtime"
+pluginManagement {
+    repositories {
+        mavenLocal()
+        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
+        maven { url 'https://maven.aliyun.com/repository/google/' }
+        maven { url 'https://maven.aliyun.com/repository/jcenter/'}
+        maven { url = uri("https://jitpack.io") }
+        mavenCentral()
+        gradlePluginPortal()
+        google()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenLocal()
+        maven { url 'https://mirrors.cloud.tencent.com/gradle/'}
+        maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
+        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
+        maven { url 'https://maven.aliyun.com/repository/google/' }
+        maven { url 'https://maven.aliyun.com/repository/jcenter/'}
+        maven { url = uri("https://jitpack.io") }
+        mavenCentral()
+        gradlePluginPortal()
+        google()
+    }
+
+    // 使用版本目录
+    versionCatalogs {
+        libs {
+            from(files("../../libs.versions.toml"))
+        }
+    }
+}
+
+rootProject.name = "rule-runtime"

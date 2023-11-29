@@ -1,7 +1,15 @@
+//gradle wrapper 生成gradle wrapper及脚本
+// gradle build   
 buildscript {
     repositories {
         mavenLocal()
-        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
+        maven { url 'https://mirrors.cloud.tencent.com/gradle/'}
+		maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
+		maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+		maven { url 'https://maven.aliyun.com/nexus/content/groups/public' }
+		maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' }
+		maven { url 'https://maven.aliyun.com/repository/jcenter' }
+		maven { url 'https://maven.aliyun.com/repository/google' }
         mavenCentral()
         maven { url 'https://jitpack.io' }
         maven { url "https://maven.pkg.jetbrains.space/public/p/ktor/eap"}
@@ -9,23 +17,45 @@ buildscript {
         google()
     }
 
-    dependencies {
-        classpath "net.sf.proguard:proguard-gradle:$proguardVersion"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
-    }
+   // dependencies {
+   //    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10"  //TODO：使用${libs.versions.kotlinVersion}出现错误
+   //    classpath "org.jetbrains.kotlin:kotlin-serialization:${libs.versions.kotlinVersion}"
+   //  }
 }
 
 
-apply plugin: 'kotlin'
-apply plugin: 'kotlinx-serialization'
-//apply plugin: 'com.google.devtools.ksp'
-apply plugin: 'java-library'
-apply plugin: 'maven-publish'
+plugins{
+	id 'java-library'
+	id 'maven-publish'
+	alias libs.plugins.kotlin
+	alias libs.plugins.kotlin.serialization
+}
 
-group 'com.github.rwsbillyang.rule'
-version "1.0.0"
+group 'com.github.rwsbillyang'  //必须放在plugins后面，否则报错
+version libs.versions.ruleRuntimeVersion.get()
 
+
+dependencies {
+    implementation libs.kotlin.stdlib.jdk8
+    implementation libs.kotlin.serialization.json
+    
+    testImplementation libs.junit.junit
+
+}
+
+kotlin {
+    sourceSets.main {
+        kotlin.srcDir("build/generated/ksp/main/kotlin")
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
+    sourceCompatibility = "1.8"
+    targetCompatibility = "1.8"
+}
 
 sourceSets {
     main.kotlin.srcDirs = main.java.srcDirs = ['src']
@@ -33,38 +63,7 @@ sourceSets {
     main.resources.srcDirs = ['resources']
     test.resources.srcDirs = ['testresources']
 }
-// Use KSP Generated sources
-sourceSets.main {
-    java.srcDirs("build/generated/ksp/main/kotlin")
-}
 
-sourceCompatibility = "$jdkVersion"
-targetCompatibility = "$jdkVersion"
-
-
-compileKotlin {
-    kotlinOptions.jvmTarget = "$jdkVersion"
-}
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "$jdkVersion"
-}
-
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-    //jcenter()
-    google()
-}
-
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinx_serialization_version") // JVM dependency
-
-    testImplementation 'junit:junit:4.13.2'
-  //  compileOnly("com.github.rwsbillyang:ktorKit:$ktorKitVersion")
-
-}
 publishing {
     publications {
         maven(MavenPublication) {
