@@ -27,7 +27,7 @@ package com.github.rwsbillyang.rule.runtime
  * @param entity 附属信息，通常是对应的规则或规则组 不同环境中数据库规则实体定义可能不同
  * */
 class EvalRule(
-    val logicalExpr: LogicalExpr?,
+    val logicalExpr: ILogicalExpr?,
     val exclusive: Boolean,
     val action: String? = null,
     val elseAction: String? = null,

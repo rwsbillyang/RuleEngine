@@ -84,7 +84,7 @@ dependencies {
     implementation libs.komapper.dialect.mysql.jdbc
     ksp libs.komapper.processor
 
-    implementation project(":runtime")
+    implementation project(":rule-runtime")
     //implementation "com.github.rwsbillyang.rule:runtime:1.0.0"
 
     implementation libs.ktorKit

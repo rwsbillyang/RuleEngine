@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-@file:UseContextualSerialization(LogicalExpr::class)
+@file:UseContextualSerialization(ITriLogicalExpr::class)
 
 package com.github.rwsbillyang.rule.runtime
 
@@ -32,13 +32,17 @@ import kotlinx.serialization.UseContextualSerialization
 @SerialName(IType.Type_Complex)
 class ComplexExpression(
     val op: String,
-    val exprs: List<LogicalExpr>
-): LogicalExpr {
+    val exprs: List<ILogicalExpr>
+): ILogicalExpr {
     override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?): Boolean{
         return when(EnumLogicalOp.valueOf(op)){
             EnumLogicalOp.and -> exprs.all { it.eval(dataProvider) }
             EnumLogicalOp.or -> exprs.any { it.eval(dataProvider) }
             EnumLogicalOp.none -> !(exprs.any { it.eval(dataProvider) })
         }
+    }
+
+    override fun humanReadString(): String{
+      return "$op(" + exprs.joinToString(",\n\t") { it.humanReadString() } + ")"
     }
 }

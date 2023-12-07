@@ -23,7 +23,7 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 
 val ruleRuntimeExprSerializersModule = SerializersModule {
-    polymorphic(LogicalExpr::class){
+    polymorphic(ILogicalExpr::class){
         subclass(BoolExpression::class)
         subclass(IntExpression::class)
         subclass(LongExpression::class)

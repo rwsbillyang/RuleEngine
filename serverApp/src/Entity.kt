@@ -20,7 +20,7 @@ package com.github.rwsbillyang.rule.composer
 
 
 
-import com.github.rwsbillyang.rule.runtime.LogicalExpr
+import com.github.rwsbillyang.rule.runtime.ILogicalExpr
 import kotlinx.serialization.*
 import org.komapper.annotation.*
 import org.komapper.core.dsl.Meta
@@ -347,7 +347,7 @@ data class Rule(
         return Pair(list, null)
     }
 
-    fun getExpr() = MySerializeJson.decodeFromString<LogicalExpr>(exprStr)
+    fun getExpr() = MySerializeJson.decodeFromString<ILogicalExpr>(exprStr)
     fun getExprMeta() = if(metaStr != null) MySerializeJson.decodeFromString<ExpressionMeta>(metaStr) else null
 }
 

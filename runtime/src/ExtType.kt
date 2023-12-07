@@ -29,11 +29,4 @@ interface IExtOpEnum: IEnumOp{
     val operandCfgMap: Map<String, OperandConfig>
 }
 
-/**
- * @param op 操作符
- * @param operands 操作数
- * */
-interface IExtExpr: LogicalExpr {
-    val op: String
-    val operands: Map<String, Operand>
-}
+

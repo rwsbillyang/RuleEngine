@@ -24,6 +24,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseContextualSerialization
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * 一个逻辑表达式构成因素：表达式类型（变量类型决定）、变量（mapKey或记录库中添加的变量记录）、操作码、若干操作数构成
@@ -99,6 +100,8 @@ interface Operand{
     fun raw(
         dataProvider: (key: String, keyExtra: String?) -> Any?,
         keyExtra: String? = null) = if(this is VariableValue) dataProvider(v, keyExtra) else v
+
+    fun humanReadString() = if(this is VariableValue) "\$$v" else "$v"
 }
 
 
@@ -123,7 +126,9 @@ class StringValue(override val v: String) : Operand
 
 @Serializable
 @SerialName(IType.Type_Datetime)
-class LocalDateTimeValue(override val v: LocalDateTime) : Operand
+class LocalDateTimeValue(override val v: LocalDateTime) : Operand{
+    override fun humanReadString() =  v.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+}
 
 @Serializable
 @SerialName(IType.Type_IntSet)
@@ -144,7 +149,9 @@ class StringSetValue(override val v: Set<String>) : Operand
 
 @Serializable
 @SerialName(IType.Type_DateTimeSet)
-class LocalDateTimeSetValue(override val v: Set<LocalDateTime>) : Operand
+class LocalDateTimeSetValue(override val v: Set<LocalDateTime>) : Operand{
+    override fun humanReadString() =  v.joinToString(",", "[", "]") { it.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) }
+}
 
 
 // 以下为枚举类型,为枚举增加了枚举名称label
@@ -172,6 +179,8 @@ class LabelStringEnumValue(override val v: List<SelectOption<String>>) : Operand
 @Serializable
 @SerialName(IType.Type_DateTimeEnum)
 class LabelLocalDateTimeEnumValue(override val v: List<SelectOption<LocalDateTime>>) : Operand
+
+
 
 
 /**
