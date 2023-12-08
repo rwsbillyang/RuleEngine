@@ -82,11 +82,12 @@ dependencies {
     ksp platform(libs.komapper.platform)
     implementation libs.komapper.starter.jdbc
     implementation libs.komapper.dialect.mysql.jdbc
-    ksp libs.komapper.processor
+    ksp("org.komapper:komapper-processor")//ksp libs.komapper.processor //error
 
-    implementation project(":rule-runtime")
-    //implementation "com.github.rwsbillyang.rule:runtime:1.0.0"
+    //implementation project(":rule-runtime")
+    implementation libs.rule.runtime
 
+    //implementation project(":ktorKit")
     implementation libs.ktorKit
 
     //only for dev
@@ -107,7 +108,7 @@ java {
         languageVersion = JavaLanguageVersion.of(17)
     }
     sourceCompatibility = "1.8"
-    targetCompatibility = "11" //komapper要求java11
+    targetCompatibility = "17" //komapper要求java11
 }
 
 sourceSets {

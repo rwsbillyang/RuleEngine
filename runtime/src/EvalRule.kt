@@ -31,7 +31,8 @@ class EvalRule(
     val exclusive: Boolean,
     val action: String? = null,
     val elseAction: String? = null,
-    val entity: Any?
+    val entity: Any?,
+    val logInfo: ((Any?) -> String?)? = null
 ){
     /**
      * @param dataProvider 根据key获取对应的变量值
@@ -50,6 +51,10 @@ class EvalRule(
          if(logicalExpr != null){
              try {
                  val ret = logicalExpr.eval(dataProvider)
+                 if(logInfo != null){
+                     println("eval: ret=$ret, entity=${logInfo!!(entity)}")
+                 }
+
                  if(ret){
                      collector?.collect(this, parentRule)
                      (action?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultAction)?.let { it(this, parentRule) }
@@ -87,6 +92,7 @@ class EvalRule(
         if(children.isEmpty()) return false
 
         if(exclusive){
+            //println("evalChildren: exclusively eval")
             for(r in children){
                 if(r.eval(dataProvider, loadChildrenFunc, toEvalRule, this, collector)){
                     return true
@@ -96,7 +102,11 @@ class EvalRule(
         }else{
             var flag = false
             for(r in children){
-                flag = flag || r.eval(dataProvider, loadChildrenFunc, toEvalRule, this, collector)
+                val ret = r.eval(dataProvider, loadChildrenFunc, toEvalRule, this, collector)
+                if(logInfo != null){
+                    println("evalChildren: ret=$ret, entity=${logInfo!!(entity)}")
+                }
+                flag = ret || flag
             }
             return flag
         }

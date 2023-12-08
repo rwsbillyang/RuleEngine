@@ -36,4 +36,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "rule-composer"
+rootProject.name = "rule-composer-serverApp"

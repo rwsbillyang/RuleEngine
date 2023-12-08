@@ -45,7 +45,9 @@ class MyBaseCrudService(): AbstractSqlService(VoidCache()){
 //若需在IDE中运行测试，需将依赖com.github.rwsbillyang:yinyang从 compileOnly 改为：implementationg
 fun main(){
     val service = MyBaseCrudService()
-    runRuleEval(service, 0, LocalDateTime.now()) //0 命宫， 1 父母宫 2 福德宫...
+    val rootList = service.findAll(Meta.ruleGroup, {Meta.ruleGroup.label eq "太微赋"}) //{Meta.ruleGroup.level eq 0}
+    //val rootList = service.findAll(Meta.rule, {Meta.rule.id eq 611})
+    runRuleEval(service, 0, LocalDateTime.now(), rootList) //0 命宫， 1 父母宫 2 福德宫...
 
   //  testSerialize() //sealed class 不能🈶多个层次的继承
 
@@ -66,7 +68,7 @@ fun extra2RuleCommon(extra: Any?): RuleCommon?{
     }
 }
 
-fun runRuleEval(service: MyBaseCrudService, gongNameIndex: Int, dateTime: LocalDateTime){
+fun runRuleEval(service: MyBaseCrudService, gongNameIndex: Int, dateTime: LocalDateTime, rootList: List<Any>){
 
     val zwPanData = ZwPanData.fromLocalDateTime(
         Gender.Female,
@@ -165,14 +167,18 @@ fun runRuleEval(service: MyBaseCrudService, gongNameIndex: Int, dateTime: LocalD
     val toEvalRule: (extra: Any) -> EvalRule = {
         when (it) {
             is Rule ->{
+                val rule = it
                 try {
-                    EvalRule(it.getExpr(), it.exclusive == 1, it.thenAction, it.elseAction, it)
+                    EvalRule(it.getExpr(), it.exclusive == 1, it.thenAction, it.elseAction, it)//{ "${rule.id}: ${rule.description}"}
                 }catch (e: Exception){
                     println("Exception=${e.message}, it.id=${it.id}")
                     throw e
                 }
             }
-            is RuleGroup -> EvalRule(null, it.exclusive == 1, null, null, it)
+            is RuleGroup -> {
+                val group = it
+                EvalRule(null, it.exclusive == 1, null, null, it)//{ "group-${group.id}: ${group.label}"}
+            }
             else -> {
                 System.err.println("toEvalRule: only support Rule/RuleGroup as extra for EvalRule： ${it.toString()}")
                 throw Exception("only support Rule/RuleGroup as extra")
@@ -201,9 +207,7 @@ fun runRuleEval(service: MyBaseCrudService, gongNameIndex: Int, dateTime: LocalD
         Pair(key, data)
     }
 
-    val rootList = service.findAll(Meta.ruleGroup, {Meta.ruleGroup.label eq "太微赋"}
-        //{Meta.ruleGroup.level eq 0}
-    )
+
     RuleEngine.eval(rootList, dataProvider, loadChildrenFunc, toEvalRule, collector)
 
     //println收集的结果
