@@ -288,7 +288,7 @@ fun Routing.composerApi() {
     if(isDev){
         route("/api/dev"){
             //初始化数据库： http://localhost:18000/api/dev/initDbMeta
-            //truncate table `t_param_type`;  truncate table `t_operator`;
+            //truncate table `t_param_type`;  truncate table `t_opcode`;
             get("/initDbMeta"){
                 call.respondBoxOK(DevController(crudController.service).initMetaDataInDb())
             }

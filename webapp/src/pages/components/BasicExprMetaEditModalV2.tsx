@@ -455,13 +455,13 @@ const defaultOperandValueMeta = (operandConfig: OperandConfig) => {
     operandMeta.t = operandConfig.defaultType
     return operandMeta
   }
-  if (operandConfig.selectOptions && operandConfig.selectOptions.length) {
+  if (operandConfig.selectOptions && operandConfig.selectOptions.length > 0 && operandConfig.defaultSelect) {
     operandMeta.t = 'C'
     operandMeta.constIds = operandConfig.defaultSelect
     operandMeta.jsonValue = { _class: "String", v: operandConfig.defaultSelect }
     return operandMeta
   }
-  if (operandConfig.contantIds || operandConfig.typeCode) {
+  if (operandConfig.contantIds && operandConfig.typeCode) {
     operandMeta.t = 'C'
     return operandMeta
   }

@@ -65,7 +65,7 @@ abstract class BaseType<T>: IType<T> {
 abstract class SysBasicType<T>: BaseType<T>() {
     override fun supportOperators() = EnumBasicOp.values().map { it.name }
     override fun op(dataProvider: (key: String, keyExtra:String?) -> Any?, key:String, op: String, operands: Map<String, Operand>, keyExtra: String?)
-    = op(op, key?.let { dataProvider(it, keyExtra) as T? },
+    = op(op,  dataProvider(key, keyExtra) as T?,
         operands["other"]?.raw(dataProvider) as T? ,
         operands["start"]?.raw(dataProvider) as T?,
         operands["end"]?.raw(dataProvider) as T?,

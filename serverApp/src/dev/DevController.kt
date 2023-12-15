@@ -32,7 +32,6 @@ import com.github.rwsbillyang.yinyang.ziwei.rrt.GongOpEnum
 import com.github.rwsbillyang.yinyang.ziwei.rrt.GongType
 import com.github.rwsbillyang.yinyang.ziwei.rrt.StarOpEnum
 import com.github.rwsbillyang.yinyang.ziwei.rrt.StarType
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import org.komapper.core.dsl.Meta
 import org.komapper.core.dsl.QueryDsl
