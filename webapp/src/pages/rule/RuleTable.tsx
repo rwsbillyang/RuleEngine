@@ -16,7 +16,7 @@ import { defaultProps, mustFill } from "../moduleTableProps"
 
 import { RuleEditModal } from "./RuleEdit"
 import { Dropdown, message } from "antd"
-import { RuleGroupEditModal, initialValuesRuleGroup, rubleGroupTableProps, statusOptions } from "./RuleGroupTable"
+import { RuleGroupEditModal, initialValuesRuleGroup, rubleGroupTableProps } from "./RuleGroupTable"
 import { deleteRuleOrGroup } from "./RuleCommon"
 import { basicMeta2Expr, complexMeta2Expr, removeBasicExpressionMetaFields, removeComplexExpressionMetaFields } from "../utils"
 import { ArrayUtil } from "@rwsbillyang/usecache"
@@ -61,7 +61,7 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
         title: '状态',
         valueType: "select",
         //valueEnum: {0: "禁用", 1: "可用"},
-        fieldProps:{ options: statusOptions },
+        fieldProps:{ options: [{value:0, label: "禁用"}, {value:1, label: "可用"}] },
         dataIndex: 'enable',
     },
     {
@@ -86,7 +86,7 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
     },
     {
         title: 'Then',
-        //hideInTable: true,
+        hideInTable: true,
         tooltip: "若为true则执行",
         dataIndex: ['rule', 'thenAction'],
         key: "thenAction",

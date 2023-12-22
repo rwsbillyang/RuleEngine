@@ -81,7 +81,7 @@ abstract class CollectionType<Container: Collection<T>, T>: BaseType<T>() {
         operands["e"]?.raw(dataProvider) as T?, //key所在变量集中是否包含e
         operands["num"]?.raw(dataProvider) as Int?) //key所在变量集与other交集元素个事 与num比较
     fun op(op: String, v0: Container?, other: Container? = null, e: T? = null, num: Int? = null):Boolean{
-        if (v0 == null) throw Exception("${code}Type.${op}: no v0")
+        if (v0 == null) return false
         return when(EnumCollectionOp.valueOf(op)){
             EnumCollectionOp.onlyContains ->  {
                 if (other == null) throw Exception("${code}Type.${op}: no other")
@@ -135,7 +135,7 @@ object BoolType: SysBasicType<Boolean>(){
     override val code = IType.Type_Bool
     override fun supportOperators() = listOf(EnumBasicOp.eq.name)
     override fun op(op: String, v0: Boolean?, other: Boolean?, start: Boolean?, end: Boolean?, set: Set<Boolean>?):Boolean{
-        if(v0 == null) throw Exception("BoolType: no v0")
+        if (v0 == null) return false
         return when(EnumBasicOp.valueOf(op)){
             EnumBasicOp.eq -> v0 == other
             else -> throw Exception("BoolType not support operator: $op")
@@ -147,7 +147,7 @@ object IntType: SysBasicType<Int>() {
     override val label = "整数"
     override val code = IType.Type_Int
     override fun op(op: String, v0: Int?, other: Int?, start: Int?, end: Int?, set: Set<Int>?): Boolean{
-        if (v0 == null) throw Exception("${code}Type.${op}: no v0")
+        if (v0 == null) return false
         return when (EnumBasicOp.valueOf(op)) {
             EnumBasicOp.eq -> {
                 if (other == null) throw Exception("${code}Type.eq: no other")
@@ -200,7 +200,7 @@ object DoubleType: SysBasicType<Double>() {
     override val label = "小数"
     override val code = IType.Type_Double
     override fun op(op: String, v0: Double?, other: Double?, start: Double?, end: Double?, set: Set<Double>?): Boolean{
-        if (v0 == null) throw Exception("${code}Type.${op}: no v0")
+        if (v0 == null) return false
         return when (EnumBasicOp.valueOf(op)) {
             EnumBasicOp.eq -> {
                 if (other == null) throw Exception("${code}Type.eq: no other")
@@ -252,7 +252,7 @@ object LongType: SysBasicType<Long>() {
     override val label = "长整数"
     override val code = IType.Type_Long
     override fun op(op: String, v0: Long?, other:Long?, start: Long?, end: Long?, set: Set<Long>?): Boolean{
-        if (v0 == null) throw Exception("${code}Type.${op}: no v0")
+        if (v0 == null) return false
         return when (EnumBasicOp.valueOf(op)) {
             EnumBasicOp.eq -> {
                 if (other == null) throw Exception("${code}Type.eq: no other")
@@ -304,7 +304,7 @@ object StringType: SysBasicType<String>() {
     override val label = "字符串"
     override val code = IType.Type_String
     override fun op(op: String, v0: String?, other:String?, start: String?, end: String?, set: Set<String>?): Boolean{
-        if (v0 == null) throw Exception("${code}Type.${op}: no v0")
+        if (v0 == null) return false
         return when (EnumBasicOp.valueOf(op)) {
             EnumBasicOp.eq -> {
                 if (other == null) throw Exception("${code}Type.eq: no other")
@@ -357,7 +357,7 @@ object DateTimeType: SysBasicType<LocalDateTime>() {
     override val label = "日期时间"
     override val code = IType.Type_Datetime
     override fun op(op: String, v0: LocalDateTime?, other:LocalDateTime?, start: LocalDateTime?,end: LocalDateTime?, set: Set<LocalDateTime>?): Boolean{
-        if (v0 == null) throw Exception("${code}Type.${op}: no v0")
+        if (v0 == null) return false
         return when (EnumBasicOp.valueOf(op)) {
             EnumBasicOp.eq -> {
                 if (other == null) throw Exception("${code}Type.eq: no other")

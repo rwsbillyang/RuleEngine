@@ -45,9 +45,14 @@ class MyBaseCrudService(): AbstractSqlService(VoidCache()){
 //若需在IDE中运行测试，需将依赖com.github.rwsbillyang:yinyang从 compileOnly 改为：implementationg
 fun main(){
     val service = MyBaseCrudService()
-    val rootList = service.findAll(Meta.ruleGroup, {Meta.ruleGroup.label eq "太微赋"}) //{Meta.ruleGroup.level eq 0}
-    //val rootList = service.findAll(Meta.rule, {Meta.rule.id eq 611})
-    runRuleEval(service, 0, LocalDateTime.now(), rootList) //0 命宫， 1 父母宫 2 福德宫...
+    //val rootList = service.findAll(Meta.ruleGroup, {Meta.ruleGroup.label eq "太微赋"}) //{Meta.ruleGroup.level eq 0}
+    val rootList = service.findAll(Meta.rule, {Meta.rule.id eq 716})
+    runRuleEval(service, 0,
+        LocalDateTime.of(1979,12,8,10,0),
+        //LocalDateTime.now(),
+        rootList) //0 命宫， 1 父母宫 2 福德宫...
+
+   // generateIds()
 
   //  testSerialize() //sealed class 不能🈶多个层次的继承
 
@@ -264,4 +269,6 @@ fun testSerialize(){
 //    println("size=${b.v.size}")
 }
 
-
+fun  generateIds(){
+    println((706..821).joinToString(",") { it.toString() })
+}

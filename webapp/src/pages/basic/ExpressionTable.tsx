@@ -83,7 +83,7 @@ export const BasicExpressionTable: React.FC = () => {
       //所以保存时放到meta中，同时给meta中的other start等赋值
       //此转换函数再saveOne中执行
       //console.log("BasicExpressionTable: to transform...")
-      if(e.meta) removeBasicExpressionMetaFields(e.meta)
+      if(e.meta) removeBasicExpressionMetaFields(e.meta)//保留meta.op.operandConfigMapStr信息，用于BasicExprMetaEditModalV2中指定expr时，重现operands，否则不显示操作数配置
       e.metaStr = JSON.stringify(e.meta)
       e.exprStr = JSON.stringify(basicMeta2Expr(e.meta))
 

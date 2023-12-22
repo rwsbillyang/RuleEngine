@@ -197,7 +197,7 @@ export const OpcodeTable: React.FC = () => {
                   url: `${Host}/api/rule/composer/list/constant`,
                   query: { typeIds: typeIds, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
                   convertFunc: (item) => { return { label: item.label, value: item.id } }
-                }, params)
+                })
               }
             }
           ]

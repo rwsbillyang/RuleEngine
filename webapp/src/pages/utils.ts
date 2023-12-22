@@ -226,14 +226,12 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta, toMini: boolean = tru
     }
 
     const expr: BasicExpression = {
-        _class: "",
+        _class: meta.type || meta.op?.type,
         key: "",
         op: meta.op.code,
         operands: operandValueObj
     }
-    if(meta.type){
-        expr._class = meta.type
-    }
+
     if (meta.mapKey) {
         expr.key = meta.mapKey
         expr.extra = meta.extra
@@ -243,13 +241,18 @@ export const basicMeta2Expr = (meta?: BasicExpressionMeta, toMini: boolean = tru
         expr.extra = meta.param.extra
         return expr
     }
-    
+
+    if(!expr._class)
+    {
+        console.warn("no expr._class, in meta.type || meta.op?.type") 
+    }
+
     console.warn("should not come here: please check meta.type or meta.mapKey")
     return undefined
 }
 
 //数据量过大，尤其某些复合表达式数据量超过字段存储空间
-export const removeBasicExpressionMetaFields = (meta: BasicExpressionMeta) => {
+export const removeBasicExpressionMetaFields = (meta: BasicExpressionMeta, keepOperandCfgStr: boolean = false) => {
     if(meta.param){
         delete  meta.param
         // delete meta.param.domain
@@ -272,7 +275,7 @@ export const removeBasicExpressionMetaFields = (meta: BasicExpressionMeta) => {
         delete meta.op.domain
         delete meta.op.remark
         delete meta.op.operandConfigList
-        delete meta.op.operandConfigMapStr
+        if(!keepOperandCfgStr) delete meta.op.operandConfigMapStr
     }
 }
 //数据量过大，尤其某些复合表达式数据量超过字段存储空间

@@ -78,33 +78,42 @@ export const BasicExprMetaEditModalV2: React.FC<{
   const ref = useRef<{paramTypeList?: ParamType[], paramList?: Param[]}>({})
 
   const updateOpAndOperandsIfParamTypeChanged = () => {
-    const paramType =  getParamTypeById(ref.current.paramTypeList, newMeta.paramTypeId) || getParamById(ref.current.paramList, newMeta.paramId)?.paramType
-    if(paramType){
-      newMeta.paramType = paramType
-      newMeta.type = paramType.code
-      if(paramType.supportOps){
-        setOpcodeOptions(paramType.supportOps.map((item) => { return { label: item.label, value: item.id } }))
+    const list = ref.current.paramTypeList
+    if(!list || list.length === 0){
+      console.log("no paramTypeList, please wait until load it finished")
+    }else{
+      const paramType =  getParamTypeById(list, newMeta.paramTypeId) || getParamById(ref.current.paramList, newMeta.paramId)?.paramType
+      if(paramType){
+        newMeta.paramType = paramType
+        newMeta.type = paramType.code
+        if(paramType.supportOps){
+          setOpcodeOptions(paramType.supportOps.map((item) => { return { label: item.label, value: item.id } }))
+  
+          const op: Opcode | undefined = ArrayUtil.findOne(paramType.supportOps, newMeta.opId, "id")
+          if (op) {
+            const list = operandConfigMapStr2List(op.operandConfigMapStr)?.list
+            setOperandConfigList(list)
 
-        const op: Opcode | undefined = ArrayUtil.findOne(paramType.supportOps, newMeta.opId, "id")
-        if (op) {
-          const list = operandConfigMapStr2List(op.operandConfigMapStr)?.list
-          setOperandConfigList(list)
-
-          if(meta?.operandMetaObj){
-            newMeta.operandMetaObj = meta?.operandMetaObj
+            if(meta?.operandMetaObj){
+              newMeta.operandMetaObj = meta.operandMetaObj
+            }else{
+              if(!newMeta.operandMetaObj){
+                newMeta.operandMetaObj = {}
+                list?.forEach((e) => {
+                  const v = defaultOperandValueMeta(e)
+                  if (v) newMeta.operandMetaObj[e.name] = v
+                })
+              }
+            }
           }else{
-            newMeta.operandMetaObj = {}
-            list?.forEach((e) => {
-              const v = defaultOperandValueMeta(e)
-              if (v) newMeta.operandMetaObj[e.name] = v
-            })
+            console.log("1.updateOpAndOperandsIfParamTypeChanged: not found op,  newMeta.opId="+ newMeta.opId)
           }
         }else{
-          console.log("updateOpAndOperandsIfParamTypeChanged: not found op,  newMeta.opId="+ newMeta.opId)
+          console.log("2.updateOpAndOperandsIfParamTypeChanged: no paramType.supportOps in paramType:", paramType)
         }
+      }else{
+        console.log("3.updateOpAndOperandsIfParamTypeChanged: not found paramType, newMeta.paramTypeId=" + newMeta.paramTypeId)
       }
-    }else{
-      console.log("updateOpAndOperandsIfParamTypeChanged: not found paramType, newMeta.paramTypeId=" + newMeta.paramTypeId)
     }
   }
 
@@ -150,7 +159,7 @@ export const BasicExprMetaEditModalV2: React.FC<{
         newMeta.extra = meta?.extra || param?.extra
         newMeta.opId = meta?.opId
         newMeta.op = meta?.op
-        //newMeta.operandMetaObj = meta?.operandMetaObj
+        
         
 
         form?.setFieldValue("paramId", newMeta?.paramId)
@@ -159,12 +168,15 @@ export const BasicExprMetaEditModalV2: React.FC<{
         form?.setFieldValue("extra", newMeta?.extra)
         form?.setFieldValue("opId", newMeta?.opId)
 
-        updateOpAndOperandsIfParamTypeChanged()
-       // ref.current.paramTypeCode = newMeta.param?.paramType?.code || newMeta.paramType?.code
+        newMeta.operandMetaObj = meta?.operandMetaObj || {}
+    
+        updateOpAndOperandsIfParamTypeChanged() //设置operandCfgList和operands值
+       // console.log("exprId changed: newMeta=", newMeta)
+
         setNewExprId(v.exprId)
         setNewMeta({...newMeta} || { ...initialMeta })
     
-        //setOperandConfigList(operandConfigMapStr2List(meta?.op?.operandConfigMapStr)?.list)
+        
         setOpTooltip(meta?.op?.remark)
       }
 
@@ -349,6 +361,7 @@ export const BasicExprMetaEditModalV2: React.FC<{
             ref.current.paramList = list
             newMeta.param = getParamById(list, newMeta?.paramId, domainId) //meta中删除，重建param
             newMeta.paramType = newMeta.param?.paramType
+            newMeta.type = newMeta.paramType?.code
         })} /> :
       <ProFormSelect
         name="paramId"
@@ -368,6 +381,7 @@ export const BasicExprMetaEditModalV2: React.FC<{
           ref.current.paramList = list
           newMeta.param = getParamById(list, newMeta?.paramId, domainId) //meta中删除，重建param
           newMeta.paramType = newMeta.param?.paramType
+          newMeta.type = newMeta.paramType?.code
       })}
       />
     }

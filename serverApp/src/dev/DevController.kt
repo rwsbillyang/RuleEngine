@@ -161,13 +161,13 @@ class DevController(val service: AbstractSqlService){
         val stringTypeId = findParamTypeIdByCode(IType.Type_String)?:-1
         //特殊处理，星曜值的前面加前缀，目的解决查询宫支位置时星曜名称重复问题
         op = LabelStringEnumValue(ZwConstants.BoShi12Stars.map{ SelectOption(it, StarCategory.BoShi12.prefix+it) })
-        val boshi = Constant("博士12神", stringTypeId, MySerializeJson.encodeToString(op), true)
+        val boshi = Constant("博士12神", stringTypeId, MySerializeJson.encodeToString(op), true, domainId = domainId)
 
         op = LabelStringEnumValue(ZwConstants.SuiQian12Stars.map{ SelectOption(it, StarCategory.SuiQian12.prefix+it) })
-        val suiqian = Constant("岁前12星", stringTypeId, MySerializeJson.encodeToString(op), true)
+        val suiqian = Constant("岁前12星", stringTypeId, MySerializeJson.encodeToString(op), true, domainId = domainId)
 
         op = LabelStringEnumValue(ZwConstants.JiangQian12Stars.map{ SelectOption(it, StarCategory.JiangQian12.prefix+it) })
-        val jiangqian = Constant("将前12星", stringTypeId, MySerializeJson.encodeToString(op), true)
+        val jiangqian = Constant("将前12星", stringTypeId, MySerializeJson.encodeToString(op), true, domainId = domainId)
 
 
         val list = listOf(gan, zhi, gender, bright) + list2 + listOf(boshi, suiqian, jiangqian)

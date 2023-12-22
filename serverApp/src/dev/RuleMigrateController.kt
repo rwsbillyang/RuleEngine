@@ -34,7 +34,8 @@ import java.time.LocalDateTime
 
 fun main(){
     val service = MyBaseCrudService()
-    val sqlLiteHelper = SqlLiteHelper("/Users/bill/git/MingLi/app/src/main/assets/app.db")
+
+    val sqlLiteHelper = SqlLiteHelper("/Users/bill/git/android/MingLi/app/src/main/assets/app.db")
     RuleMigrateController(service).apply {
         createRuleTable(sqlLiteHelper)
         migrateRuleIntoSqlLite(sqlLiteHelper)
@@ -43,6 +44,10 @@ fun main(){
         migrateGroupIntoSqlLite(sqlLiteHelper)
     }
     sqlLiteHelper.close()
+
+//    RuleMigrateController(service).apply {
+//        runRuleExprCheck(596)
+//    }
 }
 /**
  * 将docker中的MySQL8中的Rule和RuleGroup，迁移到MingLi app的assets中的sqlite app.db中
@@ -157,23 +162,7 @@ class RuleMigrateController(val service: AbstractSqlService) {
     }
 
 
-    fun checkRuleExprValid(dataProvider: (key: String, keyExtra:String?) -> Any?, errList: MutableList<Pair<Int?, String?>>, lastId: Int? = null){
-        val p = RuleQueryParams(MySerializeJson.encodeToString(UmiPagination(sort = Sort.ASC, pageSize = 100, lastId = lastId?.toString())), domainId = 1)
-        val list = service.findPage(Meta.rule, p.toSqlPagination())
-        list.forEach {
-            try {
-                it.getExpr().eval(dataProvider)
-            }catch (e: Exception){
-                errList.add(Pair(it.id, e.message))
-                e.printStackTrace()
-            }
-        }
-        if (list.size >= p.pagination.pageSize){
-            checkRuleExprValid(dataProvider,errList, list[list.size - 1].id)
-        }
 
-        println("Done!")
-    }
 
     //test 太微赋 valid
     fun testExprDeserialize(service: MyBaseCrudService){
@@ -195,7 +184,7 @@ class RuleMigrateController(val service: AbstractSqlService) {
     }
 
 
-    fun runRuleExprCheck(){
+    fun runRuleExprCheck(lastId: Int? = null){
         val zwPanData = ZwPanData.fromLocalDateTime(
             Gender.Female,
             LocalDateTime.now())
@@ -216,19 +205,38 @@ class RuleMigrateController(val service: AbstractSqlService) {
                         StarType.classDiscriminator -> key
                         else -> {
                             System.err.println("dataProvider: key=$key, keyExtra=$keyExtra")
-                            throw Exception("Not found key in dataProvider: key=$key, keyExtra=$keyExtra")
+                            null
+                           // throw Exception("Not found key in dataProvider: key=$key, keyExtra=$keyExtra")
                         }
                     }
                 }
             }
         }
         val errList: MutableList<Pair<Int?, String?>> = mutableListOf()
-        checkRuleExprValid(dataProvider, errList, 596)
+        checkRuleExprValid(dataProvider, errList, lastId)
         errList.forEach {
             println("id= " + it.first + ": " + it.second)
         }
-        println(errList.joinToString(",") { it.first.toString() })
+        println("select id,priority,label,description,expr_str,meta_str from t_rule where id in (" + errList.joinToString(",") { it.first.toString() } + ");")
     }
+    fun checkRuleExprValid(dataProvider: (key: String, keyExtra:String?) -> Any?, errList: MutableList<Pair<Int?, String?>>, lastId: Int? = null){
+        val p = RuleQueryParams(MySerializeJson.encodeToString(UmiPagination(sort = Sort.ASC, pageSize = 100, lastId = lastId?.toString())), domainId = 1)
+        val list = service.findPage(Meta.rule, p.toSqlPagination())
+        list.forEach {
+            try {
+                it.getExpr().eval(dataProvider)
+            }catch (e: Exception){
+                errList.add(Pair(it.id, e.message))
+                e.printStackTrace()
+            }
+        }
+        if (list.size >= p.pagination.pageSize){
+            checkRuleExprValid(dataProvider,errList, list[list.size - 1].id)
+        }
+
+        println("Done!")
+    }
+
 
 //    fun exportAsCsvFile(){
 //        //SELECT id,label,rule_parent_ids,rule_group_parent_ids,rule_children_ids,rule_group_children_ids,description,remark,expr_remark,expr_str,priority,tags,domain_id,level,exclusive,threshhold FROM t_rule where domain_id=1 and enable=1;

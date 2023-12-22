@@ -65,11 +65,11 @@ export const ConstantTable: React.FC = () => {
       dataIndex: "jsonValue", //从后端提供的jsonValue中取值
       renderText: (text, record) => {
         if (record.isEnum)
-          return record.jsonValue?.value?.map(e => e.label).join(",")
+          return record.jsonValue?.v?.map(e => e.label).join(",")
         else if (record.jsonValue?._class.indexOf("Set") > 0)
-          return record.jsonValue?.value?.join(",")
+          return record.jsonValue?.v?.join(",")
         else
-          return record.jsonValue?.value + ""
+          return record.jsonValue?.v + ""
       },
       // dependencies: ['isEnum', 'typeInfo'], 
       // renderFormItem: (schema, config, form) => {
@@ -94,12 +94,12 @@ export const ConstantTable: React.FC = () => {
       key: "domainId",
       dataIndex: ['domain', 'label'],
       //search:{transform:(v)=>{return {domainId: v}}},//转换form字段值的key，默认为dataIndex确定，转换后 将使用 domainId, 选中后值为v
-      request: (params) => asyncSelectProps2Request<Domain, DomainQueryParams>({
+      request: () => asyncSelectProps2Request<Domain, DomainQueryParams>({
         key: AllDomainKey, //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
         url: `${Host}/api/rule/composer/list/domain`,
         query: { pagination: { pageSize: -1, sKey: "id", sort: 1 } }, //pageSize: -1为全部加载
         convertFunc: (item) => { return { label: item.label, value: item.id } }
-      }, params)
+      })
     },
     {
       title: '备注',
@@ -139,7 +139,7 @@ export const ConstantTable: React.FC = () => {
         //若选择了枚举，只支持基本类型，否则为全部
         query: { type: params.isEnum ? 'Basic' : undefined, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
         convertFunc: (item) => { return { label: item.code, value: item.id } }
-      }, params)
+      })
     },
     {
       valueType: 'dependency',
@@ -150,12 +150,12 @@ export const ConstantTable: React.FC = () => {
       title: '所属',
       key: "domainId",
       dataIndex: ['domain', 'label'],
-      request: (params) => asyncSelectProps2Request<Domain, DomainQueryParams>({
+      request: () => asyncSelectProps2Request<Domain, DomainQueryParams>({
         key: AllDomainKey, //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
         url: `${Host}/api/rule/composer/list/domain`,
         query: { pagination: { pageSize: -1, sKey: "id", sort: 1 } }, //pageSize: -1为全部加载
         convertFunc: (item) => { return { label: item.label, value: item.id } }
-      }, params)
+      })
     },
     {
       title: '备注',
@@ -167,7 +167,7 @@ export const ConstantTable: React.FC = () => {
 
   //提交保存前数据转换
   const transformBeforeSave = (e: Constant) => {
-    console.log("transformBeforeSave Constant=", e)
+    //console.log("transformBeforeSave Constant=", e)
     if (e.typeInfo) {
       e.jsonValue = { _class: e.typeInfo.label + (e.isEnum ? "Enum" : ""), v: e.jsonValue?.v }//若选择枚举，则存储类型为容器。故_class加上Set
       e.typeId = +e.typeInfo.value
@@ -241,9 +241,9 @@ const getJsonValueColumn = (isEnum?: boolean, typeInfo?: LabeledValue) => {
         title: '枚举值',
         tooltip: "若是枚举，则是固定个数的值",
         valueType: 'formList',
-        dataIndex: ['jsonValue', 'value'],
+        dataIndex: ['jsonValue', 'v'],
         formItemProps: mustFill,
-        renderText: (text, record) => record.jsonValue?.value?.map(e => e.label).join(","),
+        renderText: (text, record) => record.jsonValue?.v?.map(e => e.label).join(","),
         columns: [
           {
             valueType: 'group',
@@ -273,7 +273,7 @@ const getJsonValueColumn = (isEnum?: boolean, typeInfo?: LabeledValue) => {
         dataIndex: 'jsonValue',//从后端提供的jsonValue中取值
         valueType: vauleType,
         width: 'md',
-        renderText: (text, record) => record.jsonValue?.value + "",
+        renderText: (text, record) => record.jsonValue?.v + "",
         renderFormItem: (schema, config, form) => {
           //console.log("schema=" + JSON.stringify(schema))
           //console.log("config=" + JSON.stringify(config))
@@ -307,7 +307,7 @@ const getJsonValueColumn = (isEnum?: boolean, typeInfo?: LabeledValue) => {
     columns = [
       {
         title: "值", //需要构建一个JsonValue，并且根据枚举以及type选择不同的控件
-        dataIndex: ['jsonValue', 'value'],//从后端提供的jsonValue中取值
+        dataIndex: ['jsonValue', 'v'],//从后端提供的jsonValue中取值
         valueType: vauleType,
         width: 'md',
         renderText: (text, record) => record.jsonValue?.value + "",
@@ -316,6 +316,6 @@ const getJsonValueColumn = (isEnum?: boolean, typeInfo?: LabeledValue) => {
       }
     ]
   }
-  console.log("columns", columns)
+  //console.log("columns", columns)
   return columns
 }

@@ -35,7 +35,6 @@ export const RuleEditModal: React.FC<{
 
     const [condition, setCondition] = useState<{ exprId, meta }>({ exprId: record?.exprId, meta: record?.meta })
 
-    const options = [{value:0, label: "关闭"}, {value:1, label: "打开"}]
     
     return <ModalForm<Rule> layout="horizontal" initialValues={record}
         title="编辑规则"
@@ -79,8 +78,8 @@ export const RuleEditModal: React.FC<{
         </ProForm.Group>
 
         <ProForm.Group>
-            <ProFormSelect width="xs" name={"exclusive"} fieldProps={{ options: options }} label="排他性" />
-            <ProFormSelect width="xs" name={"enable"} fieldProps={{ options: options }}  label="状态" />
+            <ProFormSelect width="xs" name={"exclusive"} fieldProps={{ options: [{value:0, label: "否"}, {value:1, label: "是"}] }} label="排他性" />
+            <ProFormSelect width="xs" name={"enable"} fieldProps={{ options: [{value:0, label: "禁用"}, {value:1, label: "可用"}] }}  label="状态" />
             <ProFormDigit width="xs" name={"priority"} label="优先级" />
             <ProFormDigit width="xs" name={"threshhold"} label="可信度" />
         </ProForm.Group>
@@ -118,7 +117,7 @@ export const RuleEditModal: React.FC<{
         <ProFormSelect name={"tagList"} label="标签" fieldProps={{ mode: "tags" }} />
         <ProFormTextArea name={"exprRemark"} label="表达式备注" tooltip="对表达式的备注说明"/>
         <ProFormTextArea name={"description"} label="说明" />
-        <ProFormTextArea name={"remark"} label="备注" />
+        <ProFormTextArea name={"remark"} label="备注" fieldProps={{ rows: 6 }}/>
     </ModalForm>
 }
 

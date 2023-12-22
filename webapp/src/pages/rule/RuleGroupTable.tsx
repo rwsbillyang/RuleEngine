@@ -22,8 +22,6 @@ import { ArrayUtil } from "@rwsbillyang/usecache"
 import { MoveIntoNewParentModal, MoveNodeParam } from "./MoveRuleNode"
 
 
-export const statusOptions = [{value:0, label: "关闭"}, {value:1, label: "打开"}]
-
 const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup> = 
     [
         {
@@ -58,16 +56,16 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
             tooltip: "任意一个rule的条件成立则退出",
             valueType: "select",
             //valueEnum: {0: "关闭", 1: "打开"},
-            fieldProps:{ options:statusOptions },
+            fieldProps:{ options:[{value:0, label: "否"}, {value:1, label: "是"}] },
             dataIndex: 'exclusive',
-            hideInTable: true,
+            //hideInTable: true,
         },
         {
             title: '状态',
             dataIndex: 'enable',
             valueType: "select",
             //valueEnum: {0: "禁用", 1: "可用"},
-            fieldProps:{ options: statusOptions },
+            fieldProps:{ options: [{value:0, label: "禁用"}, {value:1, label: "可用"}] },
         },
         {
             title: '优先级',
@@ -92,6 +90,7 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
             title: '备注',
             dataIndex: 'remark',
             valueType: 'textarea',
+            fieldProps:{ rows: 6 },
             ellipsis: true,
             hideInTable: true,
             hideInSearch: true
