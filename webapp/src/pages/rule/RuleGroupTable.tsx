@@ -9,8 +9,8 @@ import { asyncSelectProps2Request } from "@/myPro/MyProTableProps"
 import { ProColumns } from "@ant-design/pro-table"
 import { Host } from "@/Config"
 
-
-import { Button, Dropdown, message } from "antd"
+import { PlusCircleTwoTone, MinusCircleTwoTone } from "@ant-design/icons";
+import { Button, Dropdown, Spin, message } from "antd"
 import { RuleEditModal } from "./RuleEdit"
 import { initialValueRule, rubleTableProps } from "./RuleTable"
 import { BetaSchemaForm } from "@ant-design/pro-form"
@@ -18,8 +18,10 @@ import { BetaSchemaForm } from "@ant-design/pro-form"
 import { defaultProps, mustFill } from "../moduleTableProps"
 
 import { deleteRuleOrGroup, saveRuleOrGroup } from "./RuleCommon"
-import { ArrayUtil } from "@rwsbillyang/usecache"
+import { ArrayUtil, cachedGet } from "@rwsbillyang/usecache"
 import { MoveIntoNewParentModal, MoveNodeParam } from "./MoveRuleNode"
+import { ExpandableConfig } from "antd/lib/table/interface"
+import { dispatch } from "use-bus"
 
 
 const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup> = 
@@ -116,20 +118,14 @@ export const rubleGroupTableProps = {
     }
 }
 
-const expandable = {
-    //childrenColumnName: "ruleGroupChildren",
-    //fixed: "right",
-    indentSize: 5
-    // expandedRowRender: (record, index, indent, expanded) => {
-    //     return <Table columns={ruleGroupColumns} dataSource={record.ruleGroupChildren} pagination={false} />
-    // }
-}
+
 
 //基本表达式列表管理
 export const RuleGroupTable: React.FC = () => {
 
     const [searchParams] = useSearchParams();
     const initialQuery: RuleGroupQueryParams = { domainId: searchParams["domainId"], level: 0 }
+    const [loadingTypeId, setLoadingTypeId] = useState<string>() //loading 
     const [path, setPath] = useState<string[]>()
     const [moveParam, setMoveParam] = useState<MoveNodeParam>()
     const { current } = useRef<{ treeData?: RuleCommon[] }>({}) //移动节点时，用于作为树形选择器的数据
@@ -179,7 +175,39 @@ export const RuleGroupTable: React.FC = () => {
         }
     }
 
+    const expandable: ExpandableConfig<RuleCommon> = {
+        indentSize: 5,
+        expandIcon:  ({ expanded, onExpand, record })=> {
+            if(loadingTypeId === record.typedId) 
+                return  <Spin size="small"/>
+            else{
+                if(record.children){
+                    return expanded ? (
+                        <MinusCircleTwoTone onClick={e => onExpand(record, e)} />
+                      ) : (
+                        <PlusCircleTwoTone onClick={e => onExpand(record, e)} />
+                      )
+                }else{
+                    return undefined
+                }
+            }
+        },
+        onExpand: (expanded,record) =>{
+            if(expanded && record.children?.length === 0){
+                setLoadingTypeId(record.typedId)
+                cachedGet<RuleCommon[]>(`/api/rule/composer/loadChildren/${RuleGroupName}/${record.id}`,
+                (data)=>{
+                    setLoadingTypeId(undefined)
+                    data.forEach((e)=> {
+                        e.posPath = [...record.posPath, e.posPath[0]]
+                    })
+                    record.children = data
 
+                    dispatch("loadChildrenDone-"+rubleGroupTableProps.listApi)
+                })
+            }
+        }
+    }
 
     return <>
         <MyProTable<RuleCommon, RuleGroupQueryParams>
@@ -189,7 +217,7 @@ export const RuleGroupTable: React.FC = () => {
             initialQuery={initialQuery}
             initialValues={initialValuesRuleGroup}
             listTransformArgs={path}
-            listTransform={(list: RuleCommon[], path?: any) => {
+            listTransform={(list: RuleCommon[], args?: any) => {
                 ArrayUtil.traverseTree(list, (e) => {
                     const children = e.children
                     if(children && children.length > 0)
@@ -198,9 +226,12 @@ export const RuleGroupTable: React.FC = () => {
                 list.sort((a,b)=>(a.priority||50) - (b.priority||50))
                 
                 current.treeData = list //记录下当前全部树形数据
-                if (!path) return list
-                const root = ArrayUtil.trimTreeByPath(list, path, rubleGroupTableProps.idKey)
-                //console.log("after trim, root=",root)
+                
+                //console.log("after trim, list=",list)
+
+                if (!args) return list
+                const root = ArrayUtil.trimTreeByPath(list, args, rubleGroupTableProps.idKey)
+                
                 return root ? [root] : list
             }}
 

@@ -42,7 +42,7 @@ class RuleTreeController : KoinComponent {
         val children = addChild_RuleInRule(newOne.id!!, parentRuleId)
 
         //并不是从根上进行构建tree,故path只是自己，前端需要结合parent重新构建
-        return InsertNodeResult(newOne.toRuleCommon(service), RuleAndGroupdIds(children, null))//转换成RuleCommon用于给前端添加到children中，展示到树形列表中
+        return InsertNodeResult(newOne.toRuleCommon(service, TableChildrenMode.None), RuleAndGroupdIds(children, null))//转换成RuleCommon用于给前端添加到children中，展示到树形列表中
     }
 
     /**
@@ -62,7 +62,7 @@ class RuleTreeController : KoinComponent {
         val children = addChild_GroupInRule(newOne.id!!, parentRuleId)
 
         //并不是从根上进行构建tree,故path只是自己，前端需要结合parent重新构建
-        return InsertNodeResult(newOne.toRuleCommon(service), RuleAndGroupdIds(null, children))//转换成RuleCommon用于给前端添加到children中，展示到树形列表中
+        return InsertNodeResult(newOne.toRuleCommon(service, TableChildrenMode.None), RuleAndGroupdIds(null, children))//转换成RuleCommon用于给前端添加到children中，展示到树形列表中
     }
 
     /**
@@ -82,7 +82,7 @@ class RuleTreeController : KoinComponent {
         val children = addChild_GroupInGroup(newOne.id!!, parentRuleGroupId)
 
         //并不是从根上进行构建tree,故path只是自己，前端需要结合parent重新构建
-        return InsertNodeResult(newOne.toRuleCommon(service), RuleAndGroupdIds(null, children))//转换成RuleCommon用于给前端添加到children中，展示到树形列表中
+        return InsertNodeResult(newOne.toRuleCommon(service, TableChildrenMode.None), RuleAndGroupdIds(null, children))//转换成RuleCommon用于给前端添加到children中，展示到树形列表中
     }
 
     /**
@@ -102,7 +102,7 @@ class RuleTreeController : KoinComponent {
         val children = addChild_RuleInGroup(newOne.id!!, parentRuleGroupId)
 
         //并不是从根上进行构建tree,故path只是自己，前端需要结合parent重新构建
-        return InsertNodeResult(newOne.toRuleCommon(service), RuleAndGroupdIds(children, null)) //转换成RuleCommon用于给前端添加到children中，展示到树形列表中
+        return InsertNodeResult(newOne.toRuleCommon(service, TableChildrenMode.None), RuleAndGroupdIds(children, null)) //转换成RuleCommon用于给前端添加到children中，展示到树形列表中
     }
 
     /**

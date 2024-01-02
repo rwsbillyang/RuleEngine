@@ -109,8 +109,8 @@ class BaseCrudController : KoinComponent {
             Name_constant -> MySerializeJson.encodeToString(DataBox.ok(service.findPage(Meta.constant, params.toSqlPagination()).onEach { it.toBean(service) }))
             Name_opcode -> MySerializeJson.encodeToString(DataBox.ok(service.findPage(Meta.opcode,params.toSqlPagination()).onEach { it.toBean(service) }))
             Name_expression -> MySerializeJson.encodeToString(DataBox.ok(service.findPage(Meta.expression, params.toSqlPagination()).onEach { it.toBean(service) }))
-            Name_rule -> MySerializeJson.encodeToString(DataBox.ok(service.findPage(Meta.rule, params.toSqlPagination()).map { it.toRuleCommon(service) }))
-            Name_ruleGroup -> MySerializeJson.encodeToString(DataBox.ok(service.findPage(Meta.ruleGroup, params.toSqlPagination()).map { it.toRuleCommon(service) }))
+            Name_rule -> MySerializeJson.encodeToString(DataBox.ok(service.findPage(Meta.rule, params.toSqlPagination()).map { it.toRuleCommon(service, TableChildrenMode.LazyLoad, null) }))
+            Name_ruleGroup -> MySerializeJson.encodeToString(DataBox.ok(service.findPage(Meta.ruleGroup, params.toSqlPagination()).map { it.toRuleCommon(service, TableChildrenMode.LazyLoad, null) }))
             Name_action -> MySerializeJson.encodeToString(DataBox.ok(service.findPage(Meta.ruleAction, params.toSqlPagination())))
             else -> {
                 log.warn("findPage: Not support $name in findPageList")
@@ -118,6 +118,42 @@ class BaseCrudController : KoinComponent {
             }
         }
     }
+
+    fun loadChildren(name: String, id: Int): String
+    {
+        return when (name) {
+            Name_rule -> {
+                val rule = service.findOne(Meta.rule, { Meta.rule.id eq id }, "rule/$id")
+                if(rule != null){
+                    MySerializeJson.encodeToString(DataBox.ok(
+                        service.getChildrenList(rule.ruleChildrenIds, rule.ruleGroupChildrenIds, true)
+                    ))
+                }else{
+                    log.warn("Not found rule, id=$id in findChildren")
+                    MySerializeJson.encodeToString(DataBox.ko<Unit>("Not found rule, id=$id"))
+                }
+            }
+            Name_ruleGroup -> {
+                val ruleGroup = service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq id }, "ruleGroup/$id")
+                if(ruleGroup != null){
+                    MySerializeJson.encodeToString(DataBox.ok(
+                        service.getChildrenList(ruleGroup.ruleChildrenIds, ruleGroup.ruleGroupChildrenIds, true)
+                    ))
+                }else{
+                    log.warn("Not found ruleGroup, id=$id in findChildren")
+                    MySerializeJson.encodeToString(DataBox.ko<Unit>("Not found ruleGroup, id=$id"))
+                }
+            }
+            else -> {
+                log.warn("Not support $name in findChildren")
+                MySerializeJson.encodeToString(DataBox.ko<Unit>("Not support $name in findChildren"))
+            }
+        }
+    }
+
+
+
+
 
     //special case workaround 不考虑其他查询条件，只根据id列表查
     fun findInIdList(name: String, ids: String) = when(name){
@@ -151,8 +187,8 @@ class BaseCrudController : KoinComponent {
             Name_constant -> MySerializeJson.encodeToString(DataBox.ok(service.findOne(Meta.constant, { Meta.constant.id eq id }, "constant/$id")?.apply { toBean(service) }))
             Name_opcode -> MySerializeJson.encodeToString(DataBox.ok(service.findOne(Meta.opcode, { Meta.opcode.id eq id }, "opcode/$id")?.apply { toBean(service) }))
             Name_expression -> MySerializeJson.encodeToString(DataBox.ok(service.findOne(Meta.expression, { Meta.expression.id eq id }, "expression/$id")?.apply { toBean(service) }))
-            Name_rule -> MySerializeJson.encodeToString(DataBox.ok(service.findOne(Meta.rule, { Meta.rule.id eq id }, "rule/$id")?.toRuleCommon(service)))
-            Name_ruleGroup -> MySerializeJson.encodeToString(DataBox.ok(service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq id }, "ruleGroup/$id")?.toRuleCommon(service)))
+            Name_rule -> MySerializeJson.encodeToString(DataBox.ok(service.findOne(Meta.rule, { Meta.rule.id eq id }, "rule/$id")?.toRuleCommon(service, TableChildrenMode.LazyLoad, null)))
+            Name_ruleGroup -> MySerializeJson.encodeToString(DataBox.ok(service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq id }, "ruleGroup/$id")?.toRuleCommon(service, TableChildrenMode.LazyLoad, null)))
             Name_action -> MySerializeJson.encodeToString(DataBox.ok(service.findOne(Meta.ruleAction, { Meta.ruleAction.id eq id }, "ruleAction/$id")))
             else -> {
                 log.warn("findOne: Not support $name in findOne")
@@ -199,13 +235,13 @@ class BaseCrudController : KoinComponent {
             val e = call.receive<Rule>()
             // 查询再插入，非原子性，并发时容易出问题
             //val old = service.findOne(Meta.rule, { Meta.rule.id eq e.id }, "rule/${e.id}")
-            MySerializeJson.encodeToString(DataBox.ok(service.save(Meta.rule, e, e.id == null, "rule/${e.id}").toRuleCommon(null)))//1是新增时没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
+            MySerializeJson.encodeToString(DataBox.ok(service.save(Meta.rule, e, e.id == null, "rule/${e.id}").toRuleCommon(service, TableChildrenMode.None, null)))//1是新增时没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
         }
         Name_ruleGroup -> {
             val e = call.receive<RuleGroup>()
             //查询再插入，非原子性，并发时容易出问题
             //val old = service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq e.id }, "ruleGroup/${e.id}")
-            MySerializeJson.encodeToString(DataBox.ok(service.save(Meta.ruleGroup, e, e.id == null, "ruleGroup/${e.id}").toRuleCommon(null)))//1是新增时没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
+            MySerializeJson.encodeToString(DataBox.ok(service.save(Meta.ruleGroup, e, e.id == null, "ruleGroup/${e.id}").toRuleCommon(service, TableChildrenMode.None, null)))//1是新增时没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
         }
         Name_action -> {
             val e = call.receive<RuleAction>()

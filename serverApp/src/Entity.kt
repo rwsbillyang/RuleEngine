@@ -305,47 +305,34 @@ data class Rule(
     //@KomapperIgnore var ruleGroupChildren: List<RuleGroup>? = null,
     //@KomapperIgnore var children: MutableList<RuleCommon> ? = null //为前端构造tree型列表展示，不再使用List<Rule>和List<RuleGroup>，让前端子列表统一
 ){
-    fun toRuleCommon(service: BaseCrudService?, path: MutableList<String>? = null): RuleCommon  {
-        val pair = if(service != null) getChildrenTree(service, path) else null //在新增和修改时无需构建children，因1是没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
-        return RuleCommon(
-            pair?.first?: listOf("${RuleType.rule.name}-$id"), this, null, id, "${RuleType.rule.name}-$id", level, label, priority, remark, enable, tags, exclusive, domainId, description,  domain, pair?.second
-        )
-    }
+    fun toRuleCommon(service: BaseCrudService, childrenMode: TableChildrenMode, path: MutableList<String>? = null): RuleCommon  {
+        domain = domainId?.let{ service.findOne(Meta.domain, {Meta.domain.id eq it}) }
 
-    //数据库中的字段转换成给前端展示需要的字段
-    fun getChildrenTree(service: BaseCrudService, path: MutableList<String>?): Pair<List<String>, List<RuleCommon>?>{
-        domain = domainId?.let{service.findOne(Meta.domain, {Meta.domain.id eq it})}
-
-        //为前端构造tree型列表展示
-        val myPath = path?: mutableListOf() //顶级节点负责创建path
-        myPath.add("${RuleType.rule.name}-$id")//将当前节点id添加进path，子节点中递归调用时，都将当前id加入，形成parentPath
-
-        val list = myPath.toList()//记录下parentPath，相当于copy
-
-        //为前端构造tree型列表展示
-        if(!ruleChildrenIds.isNullOrEmpty() || !ruleGroupChildrenIds.isNullOrEmpty()){
-            val children = mutableListOf<RuleCommon>()
-            ruleChildrenIds?.split(",")?.mapNotNull{
-                service.findOne(Meta.rule, {Meta.rule.id eq it.toInt()}, "rule/${it}")?.toRuleCommon(service, myPath)
-            }?.forEach {
-                children.add(it)
+        val typedId = "${RuleType.rule.name}-$id"
+        return when(childrenMode){
+            TableChildrenMode.Tree -> {
+                val pair = service.getChildrenTree(RuleType.rule, id!!, ruleChildrenIds, ruleGroupChildrenIds, path) //在新增和修改时无需构建children，因一是没有无需构建，二是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
+                RuleCommon(pair.first,this, null, id, typedId, level, label, priority,
+                    remark, enable, tags, exclusive, domainId, null, domain,
+                    pair.second)
             }
-            ruleGroupChildrenIds?.split(",")?.mapNotNull{
-                service.findOne(Meta.ruleGroup, {Meta.ruleGroup.id eq it.toInt()}, "ruleGroup/${it}")?.toRuleCommon(service, myPath)
-            }?.forEach {
-                children.add(it)
+            TableChildrenMode.LazyLoad ->{
+                RuleCommon(listOf("${RuleType.rule.name}-$id"),
+                    this, null, id, typedId, level, label, priority,
+                    remark, enable, tags, exclusive, domainId, null, domain,
+                    service.getChildrenList( ruleChildrenIds, ruleGroupChildrenIds, false))
             }
 
-//            val log = LoggerFactory.getLogger("Rule")
-//            log.info("id=$id, myPath:${list.joinToString(",")}")
-
-            myPath.removeLast()//返回时出栈，从子节点中递归时删除当前，避免从子节点返回时，仍然在path中有子节点id
-            return Pair(list, children.toList())
+            TableChildrenMode.None -> {
+                RuleCommon(listOf("${RuleType.rule.name}-$id"),
+                    this, null, id, typedId, level, label, priority,
+                    remark, enable, tags, exclusive, domainId, null, domain,
+                    null)
+            }
         }
-
-        myPath.removeLast()//返回时出栈，从子节点中递归时删除当前，避免从子节点返回时，仍然在path中有子节点id
-        return Pair(list, null)
     }
+
+
 
     fun getExpr() = MySerializeJson.decodeFromString<ILogicalExpr>(exprStr)
     fun getExprMeta() = if(metaStr != null) MySerializeJson.decodeFromString<ExpressionMeta>(metaStr) else null
@@ -379,46 +366,32 @@ data class RuleGroup(
     //@KomapperIgnore var ruleChildren: List<Rule>? = null,
     //@KomapperIgnore var ruleGroupChildren: List<RuleGroup>? = null,
 ){
-    fun toRuleCommon(service: BaseCrudService?, path: MutableList<String>? = null): RuleCommon  {
-        val pair = if(service != null) getChildrenTree(service, path) else null //在新增和鞭酒修改时无需构建children，因1是没有无需构建，2是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
-        return RuleCommon(
-            pair?.first?: listOf("${RuleType.ruleGroup.name}-$id"), null, this, id, "${RuleType.ruleGroup.name}-$id", level, label, priority, remark, enable, tags, exclusive, domainId, null, domain, pair?.second
-        )
-    }
+    fun toRuleCommon(service: BaseCrudService, childrenMode: TableChildrenMode, path: MutableList<String>? = null): RuleCommon  {
+        domain = domainId?.let{ service.findOne(Meta.domain, {Meta.domain.id eq it}) }
 
-    //数据库中的字段转换成给前端展示需要的字段
-    fun getChildrenTree(service: BaseCrudService, path: MutableList<String>?): Pair<List<String>, List<RuleCommon>?>{
-        domain = domainId?.let{service.findOne(Meta.domain, {Meta.domain.id eq it})}
-
-        //为前端构造tree型列表展示
-        val myPath = path?: mutableListOf() //顶级节点负责创建path
-        myPath.add("${RuleType.ruleGroup.name}-$id")//将当前节点id添加进path，子节点中递归调用时，都将当前id加入，形成parentPath
-
-        val list = myPath.toList()//记录下parentPath，相当于copy
-
-        //为前端构造tree型列表展示
-        if(!ruleChildrenIds.isNullOrEmpty() || !ruleGroupChildrenIds.isNullOrEmpty()){
-            val children = mutableListOf<RuleCommon>()
-            ruleChildrenIds?.split(",")?.mapNotNull{
-                service.findOne(Meta.rule, {Meta.rule.id eq it.toInt()}, "rule/${it}")?.toRuleCommon(service, myPath)
-            }?.forEach {
-                children.add(it)
+        val typedId = "${RuleType.ruleGroup.name}-$id"
+        return when(childrenMode){
+            TableChildrenMode.Tree -> {
+                val pair = service.getChildrenTree(RuleType.ruleGroup, id!!, ruleChildrenIds, ruleGroupChildrenIds, path) //在新增和修改时无需构建children，因一是没有无需构建，二是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
+                RuleCommon(pair.first,
+                    null, this, id, typedId, level, label, priority,
+                    remark, enable, tags, exclusive, domainId, null, domain,
+                    pair.second)
             }
-            ruleGroupChildrenIds?.split(",")?.mapNotNull{
-                service.findOne(Meta.ruleGroup, {Meta.ruleGroup.id eq it.toInt()}, "ruleGroup/${it}")?.toRuleCommon(service, myPath)
-            }?.forEach {
-                children.add(it)
+            TableChildrenMode.LazyLoad ->{
+                RuleCommon(listOf("${RuleType.ruleGroup.name}-$id"),
+                    null, this, id, typedId, level, label, priority,
+                    remark, enable, tags, exclusive, domainId, null, domain,
+                    service.getChildrenList(ruleChildrenIds, ruleGroupChildrenIds, false))
             }
 
-//            val log = LoggerFactory.getLogger("Rule")
-//            log.info("id=$id, myPath:${list.joinToString(",")}")
-
-            myPath.removeLast()//返回时出栈，从子节点中递归时删除当前，避免从子节点返回时，仍然在path中有子节点id
-            return Pair(list, children.toList())
+            TableChildrenMode.None -> {
+                RuleCommon(listOf("${RuleType.ruleGroup.name}-$id"),
+                    null, this, id, typedId, level, label, priority,
+                    remark, enable, tags, exclusive, domainId, null, domain,
+                    null)
+            }
         }
-
-        myPath.removeLast()//返回时出栈，从子节点中递归时删除当前，避免从子节点返回时，仍然在path中有子节点id
-        return Pair(list, null)
     }
 }
 
@@ -433,7 +406,10 @@ data class RuleAction(
     val id: Int? = null
 )
 
-
+/**
+ * 对于table tree，可以在后端直接构建树形数据，可以懒加载（前端点击展开按钮时加载children），也可以设置为无子节点
+ * */
+enum class TableChildrenMode{ Tree, LazyLoad, None}
 @Serializable
 enum class RuleType{ rule, ruleGroup} //名称将用于RuleCommon中的typedId，http endpoint等
 @Serializable

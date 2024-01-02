@@ -89,6 +89,17 @@ fun Routing.composerApi() {
             }
         }
 
+        get("/loadChildren/{name}/{id}"){
+            val id = call.parameters["id"]?.toInt()
+            val name = call.parameters["name"]
+            if(name == null || id == null)
+                call.respondBoxKO("no parameters name or id")
+            else{
+                val ret = crudController.loadChildren(name, id)
+                call.respondBoxJsonText(ret)
+            }
+        }
+
         //临时方案
         post("/getByIds/{name}"){
             val name = call.parameters["name"]

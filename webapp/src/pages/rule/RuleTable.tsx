@@ -3,7 +3,7 @@ import React, { useRef, useState } from "react"
 
 import { AllDomainKey, Domain, DomainQueryParams, Rule, RuleCommon, RuleQueryParams } from "../DataType"
 import { useSearchParams } from "react-router-dom"
-import { DownOutlined } from '@ant-design/icons'
+import { DownOutlined, PlusCircleTwoTone, MinusCircleTwoTone } from '@ant-design/icons'
 
 import { MyProTable } from "@/myPro/MyProTable"
 import { asyncSelectProps2Request } from "@/myPro/MyProTableProps"
@@ -15,12 +15,14 @@ import { defaultProps, mustFill } from "../moduleTableProps"
 
 
 import { RuleEditModal } from "./RuleEdit"
-import { Dropdown, message } from "antd"
+import { Dropdown, Spin, message } from "antd"
 import { RuleGroupEditModal, initialValuesRuleGroup, rubleGroupTableProps } from "./RuleGroupTable"
 import { deleteRuleOrGroup } from "./RuleCommon"
 import { basicMeta2Expr, complexMeta2Expr, removeBasicExpressionMetaFields, removeComplexExpressionMetaFields } from "../utils"
-import { ArrayUtil } from "@rwsbillyang/usecache"
+import { ArrayUtil, cachedGet } from "@rwsbillyang/usecache"
 import { MoveIntoNewParentModal, MoveNodeParam } from "./MoveRuleNode"
+import { ExpandableConfig } from "antd/es/table/interface"
+import { dispatch } from "use-bus"
 
 
 const ruleColumns: ProColumns<RuleCommon>[] = [
@@ -164,14 +166,6 @@ export const rubleTableProps = {
 }
 
 
-const expandable = {
-    //childrenColumnName: "ruleChildren",
-    //fixed: "right",
-    indentSize: 5
-    // expandedRowRender: (record, index, indent, expanded) => {
-    //     return <Table columns={ruleGroupColumns} dataSource={record.ruleGroupChildren} pagination={false} />
-    // }
-}
 
 //基本表达式列表管理
 export const RuleTable: React.FC = () => {
@@ -179,6 +173,7 @@ export const RuleTable: React.FC = () => {
     const [searchParams] = useSearchParams();
     const initialQuery: RuleQueryParams = { domainId: searchParams["domainId"], level: 0 }
     const [path, setPath] = useState<string[]>()
+    const [loadingTypeId, setLoadingTypeId] = useState<string>() //loading 
     const [moveParam, setMoveParam] = useState<MoveNodeParam>()
     const { current } = useRef<{ treeData?: RuleCommon[] }>({}) //移动节点时，用于作为树形选择器的数据
 
@@ -228,6 +223,39 @@ export const RuleTable: React.FC = () => {
                 </Dropdown>,
 
             ]
+        }
+    }
+    const expandable: ExpandableConfig<RuleCommon> = {
+        indentSize: 5,
+        expandIcon:  ({ expanded, onExpand, record })=> {
+            if(loadingTypeId === record.typedId) 
+                return  <Spin size="small"/>
+            else{
+                if(record.children){
+                    return expanded ? (
+                        <MinusCircleTwoTone onClick={e => onExpand(record, e)} />
+                      ) : (
+                        <PlusCircleTwoTone onClick={e => onExpand(record, e)} />
+                      )
+                }else{
+                    return undefined
+                }
+            }
+        },
+        onExpand: (expanded,record) =>{
+            if(expanded && record.children?.length === 0){
+                setLoadingTypeId(record.typedId)
+                cachedGet<RuleCommon[]>(`/api/rule/composer/loadChildren/${RuleName}/${record.id}`,
+                (data)=>{
+                    setLoadingTypeId(undefined)
+                    data.forEach((e)=> {
+                        e.posPath = [...record.posPath, e.posPath[0]]
+                    })
+                    record.children = data
+                    
+                    dispatch("loadChildrenDone-"+rubleTableProps.listApi)
+                })
+            }
         }
     }
 
