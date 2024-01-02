@@ -8,7 +8,8 @@ import { Host } from '@/Config';
 import { ModalForm, ProFormInstance, ProFormSelect, ProFormText } from '@ant-design/pro-form';
 import { asyncSelectProps2Request } from '@/myPro/MyProTableProps';
 
-import { ComplexExprTransfer } from './ComplexExprTransfer';
+//import { ComplexExprTransfer } from './ComplexExprTransfer';
+import { ComplexExprListEditor } from './ComplexExprListEditor';
 
 
 const ExpressionKeyPrefix = "complexExpression/domain/"
@@ -136,7 +137,7 @@ export const ComplexExprMetaEditModal: React.FC<{
         />
 
         <Form.Item label="表达式列表" required rules={[{ required: true, message: '必选' }]}>
-            <ComplexExprTransfer domainId={domainId} meta={newMeta} onSelectedChange={(keys, records) => { current.selectedRecords = records }} />
+            <ComplexExprListEditor domainId={domainId} meta={newMeta} onSelectedChange={(keys, records) => { current.selectedRecords = records }} />
         </Form.Item>
 
         <ProFormSelect
