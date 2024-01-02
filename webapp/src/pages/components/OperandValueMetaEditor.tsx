@@ -6,7 +6,7 @@ import { MyAsyncSelectProps } from "@/myPro/MyProTableProps"
 import { cachedFetch, Cache, TreeCache } from "@rwsbillyang/usecache"
 import { DefaultOptionType } from "antd/es/select"
 import { EnableParamCategory, Host } from "@/Config"
-import { checkJsonValueClass } from "../utils"
+import { checkJsonValueClass, getJsonValueClassIfMultiple } from "../utils"
 
 
 interface CascaderOption {
@@ -41,11 +41,15 @@ export const OperandValueMetaEditor: React.FC<{
     value?: OperandMeta,
     onChange: (v: OperandMeta) => void
 }> = ({ paramType, operandConfig, constantQueryParams, domainId, disabled, value, onChange }) => {
-    const typeCode = operandConfig.typeCode || ((operandConfig.selectOptions && operandConfig.selectOptions.length > 0) ? "String" : paramType.code )
+    const multiple = operandConfig.multiple
+    //优先使用配置中明确指定的operandConfig.typeCode，再其次使用selectOptions，最后根据multiple确定是否使用Set，最后才是变量本身相同类型
+    const typeCode = operandConfig.typeCode || ((operandConfig.selectOptions && operandConfig.selectOptions.length > 0) ? "String" : (multiple? getJsonValueClassIfMultiple(paramType.code): paramType.code) )
     if(!checkJsonValueClass(typeCode)){
         return <div>{operandConfig.label+": wrong type code=" +typeCode +", please correct it in opCode table"}</div>
     }
-  
+    
+    
+
     //只是bool类型，不用那么多选择
     // if(typeCode === "Bool"){
     //     return <Form.Item label={operandConfig.label} tooltip={operandConfig.tooltip} required={operandConfig.required}>
@@ -61,7 +65,7 @@ export const OperandValueMetaEditor: React.FC<{
     const [paramLoading, setParamLoading] = useState(false)
     const [constantLoading, setConstantLoading] = useState(false)
 
-    const multiple = operandConfig.multiple
+    
     
    // console.log("OperandMeta=",value)
      //console.log("operandConfig=",operandConfig)
@@ -264,9 +268,9 @@ export const OperandValueMetaEditor: React.FC<{
                                 const constants: Constant[] = []
                                 let jsonValue
                                 if (multiple) {
-                                    jsonValue = getJsonValueFromArrayArray(constants, multiple, v, typeCode, constantAsyncSelectProps.key)
+                                    jsonValue = getJsonValueFromArrayArray(constants, v, typeCode, constantAsyncSelectProps.key)
                                 } else {
-                                    jsonValue = getJsonValueFromArray(constants, multiple, v, typeCode, constantAsyncSelectProps.key)
+                                    jsonValue = getJsonValueFromArray(constants, v, typeCode, constantAsyncSelectProps.key)
                                 }
 
                                 onChange({ ...value, constIds: v, jsonValue: jsonValue })
@@ -299,7 +303,7 @@ export const OperandValueMetaEditor: React.FC<{
  * @param constantKey 从哪个缓存中搜索Constant
  * @returns 
  */
-const getJsonValueFromArray = (constants: Constant[], multiple: boolean, arry: (string | number)[], paramTypeCode: string, constantKey?: string) => {
+const getJsonValueFromArray = (constants: Constant[],  arry: (string | number)[], paramTypeCode: string, constantKey?: string) => {
     //console.log("getJsonValueFromArray: arry=" + JSON.stringify(arry))
     const constantId = arry[0]
     const constant: Constant | undefined = Cache.findOne(constantKey || "", constantId, "id")
@@ -342,9 +346,9 @@ const getJsonValueFromArray = (constants: Constant[], multiple: boolean, arry: (
  * @param constantKey 从哪个缓存中搜索Constant
  * @returns 
  */
-const getJsonValueFromArrayArray = (constants: Constant[], multiple: boolean, arrayArray: (string | number)[][], paramTypeCode: string, constantKey?: string) => {
+const getJsonValueFromArrayArray = (constants: Constant[],  arrayArray: (string | number)[][], paramTypeCode: string, constantKey?: string) => {
     //console.log("getJsonValueFromArrayArray: arrayArray=" + JSON.stringify(arrayArray))
-    const value = arrayArray.flatMap((e) => getJsonValueFromArray(constants, multiple, e, paramTypeCode, constantKey)?.v)
+    const value = arrayArray.flatMap((e) => getJsonValueFromArray(constants, e, paramTypeCode, constantKey)?.v)
     .filter((e) => e !== undefined) as ( (string| number)[] | LabelValue[]) //因为e有可能是单个元素也有可能是数组，故使用flatMap 而不是map
 
     if(value.length === 0){

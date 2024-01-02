@@ -334,16 +334,16 @@ export function deleteRuleOrGroup(
     const delPrefix = "/api/rule/composer"
 
     if (item.rule) {//删除的是rule
-        //待删项是叶子节点
-        if (!item.children || item.children.length === 0) {
-            if (fromTable === RuleName) {
-                if (debug) console.log("to delete leaf rule in rule table...")
-                deleteOne<DelResult>(item, rubleTableProps.delApi + "/" + item.id, onDelOK)
-            } else if (fromTable === RuleGroupName) {//新增顶级ruleGroup
-                if (debug) console.log("to delete leaf rule in ruleGroup table...")
-                deleteOne(item, rubleGroupTableProps.delApi + "/" + item.id, onDelOK)
-            }
-        } else {//待删项不是叶子节点
+        //待删项是叶子节点 删除叶子节点也需要变更父节点中的children信息
+        // if (!item.children || item.children.length === 0) {
+        //     if (fromTable === RuleName) {
+        //         if (debug) console.log("to delete leaf rule in rule table...")
+        //         deleteOne<DelResult>(item, rubleTableProps.delApi + "/" + item.id, onDelOK)
+        //     } else if (fromTable === RuleGroupName) {//新增顶级ruleGroup
+        //         if (debug) console.log("to delete leaf rule in ruleGroup table...")
+        //         deleteOne(item, rubleTableProps.delApi + "/" + item.id, onDelOK)
+        //     }
+        // } else {//待删项不是叶子节点
             if (fromTable === RuleName) {
                 if (parentRuleCommon) {
                     if (debug) console.log("to delete sub rule of parentRule in rule table...")
@@ -368,19 +368,19 @@ export function deleteRuleOrGroup(
             } else {
                 console.warn("Error: should not come here:  not support from table=" + fromTable)
             }
-        }
+       // }
     } else if (item.ruleGroup)//删除的是ruleGroup
     {
-        //待删项是叶子节点
-        if (!item.children || item.children.length === 0) {
-            if (fromTable === RuleName) {
-                if (debug) console.log("to delete leaf ruleGroup in rule table...")
-                deleteOne(item, rubleGroupTableProps.delApi + "/" + item.id, onDelOK)
-            } else if (fromTable === RuleGroupName) {//新增顶级ruleGroup
-                if (debug) console.log("to delete leaf ruleGroup in ruleGroup table...")
-                deleteOne(item, rubleGroupTableProps.delApi + "/" + item.id, onDelOK)
-            }
-        } else {//待删项不是叶子节点
+        //待删项是叶子节点 删除叶子节点也需要变更父节点中的children信息
+        // if (!item.children || item.children.length === 0) {
+        //     if (fromTable === RuleName) {
+        //         if (debug) console.log("to delete leaf ruleGroup in rule table...")
+        //         deleteOne(item, rubleGroupTableProps.delApi + "/" + item.id, onDelOK)
+        //     } else if (fromTable === RuleGroupName) {//新增顶级ruleGroup
+        //         if (debug) console.log("to delete leaf ruleGroup in ruleGroup table...")
+        //         deleteOne(item, rubleGroupTableProps.delApi + "/" + item.id, onDelOK)
+        //     }
+        // } else {//待删项不是叶子节点
             if (fromTable === RuleName) {
                 if (parentRuleCommon) {
                     if (debug) console.log("to delete sub ruleGroup of parentRule in rule table...")
@@ -405,7 +405,7 @@ export function deleteRuleOrGroup(
             } else {
                 console.warn("Error: should not come here:  not support from table=" + fromTable)
             }
-        }
+       // }
     } else {
         console.warn("should not come here1")
     }

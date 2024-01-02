@@ -82,14 +82,14 @@ export const BasicExprMetaEditModalV2: React.FC<{
     if(!list || list.length === 0){
       console.log("no paramTypeList, please wait until load it finished")
     }else{
-      const paramType =  getParamTypeById(list, newMeta.paramTypeId) || getParamById(ref.current.paramList, newMeta.paramId)?.paramType
-      if(paramType){
-        newMeta.paramType = paramType
-        newMeta.type = paramType.code
-        if(paramType.supportOps){
-          setOpcodeOptions(paramType.supportOps.map((item) => { return { label: item.label, value: item.id } }))
+      const paramType2 =  getParamTypeById(list, newMeta.paramTypeId) || getParamById(ref.current.paramList, newMeta.paramId)?.paramType
+      if(paramType2){
+        newMeta.paramType = paramType2
+        newMeta.type = paramType2.code
+        if(paramType2.supportOps){
+          setOpcodeOptions(paramType2.supportOps.map((item) => { return { label: item.label, value: item.id } }))
   
-          const op: Opcode | undefined = ArrayUtil.findOne(paramType.supportOps, newMeta.opId, "id")
+          const op: Opcode | undefined = ArrayUtil.findOne(paramType2.supportOps, newMeta.opId, "id")
           if (op) {
             const list = operandConfigMapStr2List(op.operandConfigMapStr)?.list
             setOperandConfigList(list)
@@ -399,7 +399,7 @@ export const BasicExprMetaEditModalV2: React.FC<{
         request={() => asyncSelectProps2Request<ParamType, ParamTypeQueryParams>({
           key: AllParamTypeKey,//不提供key，则不缓存
           url: `${Host}/api/rule/composer/list/paramType`,
-          query: { pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
+          query: { pagination: { pageSize: -1, sKey: "id", sort: -1 } },//pageSize: -1为全部加载
           convertFunc: (item) => { 
             return { label: item.label, value: item.id } 
           }

@@ -427,6 +427,15 @@ export const checkJsonValueClass = (code: string) => {
     return false
 }
 
+export const getJsonValueClassIfMultiple = (code: string) =>{
+    const codes = ["Bool", "Int", "Double", "Long", "String", "DateTime"]
+    for(let i = 0; i< codes.length; i++){
+        if(code === codes[i])
+            return code + "Set"
+    }
+    return code
+}
+
 /***
  * 有效信息，用于生成md5作为id
  */
