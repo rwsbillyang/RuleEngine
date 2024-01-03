@@ -313,20 +313,20 @@ data class Rule(
             TableChildrenMode.Tree -> {
                 val pair = service.getChildrenTree(RuleType.rule, id!!, ruleChildrenIds, ruleGroupChildrenIds, path) //在新增和修改时无需构建children，因一是没有无需构建，二是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
                 RuleCommon(pair.first,this, null, id, typedId, level, label, priority,
-                    remark, enable, tags, exclusive, domainId, null, domain,
+                    remark, enable, tags, exclusive, domainId, description, domain,
                     pair.second)
             }
             TableChildrenMode.LazyLoad ->{
                 RuleCommon(listOf("${RuleType.rule.name}-$id"),
                     this, null, id, typedId, level, label, priority,
-                    remark, enable, tags, exclusive, domainId, null, domain,
+                    remark, enable, tags, exclusive, domainId, description, domain,
                     service.getChildrenList( ruleChildrenIds, ruleGroupChildrenIds, false))
             }
 
             TableChildrenMode.None -> {
                 RuleCommon(listOf("${RuleType.rule.name}-$id"),
                     this, null, id, typedId, level, label, priority,
-                    remark, enable, tags, exclusive, domainId, null, domain,
+                    remark, enable, tags, exclusive, domainId, description, domain,
                     null)
             }
         }
