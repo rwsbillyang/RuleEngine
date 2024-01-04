@@ -354,7 +354,7 @@ export interface Rule extends BaseRecord {
 
     threshhold?: number, //percent
 
-    exprId?: number,//if exprId not null, use it 如果exprId非空，则exprStr和metaStr来自Expression记录；否则由前端编辑时提供
+    //exprId?: number,//if exprId not null, use it 如果exprId非空，则exprStr和metaStr来自Expression记录；否则由前端编辑时提供
     exprStr?: string,//json string of LogicalExpr
     metaStr?: string,//json string of ExpressionMeta
 
@@ -375,12 +375,6 @@ export interface Rule extends BaseRecord {
     
 
     exclusive?: number // default false,
-    //ruleParentIdList?: string[], //only for frontend
-    //ruleGroupParentIdList?: string[]//only for frontend
-
-    //ruleChildren?: Rule[],//setup from backend for frontend tree
-     //ruleGroupChildren?: RuleGroup[]//setup from backend for frontend tree
-    
 }
 
 
@@ -406,17 +400,17 @@ export interface RuleGroup extends BaseRecord {
     domainId?: number,
     domain?: Domain,//only for front end
 
+    exprStr?: string,//json string of LogicalExpr
+    metaStr?: string,//json string of ExpressionMeta
+    exprRemark?: string,//对表达式的备注说明
+    expr? : BasicExpression | ComplexExpression,// only for front end 由exprStr解析或前端提供
+    meta?: BasicExpressionMeta | ComplexExpressionMeta//only for front end 由metaStr解析或前端提供
+    
     ruleChildrenIds?: string, // json string of Rule.id List, 后端维护该值，前端不做任何变动，insert/save one when create a child in front end
     ruleGroupChildrenIds?: string,// json string of RuleGroup.id List, 后端维护该值，前端不做任何变动，insert one when create a child in front end
 
     ruleParentIds?: string, // json string of Rule.id List, 后端维护该值，前端不做任何变动，insert/save one when create a child in front end
     ruleGroupParentIds?: string,// json string of RuleGroup.id List, 后端维护该值，前端不做任何变动，insert one when create a child in front end
-
-    //ruleParentIdList?: string[], //only for frontend
-    //ruleGroupParentIdList?: string[]//only for frontend
-
-    //ruleChildren?: Rule[],//setup from backend for frontend tree
-     //ruleGroupChildren?: RuleGroup[]//setup from backend for frontend tree
 }
 
 export interface RuleActionQueryParams extends BasePageQuery{

@@ -14,9 +14,9 @@ import { Host } from "@/Config"
 import { defaultProps, mustFill } from "../moduleTableProps"
 
 
-import { RuleEditModal } from "./RuleEdit"
+import { RuleEditModal, RuleGroupEditModal } from "./RuleOrGroupEdit"
 import { Dropdown, Spin, message } from "antd"
-import { RuleGroupEditModal, initialValuesRuleGroup, rubleGroupTableProps } from "./RuleGroupTable"
+import {  initialValuesRuleGroup, rubleGroupTableProps } from "./RuleGroupTable"
 import { deleteRuleOrGroup } from "./RuleCommon"
 import { basicMeta2Expr, complexMeta2Expr, removeBasicExpressionMetaFields, removeComplexExpressionMetaFields } from "../utils"
 import { ArrayUtil, cachedGet } from "@rwsbillyang/usecache"

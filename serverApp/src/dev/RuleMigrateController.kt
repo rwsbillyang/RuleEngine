@@ -35,7 +35,7 @@ import java.time.LocalDateTime
 fun main(){
     val service = MyBaseCrudService()
 
-    val sqlLiteHelper = SqlLiteHelper("/Users/bill/git/android/MingLi/app/src/main/assets/app.db")
+    val sqlLiteHelper = SqlLiteHelper(HelpBooksController.sqliteDb)
     RuleMigrateController(service).apply {
         createRuleTable(sqlLiteHelper)
         migrateRuleIntoSqlLite(sqlLiteHelper)
@@ -101,7 +101,9 @@ class RuleMigrateController(val service: AbstractSqlService) {
                 "remark" to it.remark,
                 "priority" to it.priority,
                 "level" to it.level,
-                "enable" to it.enable
+                "enable" to it.enable,
+                "expr_str" to it.exprStr,
+                "expr_remark" to it.exprRemark
             )
             sqlLiteHelper.insert("RuleGroup", map)
         }
@@ -155,7 +157,9 @@ class RuleMigrateController(val service: AbstractSqlService) {
               `remark` TEXT,
               `enable` INTEGER NOT NULL,
               `priority` INTEGER,
-              `level` INTEGER
+              `level` INTEGER,
+              `expr_str` TEXT,
+              `expr_remark` TEXT
             )
         """.trimIndent()
         sqlLiteHelper.createTable(sql)

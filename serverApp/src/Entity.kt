@@ -244,23 +244,25 @@ data class Domain(
  * */
 @Serializable
 class RuleCommon(
+    val typedId: String,//添加前缀rule和group用于区分类型，parentPath查找时区分类型，因添加的subrule or subruleGroup的id可能相同，且在同一个children中
     val posPath: List<String>, //此字段用于前端向上遍历找到父节点数据，根节点id在最前面，当前叶子节点id在最后
+    var children: List<RuleCommon> ? = null, //为前端构造tree型列表展示，不再使用List<Rule>和List<RuleGroup>，让前端子列表统一
+
     val rule: Rule?,//RuleCommon自身是rule，也就是数据来源Rule
     val ruleGroup: RuleGroup?,//RuleCommon自身是RuleGroup，数据来源RuleGroup
 
-    val id: Int?, // 不再使用这种方式：md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
-    val typedId: String,//添加前缀rule和group用于区分类型，parentPath查找时区分类型，因添加的subrule or subruleGroup的id可能相同，且在同一个children中
-    val level: Int?,
-    val label: String?,
-    val priority: Int? ,
-    val remark: String?,
-    val enable: Int ,
-    val tags: String?,
-    val exclusive: Int,
-    val domainId: Int?,
-    val description: String? = null,
+    val id: Int? , //rule or ruleGroup id
+    val level: Int,
+    val label: String,
+    val exclusive: Int = 0, //chidlren是否互斥
+    val enable: Int = 1, //与sqlite一致，因为sqlite中么有boolean
+    val tags: String? = null,
+    val remark: String? = null,//相关信息备注
+    val priority: Int? = null ,
+
+    val domainId: Int? = null,
     var domain: Domain? , //前端列表数据需要
-    var children: List<RuleCommon> ? = null //为前端构造tree型列表展示，不再使用List<Rule>和List<RuleGroup>，让前端子列表统一
+    val description: String? = null
 )
 
 
@@ -270,40 +272,32 @@ class RuleCommon(
 data class Rule(
     @KomapperId @KomapperAutoIncrement
     val id: Int ? = null, //不再使用这种方式：md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
-    val level: Int? = null,
-    val label: String? = null,
-    val priority: Int? = null ,
-    val remark: String? = null,//相关信息备注
-    val description: String? = null, //对命中的说明
-    val exprRemark: String? = null,//对表达式的备注说明
+    val level: Int,
+    val label: String,
+    val exclusive: Int = 0, //chidlren是否互斥
     val enable: Int = 1, //与sqlite一致，因为sqlite中么有boolean
     val tags: String? = null,
-    val threshhold: Int? = null, //percent
-
-    val exprId: Int? = null,//if exprId not null, use it 如果exprId非空，则exprStr和metaStr来自Expression记录；否则由前端编辑时提供
-    val exprStr: String,//json string of LogicalExpr
-    val metaStr: String? = null,//json string of ExpressionMeta
-
-    val thenAction: String? = null,// if do
-    val elseAction: String? = null, //else do
+    val remark: String? = null,//相关信息备注
+    val priority: Int? = null ,
 
     val domainId: Int? = null,
     @KomapperIgnore var domain: Domain? = null, //前端列表数据需要
 
-    //@Contextual var expr : LogicalExpr? = null,//由exprStr解析或前端提供
-    //@Contextual var meta: ExpressionMeta? = null//由metaStr解析或前端提供
-
-    val exclusive: Int = 0, //chidlren是否互斥
-
     val ruleChildrenIds: String? = null, // json string of Rule.id List, insert/save one when create a child in front end
     val ruleGroupChildrenIds: String? = null,// json string of RuleGroup.id List, insert one when create a child in front end
-
     var ruleParentIds: String? = null,
     var ruleGroupParentIds: String? = null,
 
-    //@KomapperIgnore var ruleChildren: List<Rule>? = null,
-    //@KomapperIgnore var ruleGroupChildren: List<RuleGroup>? = null,
-    //@KomapperIgnore var children: MutableList<RuleCommon> ? = null //为前端构造tree型列表展示，不再使用List<Rule>和List<RuleGroup>，让前端子列表统一
+    val exprStr: String,//json string of LogicalExpr
+    val metaStr: String? = null,//json string of ExpressionMeta
+    val exprRemark: String? = null,//对表达式的备注说明
+
+    //以下为rule所特有，RuleGroup没有
+    val description: String? = null, //说明
+
+    val threshhold: Int? = null, //percent
+    val thenAction: String? = null,// if do
+    val elseAction: String? = null, //else do
 ){
     fun toRuleCommon(service: BaseCrudService, childrenMode: TableChildrenMode, path: MutableList<String>? = null): RuleCommon  {
         domain = domainId?.let{ service.findOne(Meta.domain, {Meta.domain.id eq it}) }
@@ -312,22 +306,20 @@ data class Rule(
         return when(childrenMode){
             TableChildrenMode.Tree -> {
                 val pair = service.getChildrenTree(RuleType.rule, id!!, ruleChildrenIds, ruleGroupChildrenIds, path) //在新增和修改时无需构建children，因一是没有无需构建，二是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
-                RuleCommon(pair.first,this, null, id, typedId, level, label, priority,
-                    remark, enable, tags, exclusive, domainId, description, domain,
-                    pair.second)
+                RuleCommon(typedId, pair.first, pair.second,this, null,
+                    id,  level, label, exclusive, enable, tags, remark, priority,
+                    domainId, domain, description)
             }
             TableChildrenMode.LazyLoad ->{
-                RuleCommon(listOf("${RuleType.rule.name}-$id"),
-                    this, null, id, typedId, level, label, priority,
-                    remark, enable, tags, exclusive, domainId, description, domain,
-                    service.getChildrenList( ruleChildrenIds, ruleGroupChildrenIds, false))
+                RuleCommon(typedId, listOf("${RuleType.rule.name}-$id"), service.getChildrenList( ruleChildrenIds, ruleGroupChildrenIds, false),
+                    this, null, id,  level, label, exclusive, enable, tags, remark, priority,
+                    domainId, domain, description)
             }
 
             TableChildrenMode.None -> {
-                RuleCommon(listOf("${RuleType.rule.name}-$id"),
-                    this, null, id, typedId, level, label, priority,
-                    remark, enable, tags, exclusive, domainId, description, domain,
-                    null)
+                RuleCommon(typedId, listOf("${RuleType.rule.name}-$id"), null,
+                    this, null, id,  level, label, exclusive, enable, tags, remark, priority,
+                    domainId, domain, description)
             }
         }
     }
@@ -344,27 +336,25 @@ data class Rule(
 data class RuleGroup(
     @KomapperId @KomapperAutoIncrement
     val id: Int ? = null, //不再使用这种方式：md5(domainId=xx&key=xx&op=xx&valueType=xx&value=xx)
-    val level: Int? = null,
-
+    val level: Int,
     val label: String,
-    val exclusive: Int = 1,
-
-    val enable: Int = 1,
+    val exclusive: Int = 0, //chidlren是否互斥
+    val enable: Int = 1, //与sqlite一致，因为sqlite中么有boolean
     val tags: String? = null,
-    val remark: String? = null,
-
+    val remark: String? = null,//相关信息备注
     val priority: Int? = null ,
+
     val domainId: Int? = null,
-    @KomapperIgnore var domain: Domain? = null,
+    @KomapperIgnore var domain: Domain? = null, //前端列表数据需要
 
     val ruleChildrenIds: String? = null, // json string of Rule.id List, insert/save one when create a child in front end
     val ruleGroupChildrenIds: String? = null,// json string of RuleGroup.id List, insert one when create a child in front end
-
     var ruleParentIds: String? = null,
     var ruleGroupParentIds: String? = null,
 
-    //@KomapperIgnore var ruleChildren: List<Rule>? = null,
-    //@KomapperIgnore var ruleGroupChildren: List<RuleGroup>? = null,
+    val exprStr: String? = null,//json string of LogicalExpr
+    val metaStr: String? = null,//json string of ExpressionMeta
+    val exprRemark: String? = null,//对表达式的备注说明
 ){
     fun toRuleCommon(service: BaseCrudService, childrenMode: TableChildrenMode, path: MutableList<String>? = null): RuleCommon  {
         domain = domainId?.let{ service.findOne(Meta.domain, {Meta.domain.id eq it}) }
@@ -373,26 +363,28 @@ data class RuleGroup(
         return when(childrenMode){
             TableChildrenMode.Tree -> {
                 val pair = service.getChildrenTree(RuleType.ruleGroup, id!!, ruleChildrenIds, ruleGroupChildrenIds, path) //在新增和修改时无需构建children，因一是没有无需构建，二是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
-                RuleCommon(pair.first,
-                    null, this, id, typedId, level, label, priority,
-                    remark, enable, tags, exclusive, domainId, null, domain,
-                    pair.second)
+                RuleCommon(typedId, pair.first, pair.second,null, this,
+                    id,  level, label, exclusive, enable, tags, remark, priority,
+                    domainId, domain)
             }
             TableChildrenMode.LazyLoad ->{
-                RuleCommon(listOf("${RuleType.ruleGroup.name}-$id"),
-                    null, this, id, typedId, level, label, priority,
-                    remark, enable, tags, exclusive, domainId, null, domain,
-                    service.getChildrenList(ruleChildrenIds, ruleGroupChildrenIds, false))
+                RuleCommon(typedId, listOf("${RuleType.ruleGroup.name}-$id"), service.getChildrenList(ruleChildrenIds, ruleGroupChildrenIds, false),null, this,
+                    id,  level, label, exclusive, enable, tags, remark, priority,
+                    domainId, domain)
             }
 
             TableChildrenMode.None -> {
-                RuleCommon(listOf("${RuleType.ruleGroup.name}-$id"),
-                    null, this, id, typedId, level, label, priority,
-                    remark, enable, tags, exclusive, domainId, null, domain,
-                    null)
+                RuleCommon(typedId, listOf("${RuleType.ruleGroup.name}-$id"), null,null, this,
+                    id,  level, label, exclusive, enable, tags, remark, priority,
+                    domainId, domain)
             }
         }
     }
+
+    /**
+     * 没有expr时，认为是true，会得到执行ruleGroup下的子节点，而rule则根据expr进行判断
+     * */
+    fun getExpr() = exprStr?.let{MySerializeJson.decodeFromString<ILogicalExpr>(it)}
 }
 
 @Serializable

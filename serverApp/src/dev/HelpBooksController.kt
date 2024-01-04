@@ -32,9 +32,13 @@ import org.komapper.core.dsl.Meta
  * /Users/bill/git/MingLi/app/src/main/assets/app.db
  * */
 class HelpBooksController(val service: AbstractSqlService)  {
-    //val db = "/Users/bill/git/MingLi/app/src/main/assets/app.db"
-    val db = "/Users/bill/Downloads/app.db"
-    val sqlLiteHelper = SqlLiteHelper(db)
+    companion object{
+        const val sqliteDb = "/Users/bill/git/android/MingLi/app/src/main/assets/app.db"
+        //const val sqliteDb = "/Users/bill/Downloads/app.db"
+    }
+
+
+    val sqlLiteHelper = SqlLiteHelper(sqliteDb)
 
     fun updateJuniorBookStar(list: List<JuniorBookStar>){
         list.forEach {

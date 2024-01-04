@@ -27,7 +27,7 @@ package com.github.rwsbillyang.rule.runtime
  * @param entity 附属信息，通常是对应的规则或规则组 不同环境中数据库规则实体定义可能不同
  * */
 class EvalRule(
-    val logicalExpr: ILogicalExpr?,
+    val logicalExpr: ILogicalExpr,
     val exclusive: Boolean,
     val action: String? = null,
     val elseAction: String? = null,
@@ -48,34 +48,34 @@ class EvalRule(
         parentRule: EvalRule?,
         collector: ResultTreeCollector<T>?
     ): Boolean {
-         if(logicalExpr != null){
-             try {
-                 val ret = logicalExpr.eval(dataProvider)
-                 if(logInfo != null){
-                     println("eval: ret=$ret, entity=${logInfo!!(entity)}")
-                 }
+//         if(logicalExpr != null){  }else{
+//             val flag = evalChildren(dataProvider, loadChildrenFunc, toEvalRule, collector)
+//             if(flag) {//当顶级节点为group时，因为没有自己的expr，只要有子节点，就会执行collect
+//                 collector?.collect(this, parentRule)
+//             }
+//             return flag
+//         }
 
-                 if(ret){
-                     collector?.collect(this, parentRule)
-                     (action?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultAction)?.let { it(this, parentRule) }
-                     evalChildren(dataProvider, loadChildrenFunc, toEvalRule, collector)
+        try {
+            val ret = logicalExpr.eval(dataProvider)
+            if(logInfo != null){
+                println("eval: ret=$ret, entity=${logInfo!!(entity)}")
+            }
 
-                     return true
-                 }else{
-                     (elseAction?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultElseAction)?.let { it(this, parentRule) }
-                     return false
-                 }
-             }catch (e: Exception){
-                 System.err.println(e.message + "entity=" + entity)
-                 return false
-             }
-         }else{
-             val flag = evalChildren(dataProvider, loadChildrenFunc, toEvalRule, collector)
-             if(flag) {//当顶级节点为group时，因为没有自己的expr，只要有子节点，就会执行collect
-                 collector?.collect(this, parentRule)
-             }
-             return flag
-         }
+            if(ret){
+                collector?.collect(this, parentRule)
+                (action?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultAction)?.let { it(this, parentRule) }
+                evalChildren(dataProvider, loadChildrenFunc, toEvalRule, collector)
+
+                return true
+            }else{
+                (elseAction?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultElseAction)?.let { it(this, parentRule) }
+                return false
+            }
+        }catch (e: Exception){
+            System.err.println(e.message + "entity=" + entity)
+            return false
+        }
     }
     private fun <T> evalChildren(
         dataProvider: (key: String, keyExtra:String?) -> Any?,
@@ -85,11 +85,10 @@ class EvalRule(
     ): Boolean
     {
         val children = loadChildrenFunc(entity)?.map{ toEvalRule(it) }
-        if(children == null){
-            System.err.println("no loadChildrenFunc, do nothing")
+        if(children.isNullOrEmpty()){
+           // println("no loadChildrenFunc, do nothing")
             return false
         }
-        if(children.isEmpty()) return false
 
         if(exclusive){
             //println("evalChildren: exclusively eval")

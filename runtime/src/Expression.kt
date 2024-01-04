@@ -64,6 +64,14 @@ interface ITriLogicalExpr: ILogicalExpr{
     override fun humanReadString() = "$key $op ${operands.values.joinToString(" ") { it.humanReadString() }}"
 }
 
+object TrueExpression: ILogicalExpr{
+    override fun eval(dataProvider: (key: String, keyExtra: String?) -> Any?) = true
+    override fun humanReadString() = "True forever"
+}
+object FalseExpression: ILogicalExpr{
+    override fun eval(dataProvider: (key: String, keyExtra: String?) -> Any?) = false
+    override fun humanReadString() = "False forever"
+}
 @Serializable
 @SerialName(IType.Type_Bool)
 class BoolExpression(

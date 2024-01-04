@@ -10,18 +10,19 @@ import { ProColumns } from "@ant-design/pro-table"
 import { Host } from "@/Config"
 
 import { PlusCircleTwoTone, MinusCircleTwoTone } from "@ant-design/icons";
-import { Button, Dropdown, Spin, message } from "antd"
-import { RuleEditModal } from "./RuleEdit"
+import { Dropdown, Spin, message } from "antd"
+import { RuleEditModal, RuleGroupEditModal } from "./RuleOrGroupEdit"
 import { initialValueRule, rubleTableProps } from "./RuleTable"
-import { BetaSchemaForm } from "@ant-design/pro-form"
+
 
 import { defaultProps, mustFill } from "../moduleTableProps"
 
-import { deleteRuleOrGroup, saveRuleOrGroup } from "./RuleCommon"
+import { deleteRuleOrGroup } from "./RuleCommon"
 import { ArrayUtil, cachedGet } from "@rwsbillyang/usecache"
 import { MoveIntoNewParentModal, MoveNodeParam } from "./MoveRuleNode"
 import { ExpandableConfig } from "antd/lib/table/interface"
 import { dispatch } from "use-bus"
+import { basicMeta2Expr, complexMeta2Expr, removeBasicExpressionMetaFields, removeComplexExpressionMetaFields } from "../utils"
 
 
 const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup> = 
@@ -108,12 +109,30 @@ export const rubleGroupTableProps = {
     //editForm: (e) => '/rule/editRule',
     transformBeforeSave: (e) => { //props.editConfig.transform, transform(modify shape) before save
         e.tags = e.tagList?.join(",")
-
+        if (e.meta) {
+            if (e.meta["metaList"]) {
+                e.expr = complexMeta2Expr(e.meta)
+                removeComplexExpressionMetaFields(e.meta)
+            } else {
+                e.expr = basicMeta2Expr(e.meta)
+                removeBasicExpressionMetaFields(e.meta)
+            }
+            e.metaStr = JSON.stringify(e.meta)
+            e.exprStr = JSON.stringify(e.expr)
+        }
+        if(e.remark?.trim() === "") delete e.remark
+        if(e.exprRemark?.trim() === "") delete e.exprRemark
         return e
     },
     transformBeforeEdit: (e) => { //props.editConfig.convertValue 
         if (!e) return e
         e.tagList = e.tags?.split(",")
+        if (e.metaStr) {
+            e.meta = JSON.parse(e.metaStr)
+        }
+        if (e.exprStr) {
+            e.expr = JSON.parse(e.exprStr)
+        }
         return e
     }
 }
@@ -242,32 +261,3 @@ export const RuleGroupTable: React.FC = () => {
     </>
 }
 
-/**
- * 
- * @param isAdd 编辑还是新增
- * @param record 当前需要编辑的值，新增的话可以使用初始值 经transformBeoforeEdit转换的值
- * @param tableProps 表格属性，保存及更新缓存时需用到里面的信息
- * @param currentRow 在哪个Rule上新增子项或编辑，若是新增顶级节点则为空
- * @returns 
- */
-export const RuleGroupEditModal: React.FC<{
-    isAdd: boolean,
-    record?: Partial<RuleGroup>,
-    fromTable: string,
-    currentRow?: RuleCommon
-}> = ({ isAdd, record, fromTable, currentRow }) => {
-
-
-    return <BetaSchemaForm<RuleGroup>
-        title="编辑规则组"
-        trigger={isAdd ? (currentRow ? <span>子规则组</span> : <Button type="primary">新建</Button>) : <a key="editLink">编辑</a>}
-        layoutType="ModalForm"
-        initialValues={record}
-        columns={ruleGroupColumns as any}
-        onFinish={async (values) => {
-            saveRuleOrGroup(fromTable, RuleGroupName, values, isAdd, record, currentRow)
-            return true
-        }}
-        layout="horizontal"
-    />
-}

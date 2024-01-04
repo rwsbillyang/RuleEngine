@@ -16,7 +16,7 @@ import { ConstantTable } from './pages/basic/ConstantTable'
 import { DomainTable } from './pages/basic/DomainTable'
 import { ExpressionTableTab } from './pages/basic/ExpressionTable'
 import { RuleTable } from './pages/rule/RuleTable'
-import { RuleEdit } from './pages/rule/RuleEdit'
+//import { RuleEdit } from './pages/rule/RuleOrGroupEdit'
 import { ActionTable } from './pages/rule/ActionTable'
 import { RuleGroupTable } from './pages/rule/RuleGroupTable'
 import { EnableDev, EnableParamCategory } from './Config'
@@ -122,12 +122,12 @@ const menuRoutes: MyRoute[] = [
         name: '规则',
         element: lazyLoad(<RuleTable />)
       },
-      {
-        path: '/rule/editRule',
-        name: '编辑规则',
-        hideInMenu: true,
-        element: lazyLoad(<RuleEdit />)
-      },
+      // {
+      //   path: '/rule/editRule',
+      //   name: '编辑规则',
+      //   hideInMenu: true,
+      //   element: lazyLoad(<RuleEdit />)
+      // },
       {
         path: '/rule/group',
         name: '规则组',

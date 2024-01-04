@@ -391,6 +391,7 @@ class RuleTreeController : KoinComponent {
                     {
                         Meta.rule.ruleParentIds eq parentRuleIds
                         Meta.rule.ruleGroupParentIds eq parentGroupIds
+                        Meta.rule.level eq p.newLevel
                     },
                     { Meta.rule.id eq p.current.id },
                     "rule/${p.current.id}"
@@ -424,11 +425,11 @@ class RuleTreeController : KoinComponent {
                     when(p.newParent.type){
                         RuleType.rule -> {
                             parentRuleIds = addId(parentRuleIds, p.newParent.id)
-                            addChild_RuleInRule(p.current.id, p.newParent.id)
+                            addChild_GroupInRule(p.current.id, p.newParent.id)
                         }
                         RuleType.ruleGroup -> {
                             parentGroupIds = addId(parentGroupIds, p.newParent.id)
-                            addChild_RuleInGroup(p.current.id, p.newParent.id)
+                            addChild_GroupInGroup(p.current.id, p.newParent.id)
                         }
                     }
                 }else {//到根节点下
@@ -437,17 +438,17 @@ class RuleTreeController : KoinComponent {
                     null
                 }
 
-                log.info("update parentRuleIds=${parentRuleIds}, parentGroupIds=${parentGroupIds} of rule=${p.current.id}")
+                log.info("update parentRuleIds=${parentRuleIds}, parentGroupIds=${parentGroupIds} of ruleGroup=${p.current.id}")
                 // 更新父节点信息
                 service.updateValues(
-                    Meta.rule,
+                    Meta.ruleGroup,
                     {
-                        Meta.rule.ruleParentIds eq parentRuleIds
-                        Meta.rule.ruleGroupParentIds eq parentGroupIds
-                        Meta.rule.level eq p.newLevel
+                        Meta.ruleGroup.ruleParentIds eq parentRuleIds
+                        Meta.ruleGroup.ruleGroupParentIds eq parentGroupIds
+                        Meta.ruleGroup.level eq p.newLevel
                     },
-                    { Meta.rule.id eq p.current.id },
-                    "rule/${p.current.id}"
+                    { Meta.ruleGroup.id eq p.current.id },
+                    "ruleGroup/${p.current.id}"
                 )
                 return MoveResult(RuleAndGroupdIds(parentRuleIds, parentGroupIds), RuleAndGroupdIds(null, oldGroupChildrenIds), RuleAndGroupdIds(null, newGroupChildrenIds))
             }
