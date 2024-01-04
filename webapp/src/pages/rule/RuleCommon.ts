@@ -278,6 +278,7 @@ export function deleteRuleOrGroup(
     let parent: RuleCommon | undefined
     let elemPath: RuleCommon[] | undefined
     const path = item.posPath
+    console.log("to delete item: ", path)
     if (path.length > 1) {
         elemPath = TreeCache.getElementsByPathIdsInTreeFromCache(tableProps.cacheKey, path, tableProps.idKey)//树形数据转换成数组
         if (elemPath) {

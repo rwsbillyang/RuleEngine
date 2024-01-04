@@ -38,6 +38,14 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
         formItemProps: mustFill
     },
     {
+        title: '说明',
+        dataIndex: 'description',
+        valueType: 'textarea',
+        ellipsis: true,
+        //hideInTable: true,
+        hideInSearch: true
+    },
+    {
         title: '类型',
         hideInSearch: true,
         hideInForm: true,
@@ -121,7 +129,7 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
 export const RuleName = "rule"//typedId以此开头
 export const initialValueRule: Partial<Rule> = { enable: 1, exclusive: 0, priority: 50, threshhold: 100, level: 0 }
 export const rubleTableProps = {
-    ...defaultProps(RuleName, false),
+    ...defaultProps(RuleName), //删除一项时从缓存中搜索parent，从而知道是group还是rule中进行删除
     idKey: "typedId",
     editForm: (e) => '/rule/editRule',
     transformBeforeSave: (e) => { //props.editConfig.transform, transform(modify shape) before save

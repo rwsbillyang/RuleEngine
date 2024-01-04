@@ -134,7 +134,7 @@ export const RuleGroupEditModal: React.FC<{
     
     return <ModalForm<RuleGroup> layout="horizontal" initialValues={record}
         title={isAdd? "新增规则组" : "编辑规则组"}
-        trigger={isAdd ? (currentRow ? <span>子规则</span> : <Button type="primary">新建</Button>) : <a key="editLink">编辑</a>}
+        trigger={isAdd ? (currentRow ? <span>子规则组</span> : <Button type="primary">新建</Button>) : <a key="editLink">编辑</a>}
         autoFocusFirstInput
         omitNil={false} //去掉将不能清除数据，因为需要undfined来清除掉旧数据
         modalProps={{

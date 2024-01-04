@@ -95,7 +95,10 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
   }, [refreshCount])
 
   useBus('loadChildrenDone-' + props.listApi, () => {
-    setList([...list])
+    if(props.cacheKey)  
+      CacheStorage.saveObject(props.cacheKey, list)
+    
+      setList([...list])
   }, [list])
 
   useBus((e: EventAction) => e.type.indexOf("refreshList") >= 0,
