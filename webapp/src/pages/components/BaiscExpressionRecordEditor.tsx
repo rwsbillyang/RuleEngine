@@ -31,7 +31,6 @@ export const BaiscExpressionRecordEditor: React.FC<{
   return <ModalForm<BasicExpressionRecord> initialValues={record} layout="horizontal"
     title="基本表达式"
     trigger={isAdd ? <Button type="primary">新建</Button> : <a key="editLink">编辑</a>}
-    autoFocusFirstInput
     omitNil={false} //去掉将不能清除数据，因为需要undfined来清除掉旧数据
     modalProps={{
       destroyOnClose: false,
