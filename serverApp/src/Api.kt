@@ -186,7 +186,41 @@ fun Routing.composerApi() {
         }
 
 
-
+        //将现有的rule添加到某个父节点中
+        post("/addRuleInParent/{name}/{parentId}/{ruleId}"){
+            val name = call.parameters["name"]
+            val parentId = call.parameters["parentId"]?.toInt()
+            val ruleId = call.parameters["ruleId"]?.toInt()
+            if(name == null || parentId == null || ruleId == null)
+                call.respondBoxKO("addRuleInParent, invalid parameter: no name/parentId/ruleId")
+            else{
+                try {
+                    val text = when(name){
+                        BaseCrudController.Name_rule -> {
+                            val ret = ruleTreeController.addRuleInRule(ruleId, parentId)
+                            if(ret != null)
+                                MySerializeJson.encodeToString(DataBox.ok(ret))
+                            else{
+                                MySerializeJson.encodeToString(DataBox.ko<Unit>("fail to addRuleInParent"))
+                            }
+                        }
+                        BaseCrudController.Name_ruleGroup -> {
+                            val ret = ruleTreeController.addRuleInGroup(ruleId, parentId)
+                            if(ret != null)
+                                MySerializeJson.encodeToString(DataBox.ok(ret))
+                            else{
+                                MySerializeJson.encodeToString(DataBox.ko<Unit>("fail to addRuleInParent"))
+                            }
+                        }
+                        else -> MySerializeJson.encodeToString(DataBox.ko<Int>("addRuleInParent: not support $name"))
+                    }
+                    call.respondBoxJsonText(text)
+                }catch (e: IllegalArgumentException){
+                    e.printStackTrace()
+                    call.respondBoxKO("addRuleInParent IllegalArgumentException when save: $name")
+                }
+            }
+        }
         post("/saveSubInRule/{name}/{parentRuleId}") {
             val name = call.parameters["name"]
             val parentRuleId = call.parameters["parentRuleId"]?.toInt()

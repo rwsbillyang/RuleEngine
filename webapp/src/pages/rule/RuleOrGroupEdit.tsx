@@ -10,11 +10,12 @@ import { Button, Form, message } from "antd"
 
 import { RuleName } from "./RuleTable"
 
-import {  saveRuleOrGroup } from "./RuleCommon"
+import {  InsertNodeResult, getOnInsertNodeOk, saveRuleOrGroup } from "./RuleCommon"
 import { basicExpressionMeta2String, complexExpressionMeta2String } from "../utils"
 import { BasicExprMetaEditModalV2 } from "../components/BasicExprMetaEditModalV2"
 import { ComplexExprMetaEditModal } from "../components/ComplexExprMetaEditModal"
 import { RuleGroupName } from "./RuleGroupTable"
+import { cachedFetchPromise } from "@rwsbillyang/usecache"
 
 
 
@@ -40,7 +41,6 @@ export const RuleEditModal: React.FC<{
     return <ModalForm<Rule> layout="horizontal" initialValues={record}
         title={isAdd? "新增规则" : "编辑规则"}
         trigger={isAdd ? (currentRow ? <span>子规则</span> : <Button type="primary">新建</Button>) : <a key="editLink">编辑</a>}
-        autoFocusFirstInput
         omitNil={false} //去掉将不能清除数据，因为需要undfined来清除掉旧数据
         modalProps={{
             destroyOnClose: false,
@@ -81,7 +81,7 @@ export const RuleEditModal: React.FC<{
         <ProForm.Group>
             <ProFormSelect width="xs" name={"exclusive"} fieldProps={{ options: [{value:0, label: "否"}, {value:1, label: "是"}] }} label="排他性" />
             <ProFormSelect width="xs" name={"enable"} fieldProps={{ options: [{value:0, label: "禁用"}, {value:1, label: "可用"}] }}  label="状态" />
-            <ProFormDigit width="xs" name={"priority"} label="优先级" />
+            <ProFormDigit width="xs" name={"priority"} label="优先级" min={-10000}/>
             <ProFormDigit width="xs" name={"threshhold"} label="可信度" />
         </ProForm.Group>
 
@@ -135,7 +135,6 @@ export const RuleGroupEditModal: React.FC<{
     return <ModalForm<RuleGroup> layout="horizontal" initialValues={record}
         title={isAdd? "新增规则组" : "编辑规则组"}
         trigger={isAdd ? (currentRow ? <span>子规则组</span> : <Button type="primary">新建</Button>) : <a key="editLink">编辑</a>}
-        autoFocusFirstInput
         omitNil={false} //去掉将不能清除数据，因为需要undfined来清除掉旧数据
         modalProps={{
             destroyOnClose: false,
@@ -172,7 +171,7 @@ export const RuleGroupEditModal: React.FC<{
         <ProForm.Group>
             <ProFormSelect width="xs" name={"exclusive"} fieldProps={{ options: [{value:0, label: "否"}, {value:1, label: "是"}] }} label="排他性" />
             <ProFormSelect width="xs" name={"enable"} fieldProps={{ options: [{value:0, label: "禁用"}, {value:1, label: "可用"}] }}  label="状态" />
-            <ProFormDigit width="xs" name={"priority"} label="优先级" />
+            <ProFormDigit width="xs" name={"priority"} label="优先级" min={-10000}/>
         </ProForm.Group>
 
 
@@ -196,6 +195,97 @@ export const RuleGroupEditModal: React.FC<{
     </ModalForm>
 }
 
+export const AddParentModal: React.FC<{ currentRow: RuleCommon, fromTable: string}> = ({ currentRow, fromTable }) => {
+    const ruleId = currentRow.rule?.id
+
+    return <ModalForm<RuleGroup> layout="horizontal" 
+        title="添加父节点ID" 
+        trigger={<a key="editLink">添加父节点ID</a>}
+        modalProps={{
+            destroyOnClose: false,
+        }}
+        submitTimeout={2000}
+        onFinish={async (values) => {
+    
+            if(!ruleId){
+                message.warning("no ruleId")
+                return false
+            }
+            if (!values.parentType || !values.parentId) {
+                message.warning("请填写parentType和ID")
+                return false
+            }
+        
+            cachedFetchPromise<InsertNodeResult>(`/api/rule/composer/addRuleInParent/${values.parentType}/${values.parentId}/${ruleId}`, 'POST')//undefined, StorageType.OnlySessionStorage, undefined,undefined,false
+            .then((data) => {
+              if (data) {
+                const onOK = getOnInsertNodeOk(fromTable, true, false, currentRow)
+                onOK(data)
+              }else { console.log("no data return after save") }
+              
+              return new Promise((resolve) => { resolve(true) });
+            }).catch((err) => {
+              console.warn("exception: " + err.message)
+              message.error(err.message)
+            })
+
+            return true
+        }}>
+
+        <ProFormSelect name={"parentType"} fieldProps={{ options: [{value:"rule", label: "规则"}, {value:"ruleGroup", label: "规则组"}] }} label="父节点类型" />
+        <ProFormDigit name={"parentId"} label="父节点ID" />
+    </ModalForm>
+}
+
+
+export const AddChildModal: React.FC<{ currentRow: RuleCommon, fromTable: string}> = ({ currentRow, fromTable }) => {
+    let parentId =  currentRow.ruleGroup?.id
+    let parentType = RuleGroupName
+    if(currentRow.rule){
+        parentType = RuleName
+        parentId = currentRow.rule?.id 
+    }
+
+    return <ModalForm<RuleGroup> layout="horizontal" 
+        title="添加子节点ID" 
+        trigger={<a key="editLink">添加子节点ID</a>}
+        modalProps={{
+            destroyOnClose: false,
+        }}
+        submitTimeout={2000}
+        onFinish={async (values) => {
+    
+            if(!parentType || !parentId){
+                message.warning("no parentType or parentId")
+                return false
+            }
+
+            const ruleId = values.ruleId
+            if (!ruleId) {
+                message.warning("请填写ID")
+                return false
+            }
+        
+            cachedFetchPromise<InsertNodeResult>(`/api/rule/composer/addRuleInParent/${parentType}/${parentId}/${ruleId}`, 'POST')//undefined, StorageType.OnlySessionStorage, undefined,undefined,false
+            .then((data) => {
+              if (data) {
+                const onOK = getOnInsertNodeOk(fromTable, true, false, currentRow)
+                onOK(data)
+              }else { console.log("no data return after save") }
+              
+              return new Promise((resolve) => { resolve(true) });
+            }).catch((err) => {
+              console.warn("exception: " + err.message)
+              message.error(err.message)
+            })
+
+            return true
+        }}>
+
+    
+        <ProFormDigit name={"ruleId"} label="子节点ID" />
+    </ModalForm>
+}
 
 // export const RuleGroupEditModalOld: React.FC<{
 //     isAdd: boolean,

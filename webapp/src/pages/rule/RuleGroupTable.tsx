@@ -11,14 +11,14 @@ import { Host } from "@/Config"
 
 import { PlusCircleTwoTone, MinusCircleTwoTone } from "@ant-design/icons";
 import { Dropdown, Spin, message } from "antd"
-import { RuleEditModal, RuleGroupEditModal } from "./RuleOrGroupEdit"
+import { AddChildModal, AddParentModal, RuleEditModal, RuleGroupEditModal } from "./RuleOrGroupEdit"
 import { initialValueRule, rubleTableProps } from "./RuleTable"
 
 
 import { defaultProps, mustFill } from "../moduleTableProps"
 
 import { deleteRuleOrGroup } from "./RuleCommon"
-import { ArrayUtil, cachedGet } from "@rwsbillyang/usecache"
+import { ArrayUtil, cachedFetch } from "@rwsbillyang/usecache"
 import { MoveIntoNewParentModal, MoveNodeParam } from "./MoveRuleNode"
 import { ExpandableConfig } from "antd/lib/table/interface"
 import { dispatch } from "use-bus"
@@ -27,6 +27,11 @@ import { basicMeta2Expr, complexMeta2Expr, removeBasicExpressionMetaFields, remo
 
 const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup> = 
     [
+        {
+            title: 'ID',
+            dataIndex: 'id',
+            hideInForm: true,
+        },
         {
             title: '名称',
             dataIndex: 'label',
@@ -67,7 +72,7 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
             tooltip: "任意一个rule的条件成立则退出",
             valueType: "select",
             //valueEnum: {0: "关闭", 1: "打开"},
-            fieldProps:{ options:[{value:0, label: "否"}, {value:1, label: "是"}] },
+            fieldProps: { options: [{ value: 0, label: "否" }, { value: 1, label: "是" }] },
             dataIndex: 'exclusive',
             //hideInTable: true,
         },
@@ -76,7 +81,7 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
             dataIndex: 'enable',
             valueType: "select",
             //valueEnum: {0: "禁用", 1: "可用"},
-            fieldProps:{ options: [{value:0, label: "禁用"}, {value:1, label: "可用"}] },
+            fieldProps: { options: [{ value: 0, label: "禁用" }, { value: 1, label: "可用" }] },
         },
         {
             title: '优先级',
@@ -89,12 +94,12 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
             title: '标签',
             dataIndex: 'tags',
         },
-        
+
         {
             title: '备注',
             dataIndex: 'remark',
             valueType: 'textarea',
-            fieldProps:{ rows: 6 },
+            fieldProps: { rows: 6 },
             ellipsis: true,
             hideInTable: true,
             hideInSearch: true
@@ -121,8 +126,8 @@ export const rubleGroupTableProps = {
             e.metaStr = JSON.stringify(e.meta)
             e.exprStr = JSON.stringify(e.expr)
         }
-        if(e.remark?.trim() === "") delete e.remark
-        if(e.exprRemark?.trim() === "") delete e.exprRemark
+        if (e.remark?.trim() === "") delete e.remark
+        if (e.exprRemark?.trim() === "") delete e.exprRemark
         return e
     },
     transformBeforeEdit: (e) => { //props.editConfig.convertValue 
@@ -181,49 +186,69 @@ export const RuleGroupTable: React.FC = () => {
                 <Dropdown key="more" menu={{
                     items: [
                         { label: (<a onClick={() => { setPath(record.posPath) }} key="viewOnlyNode">只看当前</a>), key: 'viewOnlyNode' },
-                        { label: (<a onClick={() => { 
-                            if(current.treeData)
-                                setMoveParam({fromTable: RuleGroupName, list: current.treeData, currentRow: record})
-                            else message.warning("no list tree data")
-                            }} key="moveNode">移动</a>), key: 'moveNode' },
+                        record.rule ? { label: (<AddParentModal currentRow={record} fromTable={RuleGroupName} key="AddParentModal" />), key: 'AddParentModal' } : null,
+                        { label: (<AddChildModal currentRow={record} fromTable={RuleGroupName} key="AddChildModal" />), key: 'AddChildModal' },
+                        {
+                            label: (<a onClick={() => {
+                                if (current.treeData)
+                                    setMoveParam({ fromTable: RuleGroupName, list: current.treeData, currentRow: record })
+                                else message.warning("no list tree data")
+                            }} key="moveNode">移动</a>), key: 'moveNode'
+                        },
                         { label: (<a onClick={() => deleteRuleOrGroup(RuleGroupName, record)} key="delete">删除</a>), key: 'delete' },
-                    ]
+                    ].filter(e => !!e)
                 }}>
                     <a onClick={(e) => e.preventDefault()}> 更多.. </a>
-                </Dropdown>,   
-            ].filter(e=>!!e)
+                </Dropdown>,
+            ].filter(e => !!e)
         }
     }
 
     const expandable: ExpandableConfig<RuleCommon> = {
         indentSize: 5,
-        expandIcon:  ({ expanded, onExpand, record })=> {
-            if(loadingTypeId === record.typedId) 
-                return  <Spin size="small"/>
-            else{
-                if(record.children){
+        expandIcon: ({ expanded, onExpand, record }) => {
+            if (loadingTypeId === record.typedId)
+                return <Spin size="small" />
+            else {
+                if (record.children) {
                     return expanded ? (
                         <MinusCircleTwoTone onClick={e => onExpand(record, e)} />
-                      ) : (
+                    ) : (
                         <PlusCircleTwoTone onClick={e => onExpand(record, e)} />
-                      )
-                }else{
+                    )
+                } else {
                     return undefined
                 }
             }
         },
-        onExpand: (expanded,record) =>{
-            if(expanded && record.children?.length === 0){
+        onExpand: (expanded, record) => {
+            if (expanded && record.children?.length === 0) {
                 setLoadingTypeId(record.typedId)
-                cachedGet<RuleCommon[]>(`/api/rule/composer/loadChildren/${RuleGroupName}/${record.id}`,
-                (data)=>{
-                    setLoadingTypeId(undefined)
-                    data.forEach((e)=> {
-                        e.posPath = [...record.posPath, e.posPath[0]]
-                    })
-                    record.children = data
+                cachedFetch<RuleCommon[]>({
+                    url: `/api/rule/composer/loadChildren/${RuleGroupName}/${record.id}`,
+                    method: "GET",
+                    isShowLoading: false,
+                    onOK: (data) => {
+                        setLoadingTypeId(undefined)
+                        data.forEach((e) => {
+                            e.posPath = [...record.posPath, e.posPath[0]]
+                        })
+                        record.children = data
 
-                    dispatch("loadChildrenDone-"+rubleGroupTableProps.listApi)
+                        dispatch("loadChildrenDone-" + rubleGroupTableProps.listApi)
+                    },
+                    onNoData: () => {
+                        setLoadingTypeId(undefined)
+                        message.warning("no data return")
+                    },
+                    onKO: (code, msg) => {
+                        setLoadingTypeId(undefined)
+                        message.error(code + ": " + msg)
+                    },
+                    onErr: (errMsg) => {
+                        setLoadingTypeId(undefined)
+                        message.error("err: "+ errMsg)
+                    }
                 })
             }
         }
@@ -240,25 +265,25 @@ export const RuleGroupTable: React.FC = () => {
             listTransform={(list: RuleCommon[], args?: any) => {
                 ArrayUtil.traverseTree(list, (e) => {
                     const children = e.children
-                    if(children && children.length > 0)
-                        e.children = children.sort((a,b)=>(a.priority||50) - (b.priority||50))
+                    if (children && children.length > 0)
+                        e.children = children.sort((a, b) => (a.priority || 50) - (b.priority || 50))
                 })
-                list.sort((a,b)=>(a.priority||50) - (b.priority||50))
-                
+                list.sort((a, b) => (a.priority || 50) - (b.priority || 50))
+
                 current.treeData = list //记录下当前全部树形数据
-                
+
                 //console.log("after trim, list=",list)
 
                 if (!args) return list
                 const root = ArrayUtil.trimTreeByPath(list, args, rubleGroupTableProps.idKey)
-                
+
                 return root ? [root] : list
             }}
 
-            //rowKey={ (record) => record.typedId || "unknown"+record.id }
+            rowKey={ (record) => record.posPath.join('-')  }
             toolBarRender={toolBarRender} actions={actions}
         />
-        <MoveIntoNewParentModal param={moveParam} setParam={setMoveParam}/>
+        <MoveIntoNewParentModal param={moveParam} setParam={setMoveParam} />
     </>
 }
 

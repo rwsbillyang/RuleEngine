@@ -14,12 +14,12 @@ import { Host } from "@/Config"
 import { defaultProps, mustFill } from "../moduleTableProps"
 
 
-import { RuleEditModal, RuleGroupEditModal } from "./RuleOrGroupEdit"
+import { AddChildModal, AddParentModal, RuleEditModal, RuleGroupEditModal } from "./RuleOrGroupEdit"
 import { Dropdown, Spin, message } from "antd"
 import {  initialValuesRuleGroup, rubleGroupTableProps } from "./RuleGroupTable"
 import { deleteRuleOrGroup } from "./RuleCommon"
 import { basicMeta2Expr, complexMeta2Expr, removeBasicExpressionMetaFields, removeComplexExpressionMetaFields } from "../utils"
-import { ArrayUtil, cachedGet } from "@rwsbillyang/usecache"
+import { ArrayUtil, cachedFetch } from "@rwsbillyang/usecache"
 import { MoveIntoNewParentModal, MoveNodeParam } from "./MoveRuleNode"
 import { ExpandableConfig } from "antd/es/table/interface"
 import { dispatch } from "use-bus"
@@ -217,6 +217,8 @@ export const RuleTable: React.FC = () => {
                 <Dropdown key="more" menu={{
                     items: [
                         { label: (<a onClick={() => { setPath(record.posPath) }} key="viewOnlyNode">只看当前</a>), key: 'viewOnlyNode' },
+                        record.rule? { label: (<AddParentModal currentRow={record} fromTable={RuleName} key="AddParentModal" />), key: 'AddParentModal' }: null,
+                        { label: (<AddChildModal currentRow={record} fromTable={RuleName} key="AddChildModal" />), key: 'AddChildModal' },
                         {
                             label: (<a onClick={() => {
                                 if (current.treeData)
@@ -225,7 +227,7 @@ export const RuleTable: React.FC = () => {
                             }} key="moveNode">移动</a>), key: 'moveNode'
                         },
                         { label: (<a onClick={() => deleteRuleOrGroup(RuleName, record)} key="delete">删除</a>), key: 'delete' },
-                    ]
+                    ].filter(e=>!!e)
                 }}>
                     <a onClick={(e) => e.preventDefault()}> 更多.. </a>
                 </Dropdown>,
@@ -250,18 +252,34 @@ export const RuleTable: React.FC = () => {
                 }
             }
         },
-        onExpand: (expanded,record) =>{
-            if(expanded && record.children?.length === 0){
+        onExpand: (expanded, record) => {
+            if (expanded && record.children?.length === 0) {
                 setLoadingTypeId(record.typedId)
-                cachedGet<RuleCommon[]>(`/api/rule/composer/loadChildren/${RuleName}/${record.id}`,
-                (data)=>{
-                    setLoadingTypeId(undefined)
-                    data.forEach((e)=> {
-                        e.posPath = [...record.posPath, e.posPath[0]]
-                    })
-                    record.children = data
-                    
-                    dispatch("loadChildrenDone-"+rubleTableProps.listApi)
+                cachedFetch<RuleCommon[]>({
+                    url: `/api/rule/composer/loadChildren/${RuleName}/${record.id}`,
+                    method: "GET",
+                    isShowLoading: false,
+                    onOK: (data) => {
+                        setLoadingTypeId(undefined)
+                        data.forEach((e) => {
+                            e.posPath = [...record.posPath, e.posPath[0]]
+                        })
+                        record.children = data
+
+                        dispatch("loadChildrenDone-" + rubleTableProps.listApi)
+                    },
+                    onNoData: () => {
+                        setLoadingTypeId(undefined)
+                        message.warning("no data return")
+                    },
+                    onKO: (code, msg) => {
+                        setLoadingTypeId(undefined)
+                        message.error(code + ": " + msg)
+                    },
+                    onErr: (errMsg) => {
+                        setLoadingTypeId(undefined)
+                        message.error("err: " + errMsg)
+                    }
                 })
             }
         }
@@ -282,7 +300,7 @@ export const RuleTable: React.FC = () => {
                 //console.log("after remove, root=",root)
                 return root ? [root] : list
             }}
-            //rowKey={ (record) => record.typedId  }
+            rowKey={ (record) => record.posPath.join('-')  }
             toolBarRender={toolBarRender} actions={actions} //注释掉此行，将跳到新的页面RuleEdit，否则使用Modal对话框
         />
         <MoveIntoNewParentModal param={moveParam} setParam={setMoveParam} />

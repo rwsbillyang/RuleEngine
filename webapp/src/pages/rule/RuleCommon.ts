@@ -13,7 +13,7 @@ export const SaveSubInRuleAPI = "/api/rule/composer/saveSubInRule/" //   {name}/
 export const SaveSubInRuleGroupAPI = "/api/rule/composer/saveSubInRuleGroup/" //   {name}/{parentRuleId}"
 
 
-interface InsertNodeResult{
+export interface InsertNodeResult{
     ruleCommon: RuleCommon //插入的节点
     parent: RuleAndGroupdIds//parent变更后的两种childrenIds
 }
@@ -26,7 +26,7 @@ interface InsertNodeResult{
  * @param currentRow 新增时为新增currentRow的子节点，编辑时为编辑当前行
  * @returns 
  */
-function getOnInsertNodeOk(fromTable: string, isAdd: boolean, debug: boolean, currentRow: RuleCommon) {
+export function getOnInsertNodeOk(fromTable: string, isAdd: boolean, debug: boolean, currentRow: RuleCommon) {
     const onSaveOK = (data: InsertNodeResult) => {//后端返回的是RuleCommon
         //构建相互指向的父子关系，后端处理保存亲子关系
 
