@@ -181,7 +181,7 @@ fun runRuleEval(service: MyBaseCrudService, gongNameIndex: Int, dateTime: LocalD
             }
             is RuleGroup -> {
                 val group = it
-                EvalRule(it.getExpr()?:TrueExpression, it.exclusive == 1, null, null, it)//{ "group-${group.id}: ${group.label}"}
+                EvalRule(it.getExpr()?:TrueExpression, it.exclusive == 1, null, null, it, true)//{ "group-${group.id}: ${group.label}"}
             }
             else -> {
                 System.err.println("toEvalRule: only support Rule/RuleGroup as extra for EvalRule： ${it.toString()}")

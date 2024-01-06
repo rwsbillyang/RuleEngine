@@ -32,6 +32,7 @@ class EvalRule(
     val action: String? = null,
     val elseAction: String? = null,
     val entity: Any?,
+    val isGroup: Boolean = false,
     val logInfo: ((Any?) -> String?)? = null
 ){
     /**
@@ -48,30 +49,34 @@ class EvalRule(
         parentRule: EvalRule?,
         collector: ResultTreeCollector<T>?
     ): Boolean {
-//         if(logicalExpr != null){  }else{
-//             val flag = evalChildren(dataProvider, loadChildrenFunc, toEvalRule, collector)
-//             if(flag) {//当顶级节点为group时，因为没有自己的expr，只要有子节点，就会执行collect
-//                 collector?.collect(this, parentRule)
-//             }
-//             return flag
-//         }
-
         try {
             val ret = logicalExpr.eval(dataProvider)
             if(logInfo != null){
-                println("eval: ret=$ret, entity=${logInfo!!(entity)}")
+                println("eval: ret=$ret, entity=${logInfo.invoke(entity)}")
             }
 
             if(ret){
-                collector?.collect(this, parentRule)
-                (action?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultAction)?.let { it(this, parentRule) }
-                evalChildren(dataProvider, loadChildrenFunc, toEvalRule, collector)
+                if(isGroup){
+                    if(evalChildren(dataProvider, loadChildrenFunc, toEvalRule, collector)){
+                        collector?.collect(this, parentRule)
+                        return true
+                    }else{
+                        return false
+                    }
+                }else{
+                    collector?.collect(this, parentRule)
+                    (action?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultAction)?.let { it(this, parentRule) }
 
-                return true
+                    evalChildren(dataProvider, loadChildrenFunc, toEvalRule, collector)
+                    return true
+                }
             }else{
-                (elseAction?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultElseAction)?.let { it(this, parentRule) }
+                if(!isGroup){
+                    (elseAction?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultElseAction)?.let { it(this, parentRule) }
+                }
                 return false
             }
+
         }catch (e: Exception){
             System.err.println(e.message + "entity=" + entity)
             return false
@@ -103,7 +108,7 @@ class EvalRule(
             for(r in children){
                 val ret = r.eval(dataProvider, loadChildrenFunc, toEvalRule, this, collector)
                 if(logInfo != null){
-                    println("evalChildren: ret=$ret, entity=${logInfo!!(entity)}")
+                    println("evalChildren: ret=$ret, entity=${logInfo.invoke(entity)}")
                 }
                 flag = ret || flag
             }

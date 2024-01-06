@@ -19,11 +19,15 @@
 package com.github.rwsbillyang.rule.runtime
 
 
+/**
+ * 用于构建树形节点
+ * */
 class TreeNode<T>(
     val data: T?,
     val parents: MutableList<String> = mutableListOf(),
     val children: MutableList<String> = mutableListOf()
 )
+
 
 /**
  * data（自己任意定义的类型T）收集器，需提供一个命中的EvalRule到T的转换器
@@ -64,7 +68,9 @@ class ResultTreeCollector<T>(
     }
 
     /**
-     * 对结果进行doSth操作, 从rootNode的children开始遍历
+     * 对rootNode进行深度遍历doSth操作, 从rootNode的children开始遍历, rootNode除外
+     * @param rootNode 虚拟根节点
+     * @param doSth 执行的操作
      * */
     fun traverseResult(rootNode: TreeNode<T> = root, doSth: (TreeNode<T>) -> Unit){
         rootNode.children.forEach{
@@ -76,6 +82,29 @@ class ResultTreeCollector<T>(
                 System.err.println("no treeNode, but has key=$it")
             }
         }
+    }
+
+    private fun setupList(list: MutableList<T>, rootNode: TreeNode<T>,comparator: (a: TreeNode<T>, b: TreeNode<T>) -> Int) {
+        rootNode.children
+            .mapNotNull { resultMap[it] }
+            .sortedWith(comparator)
+            .forEach{
+                if(it.data != null) list.add(it.data)
+                setupList(list, it, comparator)
+            }
+    }
+    /**
+     * 对rootNode进行广度遍历构建LinkList操作, 从rootNode的children开始遍历, rootNode除外
+     * @param rootNode 虚拟根节点
+     * @param skipNode 是否跳过节点
+     * @param comparator 排序比较器
+     * */
+    fun getSortedList(skipNode: (T) -> Boolean, rootNode: TreeNode<T> = root, comparator: (a: TreeNode<T>, b: TreeNode<T>) -> Int): List<T>{
+        val list = mutableListOf<T>()
+
+        setupList(list, rootNode, comparator)
+
+        return list.filter { !skipNode(it) }
     }
 }
 
