@@ -110,7 +110,7 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
 export const initialValuesRuleGroup: Partial<RuleGroup> = { exclusive: 1, enable: 1, priority: 50, level: 0 }
 export const RuleGroupName = "ruleGroup" //typedId以此开头
 export const rubleGroupTableProps = {
-    ...defaultProps(RuleGroupName), //删除一项时从缓存中搜索parent，从而知道是group还是rule中进行删除
+    ...defaultProps(RuleGroupName), //TODO: 删除一项时从缓存中搜索parent，从而知道是group还是rule中进行删除
     idKey: "typedId",
     //editForm: (e) => '/rule/editRule',
     transformBeforeSave: (e) => { //props.editConfig.transform, transform(modify shape) before save

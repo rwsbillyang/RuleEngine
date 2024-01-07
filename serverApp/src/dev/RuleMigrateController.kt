@@ -53,6 +53,21 @@ fun main(){
  * 将docker中的MySQL8中的Rule和RuleGroup，迁移到MingLi app的assets中的sqlite app.db中
  * */
 class RuleMigrateController(val service: AbstractSqlService) {
+
+    fun dropCreateTableAndMigrate(): String{
+        val sqlLiteHelper = SqlLiteHelper(HelpBooksController.sqliteDb)
+        RuleMigrateController(service).apply {
+            createRuleTable(sqlLiteHelper)
+            migrateRuleIntoSqlLite(sqlLiteHelper)
+
+            createGroupTable(sqlLiteHelper)
+            migrateGroupIntoSqlLite(sqlLiteHelper)
+        }
+        sqlLiteHelper.close()
+
+        return "Done"
+    }
+
     //将Rule和RuleGroup数据更新到sqlite
     fun migrateRuleIntoSqlLite(sqlLiteHelper: SqlLiteHelper, lastId: Int? = null){
         val p = RuleQueryParams(MySerializeJson.encodeToString(UmiPagination(sort = Sort.ASC, pageSize = 100, lastId = lastId?.toString())), domainId = 1)
@@ -128,7 +143,7 @@ class RuleMigrateController(val service: AbstractSqlService) {
             	"remark"	TEXT,
             	"expr_remark"	TEXT,
             	"expr_str"	TEXT NOT NULL,
-            	"priority"	INTEGER,
+            	"priority"	INTEGER NOT NULL,
             	"tags"	TEXT,
             	"domain_id"	INTEGER,
             	"level"	INTEGER,
@@ -156,7 +171,7 @@ class RuleMigrateController(val service: AbstractSqlService) {
               `tags` TEXT,
               `remark` TEXT,
               `enable` INTEGER NOT NULL,
-              `priority` INTEGER,
+              `priority` INTEGER NOT NULL,
               `level` INTEGER,
               `expr_str` TEXT,
               `expr_remark` TEXT

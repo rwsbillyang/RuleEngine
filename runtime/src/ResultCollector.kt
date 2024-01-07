@@ -84,27 +84,27 @@ class ResultTreeCollector<T>(
         }
     }
 
-    private fun setupList(list: MutableList<T>, rootNode: TreeNode<T>,comparator: (a: TreeNode<T>, b: TreeNode<T>) -> Int) {
+    private fun setupList(list: MutableList<T>, rootNode: TreeNode<T>) {
         rootNode.children
             .mapNotNull { resultMap[it] }
-            .sortedWith(comparator)
+            //.sortedWith(comparator)
             .forEach{
                 if(it.data != null) list.add(it.data)
-                setupList(list, it, comparator)
+                setupList(list, it)
             }
     }
     /**
      * 对rootNode进行广度遍历构建LinkList操作, 从rootNode的children开始遍历, rootNode除外
      * @param rootNode 虚拟根节点
      * @param skipNode 是否跳过节点
-     * @param comparator 排序比较器
      * */
-    fun getSortedList(skipNode: (T) -> Boolean, rootNode: TreeNode<T> = root, comparator: (a: TreeNode<T>, b: TreeNode<T>) -> Int): List<T>{
+    fun asList(rootNode: TreeNode<T> = root,skipNode: ((T) -> Boolean)? = null): List<T>{
         val list = mutableListOf<T>()
 
-        setupList(list, rootNode, comparator)
+        setupList(list, rootNode)
 
-        return list.filter { !skipNode(it) }
+        return if(skipNode == null) list
+        else list.filter { !skipNode(it) }
     }
 }
 

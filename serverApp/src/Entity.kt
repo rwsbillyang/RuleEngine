@@ -258,7 +258,7 @@ class RuleCommon(
     val enable: Int = 1, //与sqlite一致，因为sqlite中么有boolean
     val tags: String? = null,
     val remark: String? = null,//相关信息备注
-    val priority: Int? = null ,
+    val priority: Int,
 
     val domainId: Int? = null,
     var domain: Domain? , //前端列表数据需要
@@ -278,7 +278,7 @@ data class Rule(
     val enable: Int = 1, //与sqlite一致，因为sqlite中么有boolean
     val tags: String? = null,
     val remark: String? = null,//相关信息备注
-    val priority: Int? = null ,
+    val priority: Int,
 
     val domainId: Int? = null,
     @KomapperIgnore var domain: Domain? = null, //前端列表数据需要
@@ -342,7 +342,7 @@ data class RuleGroup(
     val enable: Int = 1, //与sqlite一致，因为sqlite中么有boolean
     val tags: String? = null,
     val remark: String? = null,//相关信息备注
-    val priority: Int? = null ,
+    val priority: Int,
 
     val domainId: Int? = null,
     @KomapperIgnore var domain: Domain? = null, //前端列表数据需要

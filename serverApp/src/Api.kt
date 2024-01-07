@@ -26,6 +26,7 @@ import com.github.rwsbillyang.ktorKit.apiBox.PostData
 import com.github.rwsbillyang.ktorKit.server.*
 import com.github.rwsbillyang.rule.composer.dev.DevController
 import com.github.rwsbillyang.rule.composer.dev.HelpBooksController
+import com.github.rwsbillyang.rule.composer.dev.RuleMigrateController
 
 
 import io.ktor.server.application.*
@@ -345,7 +346,10 @@ fun Routing.composerApi() {
             get("/upsertZwConstants"){
                 call.respondBoxOK(DevController(crudController.service).upsertConstants())
             }
-
+            //http://localhost:18000/api/dev/migrateRuleIntoSqllite
+            get("/migrateRuleIntoSqllite"){
+                call.respondBoxOK(RuleMigrateController(crudController.service).dropCreateTableAndMigrate())
+            }
 
             //============== for App Client ===================//
             //app获取birthInfo最后一条记录的id，然后增量上传，回流到开发环境sqlite数据库
