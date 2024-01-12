@@ -23,6 +23,7 @@ package com.github.rwsbillyang.rule.composer.dev
 
 
 import com.github.rwsbillyang.ktorKit.cache.VoidCache
+import com.github.rwsbillyang.ktorKit.db.AbstractSqlService
 import com.github.rwsbillyang.ktorKit.db.SqlDataSource
 import com.github.rwsbillyang.ktorKit.db.SqlLiteHelper
 import com.github.rwsbillyang.rule.composer.*
@@ -37,7 +38,9 @@ import org.komapper.core.dsl.Meta
 import java.time.LocalDateTime
 
 class MyData(val key:String, val id: Int?, val label: String?, val desc: String?, val remark: String?, val exprRemark: String?)
-class MyBaseCrudService: BaseCrudService(VoidCache()){
+class MyBaseCrudService: BaseCrudService(VoidCache())
+class MyBaseCrudService2: AbstractSqlService(VoidCache())
+{
     override val dbSource: SqlDataSource
         get() = SqlDataSource("ruleEngineDb", "127.0.0.1", 3306, "root", "123456")
 }

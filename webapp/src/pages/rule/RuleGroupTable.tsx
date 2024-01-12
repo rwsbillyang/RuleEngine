@@ -35,14 +35,14 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
         {
             title: '名称',
             dataIndex: 'label',
+            ellipsis: true,
             formItemProps: mustFill
         },
         {
-            title: '说明',
-            dataIndex: 'description',
-            valueType: 'textarea',
+            title: '表达式备注',
+            dataIndex: 'exprRemark',
             ellipsis: true,
-            //hideInTable: true,
+            hideInTable: false,
             hideInSearch: true
         },
         {
@@ -94,7 +94,14 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
             title: '标签',
             dataIndex: 'tags',
         },
-
+        {
+            title: '说明',
+            dataIndex: 'description',
+            valueType: 'textarea',
+            ellipsis: true,
+            hideInTable: true,
+            hideInSearch: true
+        },
         {
             title: '备注',
             dataIndex: 'remark',

@@ -41,7 +41,7 @@ import org.komapper.core.dsl.QueryDsl
 /**
  * 初始化RuleEngin数据库，包括基本类型及其操作，以及zw扩展类型及其支持的操作，以及部分zw常量
  * */
-class DevController(val service: AbstractSqlService){
+class InitDbController(val service: AbstractSqlService){
     /**
      * 元数据初始化，包括基本数据类型，以及它们支持的基本操作
      * 清空类型和操作符表，并从id=1开始添加

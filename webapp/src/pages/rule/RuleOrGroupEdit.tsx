@@ -67,16 +67,13 @@ export const RuleEditModal: React.FC<{
             }
         }}>
 
-        <ProForm.Group>
-            <ProFormSelect width="md" name={"domainId"} label="所属" request={() => asyncSelectProps2Request<Domain, DomainQueryParams>({
+        <ProFormSelect width="md" name={"domainId"} label="所属" request={() => asyncSelectProps2Request<Domain, DomainQueryParams>({
                 key: AllDomainKey, //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
                 url: `${Host}/api/rule/composer/list/domain`,
                 query: { pagination: { pageSize: -1, sKey: "id", sort: 1 } },
                 convertFunc: (item) => { return { label: item.label, value: item.id } }
             })} />
-            <ProFormText width="md" name={"label"} label="名称" required />
-
-        </ProForm.Group>
+        <ProFormText  name={"label"} label="名称" required />
 
         <ProForm.Group>
             <ProFormSelect width="xs" name={"exclusive"} fieldProps={{ options: [{value:0, label: "否"}, {value:1, label: "是"}] }} label="排他性" />
@@ -100,7 +97,7 @@ export const RuleEditModal: React.FC<{
                 </>
             }}
         </ProFormDependency>
-        <ProFormTextArea name={"exprRemark"} label="表达式备注" tooltip="对表达式的备注说明"/>
+        <ProFormText name={"exprRemark"} label="表达式备注" tooltip="对表达式的备注说明"/>
 
         <ProForm.Group>
             <ProFormSelect width="md" name={"thenAction"} label="Then动作" tooltip="条件为true时执行"
@@ -157,16 +154,13 @@ export const RuleGroupEditModal: React.FC<{
             return true
         }}>
 
-        <ProForm.Group>
-            <ProFormSelect width="md" name={"domainId"} label="所属" request={() => asyncSelectProps2Request<Domain, DomainQueryParams>({
+        <ProFormSelect width="md" name={"domainId"} label="所属" request={() => asyncSelectProps2Request<Domain, DomainQueryParams>({
                 key: AllDomainKey, //与domain列表项的key不同，主要是：若相同，则先进行此请求后没有设置loadMoreState，但导致列表管理页因已全部加载无需展示LoadMore，却仍然展示LoadMore
                 url: `${Host}/api/rule/composer/list/domain`,
                 query: { pagination: { pageSize: -1, sKey: "id", sort: 1 } },
                 convertFunc: (item) => { return { label: item.label, value: item.id } }
             })} />
-            <ProFormText width="md" name={"label"} label="名称" required />
-
-        </ProForm.Group>
+        <ProFormText  name={"label"} label="名称" required />
 
         <ProForm.Group>
             <ProFormSelect width="xs" name={"exclusive"} fieldProps={{ options: [{value:0, label: "否"}, {value:1, label: "是"}] }} label="排他性" />
@@ -189,7 +183,7 @@ export const RuleGroupEditModal: React.FC<{
                 </>
             }}
         </ProFormDependency>
-        <ProFormTextArea name={"exprRemark"} label="表达式备注" tooltip="对表达式的备注说明"/>
+        <ProFormText name={"exprRemark"} label="表达式备注" tooltip="对表达式的备注说明"/>
         <ProFormSelect name={"tagList"} label="标签" fieldProps={{ mode: "tags" }} />
         <ProFormTextArea name={"remark"} label="备注" fieldProps={{ rows: 6 }}/>
     </ModalForm>

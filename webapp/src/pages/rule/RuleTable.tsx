@@ -29,22 +29,22 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
     {
         title: "ID",
         dataIndex: 'id',
-        //hideInForm: true,
-        hideInTable: true
+        //hideInForm: true
     },
     {
         title: '名称',
         dataIndex: 'label',
+        ellipsis: true,
         formItemProps: mustFill
     },
     {
-        title: '说明',
-        dataIndex: 'description',
-        valueType: 'textarea',
+        title: '表达式备注',
+        dataIndex: 'exprRemark',
         ellipsis: true,
-        //hideInTable: true,
+        hideInTable: false,
         hideInSearch: true
     },
+
     {
         title: '类型',
         hideInSearch: true,
@@ -119,6 +119,14 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
         dataIndex: ['rule', 'threshhold'],
         key: "threshhold",
         valueType: "percent"
+    },
+    {
+        title: '说明',
+        dataIndex: 'description',
+        valueType: 'textarea',
+        ellipsis: true,
+        hideInTable: true,
+        hideInSearch: true
     },
 ]
 

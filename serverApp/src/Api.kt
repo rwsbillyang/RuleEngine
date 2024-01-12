@@ -24,7 +24,7 @@ import com.github.rwsbillyang.ktorKit.apiBox.BatchOperationParams
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.ktorKit.apiBox.PostData
 import com.github.rwsbillyang.ktorKit.server.*
-import com.github.rwsbillyang.rule.composer.dev.DevController
+import com.github.rwsbillyang.rule.composer.dev.InitDbController
 import com.github.rwsbillyang.rule.composer.dev.HelpBooksController
 import com.github.rwsbillyang.rule.composer.dev.RuleMigrateController
 
@@ -336,19 +336,23 @@ fun Routing.composerApi() {
             //初始化数据库： http://localhost:18000/api/dev/initDbMeta
             //truncate table `t_param_type`;  truncate table `t_opcode`;
             get("/initDbMeta"){
-                call.respondBoxOK(DevController(crudController.service).initMetaDataInDb())
+                call.respondBoxOK(InitDbController(crudController.service).initMetaDataInDb())
             }
 
             //http://localhost:18000/api/dev/upsertZwRRtExt
             get("/upsertZwRRtExt"){
-                call.respondBoxOK(DevController(crudController.service).upsertZwRRtExt())
+                call.respondBoxOK(InitDbController(crudController.service).upsertZwRRtExt())
             }
             get("/upsertZwConstants"){
-                call.respondBoxOK(DevController(crudController.service).upsertConstants())
+                call.respondBoxOK(InitDbController(crudController.service).upsertConstants())
             }
             //http://localhost:18000/api/dev/migrateRuleIntoSqllite
             get("/migrateRuleIntoSqllite"){
                 call.respondBoxOK(RuleMigrateController(crudController.service).dropCreateTableAndMigrate())
+            }
+            //http://localhost:18000/api/dev/tmp/modifyRuleFileds
+            get("/tmp/modifyRuleFileds"){
+                call.respondBoxOK(RuleMigrateController(crudController.service).modifyRuleFileds())
             }
 
             //============== for App Client ===================//

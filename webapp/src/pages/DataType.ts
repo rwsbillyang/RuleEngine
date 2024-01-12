@@ -335,7 +335,8 @@ export interface RuleCommon{
     domain?: Domain, //前端列表数据需要
     children?: RuleCommon[],
     exclusive: number,
-    description?:string
+    description?:string,
+    exprRemark?: string//对表达式的备注说明
 }
 
 

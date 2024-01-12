@@ -256,7 +256,22 @@ class RuleMigrateController(val service: AbstractSqlService) {
         println("Done!")
     }
 
+    fun modifyRuleFileds(): Int{
+       // val service = MyBaseCrudService2()
 
+        val list = service.findAll(Meta.rule, { Meta.rule.id greaterEq 1111844})
+        list.forEach {
+            val desc = it.description
+            val exprRemark = it.exprRemark
+            val label = it.label
+            service.updateValues(Meta.rule, {
+                Meta.rule.label eq desc
+                Meta.rule.exprRemark eq label
+                Meta.rule.description eq exprRemark
+            }, {Meta.rule.id eq it.id})
+        }
+        return list.size
+    }
 //    fun exportAsCsvFile(){
 //        //SELECT id,label,rule_parent_ids,rule_group_parent_ids,rule_children_ids,rule_group_children_ids,description,remark,expr_remark,expr_str,priority,tags,domain_id,level,exclusive,threshhold FROM t_rule where domain_id=1 and enable=1;
 //        //SELECT id,label,rule_parent_ids,rule_group_parent_ids,rule_children_ids,rule_group_children_ids,description,remark,expr_remark,expr_str,priority,tags,domain_id,level,exclusive,threshhold INTO OUTFILE '~/dev/dbDataBackup/rule.csv' FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '\n' FROM t_rule where domain_id=1 and enable=1;

@@ -262,7 +262,8 @@ class RuleCommon(
 
     val domainId: Int? = null,
     var domain: Domain? , //前端列表数据需要
-    val description: String? = null
+    val description: String? = null,
+    val exprRemark: String? = null//对表达式的备注说明
 )
 
 
@@ -308,18 +309,18 @@ data class Rule(
                 val pair = service.getChildrenTree(RuleType.rule, id!!, ruleChildrenIds, ruleGroupChildrenIds, path) //在新增和修改时无需构建children，因一是没有无需构建，二是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
                 RuleCommon(typedId, pair.first, pair.second,this, null,
                     id,  level, label, exclusive, enable, tags, remark, priority,
-                    domainId, domain, description)
+                    domainId, domain, description, exprRemark)
             }
             TableChildrenMode.LazyLoad ->{
                 RuleCommon(typedId, listOf("${RuleType.rule.name}-$id"), service.getChildrenList( ruleChildrenIds, ruleGroupChildrenIds, false),
                     this, null, id,  level, label, exclusive, enable, tags, remark, priority,
-                    domainId, domain, description)
+                    domainId, domain, description, exprRemark)
             }
 
             TableChildrenMode.None -> {
                 RuleCommon(typedId, listOf("${RuleType.rule.name}-$id"), null,
                     this, null, id,  level, label, exclusive, enable, tags, remark, priority,
-                    domainId, domain, description)
+                    domainId, domain, description, exprRemark)
             }
         }
     }
@@ -354,7 +355,7 @@ data class RuleGroup(
 
     val exprStr: String? = null,//json string of LogicalExpr
     val metaStr: String? = null,//json string of ExpressionMeta
-    val exprRemark: String? = null,//对表达式的备注说明
+    val exprRemark: String? = null//对表达式的备注说明
 ){
     fun toRuleCommon(service: BaseCrudService, childrenMode: TableChildrenMode, path: MutableList<String>? = null): RuleCommon  {
         domain = domainId?.let{ service.findOne(Meta.domain, {Meta.domain.id eq it}) }
@@ -365,18 +366,18 @@ data class RuleGroup(
                 val pair = service.getChildrenTree(RuleType.ruleGroup, id!!, ruleChildrenIds, ruleGroupChildrenIds, path) //在新增和修改时无需构建children，因一是没有无需构建，二是修改时构建也是从当前节点开始的，不是从根节点开始的parentPath
                 RuleCommon(typedId, pair.first, pair.second,null, this,
                     id,  level, label, exclusive, enable, tags, remark, priority,
-                    domainId, domain)
+                    domainId, domain, exprRemark)
             }
             TableChildrenMode.LazyLoad ->{
                 RuleCommon(typedId, listOf("${RuleType.ruleGroup.name}-$id"), service.getChildrenList(ruleChildrenIds, ruleGroupChildrenIds, false),null, this,
                     id,  level, label, exclusive, enable, tags, remark, priority,
-                    domainId, domain)
+                    domainId, domain, exprRemark)
             }
 
             TableChildrenMode.None -> {
                 RuleCommon(typedId, listOf("${RuleType.ruleGroup.name}-$id"), null,null, this,
                     id,  level, label, exclusive, enable, tags, remark, priority,
-                    domainId, domain)
+                    domainId, domain, exprRemark)
             }
         }
     }
