@@ -120,6 +120,7 @@ export const rubleGroupTableProps = {
     ...defaultProps(RuleGroupName), //TODO: 删除一项时从缓存中搜索parent，从而知道是group还是rule中进行删除
     idKey: "typedId",
     //editForm: (e) => '/rule/editRule',
+    lastIdFunc: (e: RuleCommon) => e.ruleGroup?.id?.toString() || "",
     transformBeforeSave: (e) => { //props.editConfig.transform, transform(modify shape) before save
         e.tags = e.tagList?.join(",")
         if (e.meta) {
@@ -270,12 +271,12 @@ export const RuleGroupTable: React.FC = () => {
             initialValues={initialValuesRuleGroup}
             listTransformArgs={path}
             listTransform={(list: RuleCommon[], args?: any) => {
-                ArrayUtil.traverseTree(list, (e) => {
-                    const children = e.children
-                    if (children && children.length > 0)
-                        e.children = children.sort((a, b) => (a.priority || 50) - (b.priority || 50))
-                })
-                list.sort((a, b) => (a.priority || 50) - (b.priority || 50))
+                // ArrayUtil.traverseTree(list, (e) => {
+                //     const children = e.children
+                //     if (children && children.length > 0)
+                //         e.children = children.sort((a, b) => (a.priority || 50) - (b.priority || 50))
+                // })
+                //list.sort((a, b) => (a.priority || 50) - (b.priority || 50))
 
                 current.treeData = list //记录下当前全部树形数据
 

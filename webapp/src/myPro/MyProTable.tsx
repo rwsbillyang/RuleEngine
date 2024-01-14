@@ -255,8 +255,8 @@ export const MyProTable = <T extends BaseRecord, Q extends BasePageQuery = BaseP
               p.lastId = undefined
             } else {
               //排序时，若指定了sortKey则使用指定的，否则默认使用_id
-              const sortKey = (p?.sKey) ? p.sKey : (props.idKey || "_id")
-              const lastValue = list[list.length - 1][sortKey] + "" //转换为字符串
+             // const sortKey = (p?.sKey) ? p.sKey : (props.idKey || "_id")
+              const lastValue = props.lastIdFunc? props.lastIdFunc(list[list.length - 1]) : list[list.length - 1][(p?.sKey) ? p.sKey : (props.idKey || "_id")] + "" //转换为字符串
               if (p)
                 p.lastId = lastValue
               else {

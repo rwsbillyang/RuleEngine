@@ -44,6 +44,8 @@ export interface MyProTableProps<T extends BaseRecord, Q extends BasePageQuery> 
   name: string //cacheKey 可能为空，而搜索条件依赖于cacheKey，当cacheKey为空时需要使用name区别
 
   formColumns?: ProFormColumnsType<T>[] //特殊情形下，使用单独的配置
+
+  lastIdFunc?: (T) => string //如果提供，将使用该函数从列表记录项中获取lastId
 }
 
 

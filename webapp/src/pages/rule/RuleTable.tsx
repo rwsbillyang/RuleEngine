@@ -139,6 +139,7 @@ export const initialValueRule: Partial<Rule> = { enable: 1, exclusive: 0, priori
 export const rubleTableProps = {
     ...defaultProps(RuleName), //TODO: 删除一项时从缓存中搜索parent，从而知道是group还是rule中进行删除
     idKey: "typedId",
+    lastIdFunc: (e: RuleCommon) => e.rule?.id?.toString() || "",
     editForm: (e) => '/rule/editRule',
     transformBeforeSave: (e) => { //props.editConfig.transform, transform(modify shape) before save
         e.tags = e.tagList?.join(",")
