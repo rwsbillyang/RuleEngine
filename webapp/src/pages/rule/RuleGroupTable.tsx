@@ -12,7 +12,7 @@ import { Host } from "@/Config"
 import { PlusCircleTwoTone, MinusCircleTwoTone } from "@ant-design/icons";
 import { Dropdown, Spin, message } from "antd"
 import { AddChildModal, AddParentModal, RuleEditModal, RuleGroupEditModal } from "./RuleOrGroupEdit"
-import { initialValueRule, rubleTableProps } from "./RuleTable"
+import { RuleName, initialValueRule, rubleTableProps } from "./RuleTable"
 
 
 import { defaultProps, mustFill } from "../moduleTableProps"
@@ -232,8 +232,9 @@ export const RuleGroupTable: React.FC = () => {
         onExpand: (expanded, record) => {
             if (expanded && record.children?.length === 0) {
                 setLoadingTypeId(record.typedId)
+                const name = (record.rule)? RuleName : RuleGroupName
                 cachedFetch<RuleCommon[]>({
-                    url: `/api/rule/composer/loadChildren/${RuleGroupName}/${record.id}`,
+                    url: `/api/rule/composer/loadChildren/${name}/${record.id}`,
                     method: "GET",
                     isShowLoading: false,
                     onOK: (data) => {

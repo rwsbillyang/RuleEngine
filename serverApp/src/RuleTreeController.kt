@@ -33,7 +33,7 @@ class RuleTreeController : KoinComponent {
      * @param rule 待插入或更新的子rule 若已存在，则修改子rule新的字段值以及亲子关系
      * @param parentRuleId 父rule的id
      * */
-    public fun saveRuleInRule(rule: Rule, parentRuleId: Int): InsertNodeResult {
+    fun saveRuleInRule(rule: Rule, parentRuleId: Int): InsertNodeResult {
         val old = rule.id?.let { service.findOne(Meta.rule, { Meta.rule.id eq it }, "rule/${rule.id}") }
         //更新亲子关系数据，其它3个前端不做变动，仍旧传递回来
         rule.ruleParentIds = addId(old?.ruleParentIds, parentRuleId)
@@ -44,7 +44,7 @@ class RuleTreeController : KoinComponent {
         //并不是从根上进行构建tree,故path只是自己，前端需要结合parent重新构建
         return InsertNodeResult(newOne.toRuleCommon(service, TableChildrenMode.None), RuleAndGroupdIds(children, null))//转换成RuleCommon用于给前端添加到children中，展示到树形列表中
     }
-    public fun addRuleInRule(ruleId: Int, parentId: Int): InsertNodeResult? {
+    fun addRuleInRule(ruleId: Int, parentId: Int): InsertNodeResult? {
         val rule =  service.findOne(Meta.rule, { Meta.rule.id eq ruleId }, "rule/${ruleId}")
         if(rule != null){
             //更新亲子关系数据，其它3个前端不做变动，仍旧传递回来
@@ -65,7 +65,7 @@ class RuleTreeController : KoinComponent {
         }
         return null
     }
-    public fun addRuleInGroup(ruleId: Int, parentId: Int): InsertNodeResult? {
+   fun addRuleInGroup(ruleId: Int, parentId: Int): InsertNodeResult? {
         val rule =  service.findOne(Meta.rule, { Meta.rule.id eq ruleId }, "rule/${ruleId}")
         if(rule != null){
             //更新亲子关系数据，其它3个前端不做变动，仍旧传递回来
@@ -93,7 +93,7 @@ class RuleTreeController : KoinComponent {
      * @param ruleGroup 待插入或更新的子ruleGroup 若已存在，则修改子ruleGroup新的字段值以及亲子关系
      * @param parentRuleId 父rule的id
      * */
-    public fun saveGroupInRule(ruleGroup: RuleGroup, parentRuleId: Int): InsertNodeResult {
+    fun saveGroupInRule(ruleGroup: RuleGroup, parentRuleId: Int): InsertNodeResult {
         val old = if(ruleGroup.id != null)
             service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq ruleGroup.id }, "ruleGroup/${ruleGroup.id}")
         else null
@@ -113,7 +113,7 @@ class RuleTreeController : KoinComponent {
      * @param ruleGroup 待插入或更新的子ruleGroup 若已存在，则修改子ruleGroup新的字段值以及亲子关系
      * @param parentRuleGroupId 父ruleGroup的id
      * */
-    public fun saveGroupInGroup(ruleGroup: RuleGroup, parentRuleGroupId: Int): InsertNodeResult {
+    fun saveGroupInGroup(ruleGroup: RuleGroup, parentRuleGroupId: Int): InsertNodeResult {
         val old = if(ruleGroup.id != null)
             service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq ruleGroup.id }, "ruleGroup/${ruleGroup.id}")
         else null
@@ -154,9 +154,9 @@ class RuleTreeController : KoinComponent {
         if (id == null) return ids
         if (ids.isNullOrEmpty()) return id.toString()
 
-        val set = ids.split(",").toList().toMutableSet()
-        set.add(id.toString())
-        return set.joinToString(",")
+        val set = ids.split(",").map{it.toInt()}.toMutableSet()
+        set.add(id)
+        return set.sorted().joinToString(",")
     }
 
     /**
@@ -164,10 +164,10 @@ class RuleTreeController : KoinComponent {
      * */
     private fun removeId(ids: String?, id: Int): String? {
         if (ids.isNullOrEmpty()) return null
-        val set = ids.split(",").toList().toMutableSet()
-        set.remove(id.toString())
+        val set = ids.split(",").map{it.toInt()}.toMutableSet()
+        set.remove(id)
         if (set.isEmpty()) return null
-        else return set.joinToString(",")
+        else return set.sorted().joinToString(",")
     }
 
     /**
@@ -182,7 +182,7 @@ class RuleTreeController : KoinComponent {
      * @return 返回的删除结果，只是包含当前的亲子关系，
      * 不包括循环遍历删除当前节点子孙节点的节点更新情况（实际使用情况目前还没这种情况），此时前端需清除缓存
      * */
-    public fun removeRuleInRule(id: Int, parentRuleId: Int?):  DelResult? {
+    fun removeRuleInRule(id: Int, parentRuleId: Int?):  DelResult? {
         val rule = service.findOne(Meta.rule, { Meta.rule.id eq id }, "rule/$id")
         if (rule == null) {
             log.warn("no child rule, id=$id when del, parentRuleId=$parentRuleId")
@@ -190,14 +190,14 @@ class RuleTreeController : KoinComponent {
         }
 
         var count = 0L
-        var pair: Pair<String?,String?>? = null
+
 
         if(parentRuleId != null){
             val ruleParentIds = removeId(rule.ruleParentIds, parentRuleId)
             //没有其它parents，亦即不是其它节点的子节点，递归删除自己及自己的子节点
             if(ruleParentIds.isNullOrEmpty() && rule.ruleGroupParentIds.isNullOrEmpty()){
                 //若有孩子，将递归删除孩子及自己
-                delRuleAndChildrenRecursively(rule)
+                count += delRuleAndChildrenRecursively(rule)
             }
 
             //解除父子关系
@@ -206,11 +206,11 @@ class RuleTreeController : KoinComponent {
             //没有其它parents，亦即不是其它节点的子节点，递归删除自己及自己的子节点
             if(rule.ruleParentIds.isNullOrEmpty() && rule.ruleGroupParentIds.isNullOrEmpty()){
                 //若有孩子，将递归删除孩子及自己
-                delRuleAndChildrenRecursively(rule)
+                count += delRuleAndChildrenRecursively(rule)
             }
         }
 
-        return DelResult(count, RuleAndGroupdIds(pair?.first,null),RuleAndGroupdIds(pair?.second, null))
+        return DelResult(count, RuleAndGroupdIds(null,null),RuleAndGroupdIds(null, null))
     }
 
     /**
@@ -225,7 +225,7 @@ class RuleTreeController : KoinComponent {
      * @return 返回的删除结果，只是包含当前的亲子关系，
      * 不包括循环遍历删除当前节点子孙节点的节点更新情况（实际使用情况目前还没这种情况），此时前端需清除缓存
      * */
-    public fun removeGroupInRule(id: Int, parentRuleId: Int?):  DelResult? {
+    fun removeGroupInRule(id: Int, parentRuleId: Int?):  DelResult? {
         val ruleGroup = service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq id }, "ruleGroup/$id")
         if (ruleGroup == null) {
             log.warn("no child ruleGroup, id=$id when del, parentRuleId=$parentRuleId")
@@ -233,14 +233,13 @@ class RuleTreeController : KoinComponent {
         }
 
         var count = 0L
-        var pair: Pair<String?,String?>? = null
 
         if(parentRuleId != null){
             val ruleParentIds = removeId(ruleGroup.ruleParentIds, parentRuleId)
             //没有其它parents，亦即不是其它节点的子节点，递归删除自己及自己的子节点
             if(ruleParentIds.isNullOrEmpty() && ruleGroup.ruleGroupParentIds.isNullOrEmpty()){
                 //若有孩子，将递归删除孩子及自己
-                delGroupAndChildrenRecursively(ruleGroup)
+                count += delGroupAndChildrenRecursively(ruleGroup)
             }
 
             //解除父子关系
@@ -249,12 +248,12 @@ class RuleTreeController : KoinComponent {
             //没有其它parents，亦即不是其它节点的子节点，递归删除自己及自己的子节点
             if(ruleGroup.ruleParentIds.isNullOrEmpty() && ruleGroup.ruleGroupParentIds.isNullOrEmpty()){
                 //若有孩子，将递归删除孩子及自己
-                delGroupAndChildrenRecursively(ruleGroup)
+                count += delGroupAndChildrenRecursively(ruleGroup)
             }
         }
 
 
-        return DelResult(count, RuleAndGroupdIds(pair?.first, null), RuleAndGroupdIds(null, pair?.second))
+        return DelResult(count, RuleAndGroupdIds(null, null), RuleAndGroupdIds(null, null))
     }
 
     /**
@@ -269,21 +268,20 @@ class RuleTreeController : KoinComponent {
      * @return 返回的删除结果，只是包含当前的亲子关系，
      * 不包括循环遍历删除当前节点子孙节点的节点更新情况（实际使用情况目前还没这种情况），此时前端需清除缓存
      * */
-    public fun removeGroupInGroup(id: Int, parentRuleGroupId: Int?):  DelResult? {
+    fun removeGroupInGroup(id: Int, parentRuleGroupId: Int?):  DelResult? {
         val ruleGroup = service.findOne(Meta.ruleGroup, { Meta.ruleGroup.id eq id }, "ruleGroup/$id")
         if (ruleGroup == null) {
             log.warn("no child ruleGroup, id=$id when del, parentRuleGroupId=$parentRuleGroupId")
             return null
         }
         var count = 0L
-        var pair: Pair<String?,String?>? = null
 
         if(parentRuleGroupId != null){
-            val ruleGroupParentIds = removeId(ruleGroup.ruleGroupChildrenIds, parentRuleGroupId)
+            val ruleGroupParentIds = removeId(ruleGroup.ruleGroupParentIds, parentRuleGroupId)
             //没有其它parents，亦即不是其它节点的子节点，递归删除自己及自己的子节点
             if(ruleGroup.ruleParentIds.isNullOrEmpty() && ruleGroupParentIds.isNullOrEmpty()){
                 //若有孩子，将递归删除孩子及自己
-                delGroupAndChildrenRecursively(ruleGroup)
+                count += delGroupAndChildrenRecursively(ruleGroup)
             }
 
             //解除父子关系
@@ -292,11 +290,11 @@ class RuleTreeController : KoinComponent {
             //没有其它parents，亦即不是其它节点的子节点，递归删除自己及自己的子节点
             if(ruleGroup.ruleParentIds.isNullOrEmpty() && ruleGroup.ruleGroupParentIds.isNullOrEmpty()){
                 //若有孩子，将递归删除孩子及自己
-                delGroupAndChildrenRecursively(ruleGroup)
+                count += delGroupAndChildrenRecursively(ruleGroup)
             }
         }
 
-        return DelResult(count, RuleAndGroupdIds(null, pair?.first),RuleAndGroupdIds(null,pair?.second))
+        return DelResult(count, RuleAndGroupdIds(null, null),RuleAndGroupdIds(null,null))
     }
 
 
@@ -312,7 +310,7 @@ class RuleTreeController : KoinComponent {
      * @return 返回的删除结果，只是包含当前的亲子关系，
      * 不包括循环遍历删除当前节点子孙节点的节点更新情况（实际使用情况目前还没这种情况），此时前端需清除缓存
      * */
-    public fun removeRuleInGroup(id: Int, parentRuleGroupId: Int?): DelResult? {
+    fun removeRuleInGroup(id: Int, parentRuleGroupId: Int?): DelResult? {
         val rule = service.findOne(Meta.rule, { Meta.rule.id eq id }, "rule/$id")
         if (rule == null) {
             log.warn("no child rule, id=$id when del, parentRuleGroupId=$parentRuleGroupId")
@@ -320,15 +318,13 @@ class RuleTreeController : KoinComponent {
         }
 
         var count = 0L
-        var pair: Pair<String?,String?>? = null
-
 
         if(parentRuleGroupId != null){
             val ruleGroupParentIds = removeId(rule.ruleGroupParentIds, parentRuleGroupId)
             //没有其它parents，亦即不是其它节点的子节点，递归删除自己及自己的子节点
             if(rule.ruleParentIds.isNullOrEmpty() && ruleGroupParentIds.isNullOrEmpty()){
                 //若有孩子，将递归删除孩子及自己
-                delRuleAndChildrenRecursively(rule)
+                count += delRuleAndChildrenRecursively(rule)
             }
 
             //解除父子关系
@@ -337,12 +333,12 @@ class RuleTreeController : KoinComponent {
             //没有其它parents，亦即不是其它节点的子节点，递归删除自己及自己的子节点
             if(rule.ruleParentIds.isNullOrEmpty() && rule.ruleGroupParentIds.isNullOrEmpty()){
                 //若有孩子，将递归删除孩子及自己
-                delRuleAndChildrenRecursively(rule)
+                count += delRuleAndChildrenRecursively(rule)
             }
         }
 
 
-        return DelResult(count, RuleAndGroupdIds(null, pair?.first), RuleAndGroupdIds(pair?.second, null))
+        return DelResult(count, RuleAndGroupdIds(null, null), RuleAndGroupdIds(null, null))
     }
 
     private fun delRuleAndChildrenRecursively(rule: Rule): Long{
@@ -369,7 +365,7 @@ class RuleTreeController : KoinComponent {
         val ruleChildren = ruleGroup.ruleChildrenIds?.split(",")
 
         val ruleGroupId = ruleGroup.id
-        count += service.delete(Meta.ruleGroup, { Meta.rule.id eq ruleGroupId }, "ruleGroup/$ruleGroupId")
+        count += service.delete(Meta.ruleGroup, { Meta.ruleGroup.id eq ruleGroupId }, "ruleGroup/$ruleGroupId")
         //若有孩子，先递归删除rule的孩子，再删除rule
         groupChildren?.forEach {
             count += removeGroupInGroup(it.toInt(), ruleGroupId)?.count?:0 //删除rule下的group孩子：可能删除了孩子，也可能只是拆解父子关系

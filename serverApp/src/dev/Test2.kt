@@ -16,29 +16,17 @@
 package com.github.rwsbillyang.rule.composer.dev
 
 
-import com.github.rwsbillyang.rule.composer.rule
-import org.komapper.core.dsl.Meta
+
 
 
 fun main(){
     //update t_rule set `rule_parent_ids` = null, `rule_children_ids` = null, `rule_group_children_ids`=null, tags=null, then_action=null, else_action=null where id>;
     //update t_rule set `expr_remark` = null where id> and `expr_remark`="";
-   // println((1216..1264).joinToString(",") { it.toString() })
-    modifyRuleFileds()
+    println((1268..1287).joinToString(",") { it.toString() })
+  //  modifyRuleFileds()
 }
 
 
-fun modifyRuleFileds(){
-    val service = MyBaseCrudService2()
-
-    service.findAll(Meta.rule, { Meta.rule.id greaterEq 844}).forEach {
-        service.updateValues(Meta.rule, {
-            Meta.rule.label eq it.description
-            Meta.rule.exprRemark eq it.label
-            Meta.rule.description eq it.exprRemark
-        }, {Meta.rule.id eq it.id})
-    }
-}
 
 
 

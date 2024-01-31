@@ -16,7 +16,7 @@ import { defaultProps, mustFill } from "../moduleTableProps"
 
 import { AddChildModal, AddParentModal, RuleEditModal, RuleGroupEditModal } from "./RuleOrGroupEdit"
 import { Dropdown, Spin, message } from "antd"
-import {  initialValuesRuleGroup, rubleGroupTableProps } from "./RuleGroupTable"
+import {  RuleGroupName, initialValuesRuleGroup, rubleGroupTableProps } from "./RuleGroupTable"
 import { deleteRuleOrGroup } from "./RuleCommon"
 import { basicMeta2Expr, complexMeta2Expr, removeBasicExpressionMetaFields, removeComplexExpressionMetaFields } from "../utils"
 import { ArrayUtil, cachedFetch } from "@rwsbillyang/usecache"
@@ -264,8 +264,9 @@ export const RuleTable: React.FC = () => {
         onExpand: (expanded, record) => {
             if (expanded && record.children?.length === 0) {
                 setLoadingTypeId(record.typedId)
+                const name = (record.rule)? RuleName : RuleGroupName
                 cachedFetch<RuleCommon[]>({
-                    url: `/api/rule/composer/loadChildren/${RuleName}/${record.id}`,
+                    url: `/api/rule/composer/loadChildren/${name}/${record.id}`,
                     method: "GET",
                     isShowLoading: false,
                     onOK: (data) => {
