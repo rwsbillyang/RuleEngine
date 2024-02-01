@@ -24,9 +24,7 @@ import com.github.rwsbillyang.ktorKit.apiBox.BatchOperationParams
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.ktorKit.apiBox.PostData
 import com.github.rwsbillyang.ktorKit.server.*
-import com.github.rwsbillyang.rule.composer.dev.InitDbController
-import com.github.rwsbillyang.rule.composer.dev.HelpBooksController
-import com.github.rwsbillyang.rule.composer.dev.RuleMigrateController
+import com.github.rwsbillyang.rule.composer.dev.devApi
 
 
 import io.ktor.server.application.*
@@ -50,6 +48,11 @@ val bizModule = AppModule(
     "ruleEngineDb"
 ) {
     composerApi()
+
+    val isDev = (System.getProperty("dev.mode") ?: "dev") == "dev"
+    if(isDev){
+        devApi()
+    }
 }
 
 fun Routing.composerApi() {
@@ -329,81 +332,6 @@ fun Routing.composerApi() {
                 call.respondBoxOK(ruleTreeController.moveRuleCommonIntoNewParent(param))
         }
     }
-
-    val isDev = (System.getProperty("dev.mode") ?: "dev") == "dev"
-    if(isDev){
-        route("/api/dev"){
-            //初始化数据库： http://localhost:18000/api/dev/initDbMeta
-            //truncate table `t_param_type`;  truncate table `t_opcode`;
-            get("/initDbMeta"){
-                call.respondBoxOK(InitDbController(crudController.service).initMetaDataInDb())
-            }
-
-            //http://localhost:18000/api/dev/upsertZwRRtExt
-            get("/upsertZwRRtExt"){
-                call.respondBoxOK(InitDbController(crudController.service).upsertZwRRtExt())
-            }
-            get("/upsertZwConstants"){
-                call.respondBoxOK(InitDbController(crudController.service).upsertConstants())
-            }
-            //http://localhost:18000/api/dev/migrateRuleIntoSqllite
-            get("/migrateRuleIntoSqllite"){
-                call.respondBoxOK(RuleMigrateController(crudController.service).dropCreateTableAndMigrate())
-            }
-            //http://localhost:18000/api/dev/tmp/modifyRuleFileds
-            get("/tmp/modifyRuleFileds"){
-                call.respondBoxOK(RuleMigrateController(crudController.service).modifyRuleFileds())
-            }
-
-            //============== for App Client ===================//
-            //app获取birthInfo最后一条记录的id，然后增量上传，回流到开发环境sqlite数据库
-            get("/birthInfoLastId"){
-                call.respondBoxOK(HelpBooksController(crudController.service).getBirthInfoLastId())
-            }
-            //APP回流helpBooks到开发环境sqlite数据库：更新等数据至app源码的assets下的db
-            post("/updateList/{name}"){
-                val name = call.parameters["name"]
-                if(name == null)
-                    call.respondBoxKO("delSubInRuleGroup, invalid parameter: no name")
-                else{
-                    val controller = HelpBooksController(crudController.service)
-
-                    val result = when(name){
-                        "JuniorBookStar" -> controller.updateJuniorBookStar(call.receive())
-                        "SeniorBookStar" -> controller.updateSeniorBookStar(call.receive())
-                        "SixtyStarSerials" -> controller.updateSixtyStarSerials(call.receive())
-                        "JuniorBookGongYuan" -> controller.updateJuniorBookGongYuan(call.receive())
-                        "SeniorBookGongYuan" -> controller.updateSeniorBookGongYuan(call.receive())
-                        "LbzRemark" -> controller.updateLbzRemark(call.receive())
-                        "BirthInfo" -> controller.updateBirthInfo(call.receive())
-                        else -> null
-                    }
-                    if(result == null) call.respondBoxKO("not support name: $name")
-                    else call.respondBoxOK(result)
-                }
-            }
-
-            get("/ruleList"){
-                val lastId = call.request.queryParameters["lastId"]
-                val pageSize = call.request.queryParameters["pageSize"]?.toInt()?:20
-                val domainId = call.request.queryParameters["domainId"]?.toInt()?:1
-
-                val controller = HelpBooksController(crudController.service)
-                val list = controller.getRulePage(lastId, pageSize, domainId)
-                call.respondBoxOK(list)
-            }
-            get("/ruleGroupList"){
-                val lastId = call.request.queryParameters["lastId"]
-                val pageSize = call.request.queryParameters["pageSize"]?.toInt()?:20
-                val domainId = call.request.queryParameters["domainId"]?.toInt()?:1
-
-                val controller = HelpBooksController(crudController.service)
-                val list = controller.getRuleGroupPage(lastId, pageSize, domainId)
-                call.respondBoxOK(list)
-            }
-        }
-    }
-
 
 }
 

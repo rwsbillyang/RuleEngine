@@ -203,7 +203,7 @@ class RuleMigrateController(val service: AbstractSqlService) {
     }
 
 
-    fun runRuleExprCheck(lastId: Int? = null){
+    fun runRuleExprCheck(lastId: Int? = null): String{
         val zwPanData = ZwPanData.fromLocalDateTime(
             Gender.Female,
             LocalDateTime.now())
@@ -237,6 +237,8 @@ class RuleMigrateController(val service: AbstractSqlService) {
             println("id= " + it.first + ": " + it.second)
         }
         println("select id,priority,label,description,expr_str,meta_str from t_rule where id in (" + errList.joinToString(",") { it.first.toString() } + ");")
+
+        return "Done"
     }
     fun checkRuleExprValid(dataProvider: (key: String, keyExtra:String?) -> Any?, errList: MutableList<Pair<Int?, String?>>, lastId: Int? = null){
         val p = RuleQueryParams(MySerializeJson.encodeToString(UmiPagination(sort = Sort.ASC, pageSize = 100, lastId = lastId?.toString())), domainId = 1)
@@ -253,7 +255,7 @@ class RuleMigrateController(val service: AbstractSqlService) {
             checkRuleExprValid(dataProvider,errList, list[list.size - 1].id)
         }
 
-        println("Done!")
+       // println("Done!")
     }
 
     fun modifyRuleFileds(): Int{

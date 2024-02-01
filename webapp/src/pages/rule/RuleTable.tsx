@@ -85,6 +85,7 @@ const ruleColumns: ProColumns<RuleCommon>[] = [
         title: '标签',
         tooltip: "用于搜索过滤规则",
         dataIndex: 'tags',
+        ellipsis: true,
     },
     {
         title: '备注',

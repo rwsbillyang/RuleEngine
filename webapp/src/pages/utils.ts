@@ -141,12 +141,13 @@ export const basicExpressionMeta2String = (meta?: BasicExpressionMeta) => {
 
     const oprand = list.map((e) => operandMeta2String(e.key, e.value)).filter(e => e !== "").join(", ")
 
+    const keyExtra = meta.extra ? meta.extra : ''
     if (meta.mapKey)
-        return `${meta.mapKey}'${meta.op?.label}': ${oprand}`
+        return `${meta.mapKey}'${meta.op?.label}': ${oprand} ${keyExtra}`
      else if (meta.param)
-        return `${meta.param.label}'${meta.op?.label}': ${oprand}`
+        return `${meta.param.label}'${meta.op?.label}': ${oprand} ${keyExtra}`
     else
-        return `unknown'${meta.op?.label}': ${oprand}`
+        return `unknown'${meta.op?.label}': ${oprand} ${keyExtra}`
 }
 
 

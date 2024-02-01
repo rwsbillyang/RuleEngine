@@ -93,6 +93,7 @@ const ruleGroupColumns: ProColumns<RuleCommon>[] = //TableColumnsType<RuleGroup>
         {
             title: '标签',
             dataIndex: 'tags',
+            ellipsis: true,
         },
         {
             title: '说明',
