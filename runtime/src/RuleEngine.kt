@@ -28,7 +28,7 @@ package com.github.rwsbillyang.rule.runtime
  *
  * 执行规则的逻辑表达式，则是根据表达式的key，由dataPicker提供值
  * */
-object RuleEngine {
+class RuleEngine<T>  {
     /**
      * @param rootRules 当前待执行的数据库规则实体，即规则树的起点
      * @param dataProvider 根据key获取对应的变量值
@@ -36,35 +36,32 @@ object RuleEngine {
      * @param toEvalRule 将数据库规则实体转换为可执行的EvalRule
      * @param collector 提供的话则收集匹配的规则，类型T为需收集的数据类型，需提供如何将数据库规则实体转换为T和唯一键值的函数
      * */
-    fun <T> eval(
+    fun eval(
         rootRules: List<Any>,
-        dataProvider: (key: String, keyExtra:String?) -> Any?,
-        loadChildrenFunc: (parent: Any?) -> List<Any>?,
-        toEvalRule: (entity: Any) -> EvalRule,
-        collector: ResultTreeCollector<T>?
+        toEvalRule: (entity: Any) -> LogicalEvalRule<T>,
     )
     {
         rootRules.map{ toEvalRule(it) }.forEach {
-            it.eval(dataProvider, loadChildrenFunc, toEvalRule, null, collector)
+            it.eval( toEvalRule,null)
         }
     }
 
     /**
      * 若数据库规则实体中无action，若存在此defaultAction，将使用此默认defaultAction
      * */
-    var defaultAction: Action? = null
+    var defaultAction: Action<T>? = null
 
     /**
      * 若数据库规则实体中无else时的action，若存在此defaultElseAction，将使用此默认defaultElseAction
      * */
-    var defaultElseAction: Action? = null
+    var defaultElseAction: Action<T>? = null
 
-    private val actionMap = mutableMapOf<String, Action>()
+    private val actionMap = mutableMapOf<String, Action<T>>()
 
     /**
      * 注册一个自己的action，rule中设置的action将根据注册情况查找对应的action
      * */
-    fun registerAction(key: String,  action: Action){
+    fun registerAction(key: String,  action: Action<T>){
         actionMap[key] = action
     }
 

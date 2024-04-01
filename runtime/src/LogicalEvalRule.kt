@@ -19,36 +19,36 @@
 package com.github.rwsbillyang.rule.runtime
 
 
+
 /**
  * @param logicalExpr 表达式
  * @param exclusive 子节点是否互斥
+ * @param dataProvider 根据key得到对应的变量值
+ * @param loadChildrenFunc 加载序列化或数据库记录中的子规则节点entity，通常是根据子节点id列表查询
+ * @param collector 提供的话则收集匹配的规则，并将结果转换为T类型
+ * @param entity 附属信息，通常是对应的规则或规则组 不同环境中数据库规则实体定义可能不同
+ * @param isGroup 是否是规则组
  * @param action logicalExpr执行结果为true时的动作
  * @param elseAction logicalExpr执行结果为false时的动作
- * @param entity 附属信息，通常是对应的规则或规则组 不同环境中数据库规则实体定义可能不同
+ * @param logInfo 提供的话则将entity规则转换为String，用于log输出
  * */
-class EvalRule(
+class LogicalEvalRule<T>(
     val logicalExpr: ILogicalExpr,
     val exclusive: Boolean,
-    val action: String? = null,
-    val elseAction: String? = null,
+    val dataProvider: (key: String, keyExtra:String?) -> Any?,
+    val loadChildrenFunc: (parent: Any?) -> List<Any>?,
+    val collector: ResultTreeCollector<T>?,
     val entity: Any?,
     val isGroup: Boolean = false,
+    val action: Action<T>? = null,
+    val elseAction: Action<T>? = null,
     val logInfo: ((Any?) -> String?)? = null
 ){
     /**
-     * @param dataProvider 根据key获取对应的变量值
-     * @param loadChildrenFunc 加载子规则节点extra，通常是根据子节点id查询
-     * @param toEvalRule 将extra规则转换为EvalRule
-     * @param parentRule 当前规则的父规则，方便收集命中信息
-     * @param collector 提供的话则收集匹配的规则
+     * @param toEvalRule 将序列化或数据库记录中的子规则节点entity转换为EvalRule
+     * @param parentRule 当前规则的父规则，用于构建命中信息的树状结构
      * */
-    fun <T> eval(
-        dataProvider: (key: String, keyExtra:String?) -> Any?,
-        loadChildrenFunc: (parent: Any?) -> List<Any>?,
-        toEvalRule: (extra: Any) -> EvalRule,
-        parentRule: EvalRule?,
-        collector: ResultTreeCollector<T>?
-    ): Boolean {
+    fun eval(toEvalRule: (extra: Any) -> LogicalEvalRule<T>, parentRule: LogicalEvalRule<T>?): Boolean {
         try {
             val ret = logicalExpr.eval(dataProvider)
             if(logInfo != null){
@@ -57,7 +57,7 @@ class EvalRule(
 
             if(ret){
                 if(isGroup){
-                    if(evalChildren(dataProvider, loadChildrenFunc, toEvalRule, collector)){
+                    if(evalChildren(toEvalRule)){
                         collector?.collect(this, parentRule)
                         return true
                     }else{
@@ -65,14 +65,14 @@ class EvalRule(
                     }
                 }else{
                     collector?.collect(this, parentRule)
-                    (action?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultAction)?.let { it(this, parentRule) }
+                    action?.let { it(this, parentRule) }
 
-                    evalChildren(dataProvider, loadChildrenFunc, toEvalRule, collector)
+                    evalChildren(toEvalRule)
                     return true
                 }
             }else{
                 if(!isGroup){
-                    (elseAction?.let { RuleEngine.getAction(it) }?: RuleEngine.defaultElseAction)?.let { it(this, parentRule) }
+                    elseAction?.let { it(this, parentRule) }
                 }
                 return false
             }
@@ -82,23 +82,18 @@ class EvalRule(
             return false
         }
     }
-    private fun <T> evalChildren(
-        dataProvider: (key: String, keyExtra:String?) -> Any?,
-        loadChildrenFunc: (parent: Any?) -> List<Any>?,
-        toEvalRule: (extra: Any,) -> EvalRule,
-        collector: ResultTreeCollector<T>?
-    ): Boolean
+    private fun evalChildren(toEvalRule: (extra: Any) -> LogicalEvalRule<T>,): Boolean
     {
         val children = loadChildrenFunc(entity)?.map{ toEvalRule(it) }
         if(children.isNullOrEmpty()){
-           // println("no loadChildrenFunc, do nothing")
+            // println("no loadChildrenFunc, do nothing")
             return false
         }
 
         if(exclusive){
             //println("evalChildren: exclusively eval")
             for(r in children){
-                if(r.eval(dataProvider, loadChildrenFunc, toEvalRule, this, collector)){
+                if(r.eval(toEvalRule,this)){
                     return true
                 }
             }
@@ -106,7 +101,7 @@ class EvalRule(
         }else{
             var flag = false
             for(r in children){
-                val ret = r.eval(dataProvider, loadChildrenFunc, toEvalRule, this, collector)
+                val ret = r.eval(toEvalRule,this)
                 if(logInfo != null){
                     println("evalChildren: ret=$ret, entity=${logInfo.invoke(entity)}")
                 }
@@ -116,3 +111,4 @@ class EvalRule(
         }
     }
 }
+

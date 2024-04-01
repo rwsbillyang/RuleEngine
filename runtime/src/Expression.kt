@@ -48,15 +48,20 @@ import java.time.LocalDateTime
 //    abstract fun eval(dataProvider: (String) -> Any?): Boolean
 //}
 
+interface IExpr<R>{
+    fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?): R
+
+    fun humanReadString(): String
+}
+
+
 /**
  * 使用interface代替sealed class可进行外部扩展，
  * 但需要定义SerializersModule进行polymorphic，且序列化时需将变量声明为接口类型
  * 参见：https://github.com/Kotlin/kotlinx.serialization/blob/master/docs/polymorphism.md#open-polymorphism
  * */
-interface ILogicalExpr{
-    fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?): Boolean
-    fun humanReadString(): String
-}
+interface ILogicalExpr: IExpr<Boolean>
+
 interface ITriLogicalExpr: ILogicalExpr{
     val key: String
     val op: String
@@ -225,6 +230,3 @@ class DateTimeSetExpression(
     override fun eval(dataProvider: (key: String, keyExtra:String?) -> Any?) =
         DateTimeSetType.op(dataProvider, key, op, operands)
 }
-
-
-

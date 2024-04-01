@@ -30,16 +30,16 @@ class TreeNode<T>(
 
 
 /**
- * data（自己任意定义的类型T）收集器，需提供一个命中的EvalRule到T的转换器
- * 最终结果保存在收集器的resultMap中，它是一个有着指向父子节点的树形结构，
- * 而root是其起始节点,root中的parents将为空，其children是命中的开始节点
+ * 规则运行结果收集器，T是自己定义的任意收集结果类型，需提供一个命中的EvalRule到T的转换器
+ * 最终结果保存在收集器的resultMap中，它是一个有着父子相互指向对方节点的树形网状结构，
+ * 而root是其起始节点,root中的parents将为空，其children是命中的顶部节点列表
  *
- * @param nodeDataPicker 将当前命中的EvalRule转换为Pair，其中第一个为唯一键值，第二个是自定义的data
+ * @param nodeDataPicker 将当前命中的EvalRule转换为Pair，Pair第一个参数为唯一键值，第二个是自定义的data结果数据
  * 两个值将被保存到resultMap中，并构建亲子关系节点
  *
  * */
 class ResultTreeCollector<T>(
-    val nodeDataPicker: (EvalRule)-> Pair<String, T>)
+    val nodeDataPicker: (LogicalEvalRule<T>)-> Pair<String, T>)
 {
     val root: TreeNode<T> = TreeNode(null)
     val resultMap: MutableMap<String, TreeNode<T>> = mutableMapOf()
@@ -47,7 +47,7 @@ class ResultTreeCollector<T>(
     /**
      * 收集结果
      * */
-    fun collect(currentRule: EvalRule, parentRule: EvalRule?){
+    fun collect(currentRule: LogicalEvalRule<T>, parentRule: LogicalEvalRule<T>?){
         val pair = nodeDataPicker(currentRule)
         val childKey = pair.first
         val currentNode = resultMap[childKey]?: TreeNode(pair.second)

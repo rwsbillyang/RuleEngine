@@ -18,4 +18,4 @@
 
 package com.github.rwsbillyang.rule.runtime
 
-typealias Action = (currentRule: EvalRule, parentRule: EvalRule?) -> Unit
+typealias Action<T> = (currentRule: LogicalEvalRule<T>, parentRule: LogicalEvalRule<T>?) -> Unit

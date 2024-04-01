@@ -22,7 +22,11 @@ package com.github.rwsbillyang.rule.composer.dev
 fun main(){
     //update t_rule set `rule_parent_ids` = null, `rule_children_ids` = null, `rule_group_children_ids`=null, tags=null, then_action=null, else_action=null where id>;
     //update t_rule set `expr_remark` = null where id> and `expr_remark`="";
-    println((1268..1287).joinToString(",") { it.toString() })
+    println((101..200).joinToString(",") { it.toString() })
+    println((201..300).joinToString(",") { it.toString() })
+    println((301..400).joinToString(",") { it.toString() })
+    println((401..500).joinToString(",") { it.toString() })
+    println((500..596).joinToString(",") { it.toString() })
   //  modifyRuleFileds()
 }
 
