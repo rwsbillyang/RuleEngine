@@ -171,29 +171,7 @@ fun runRuleEval(service: MyBaseCrudService, gongNameIndex: Int, dateTime: LocalD
         }
     }
 
-    val toEvalRule: (extra: Any) -> EvalRule = {
-        when (it) {
-            is Rule ->{
-                val rule = it
-                try {
-                    EvalRule(it.getExpr(), it.exclusive == 1, it.thenAction, it.elseAction, it)//{ "${rule.id}: ${rule.description}"}
-                }catch (e: Exception){
-                    println("Exception=${e.message}, it.id=${it.id}")
-                    throw e
-                }
-            }
-            is RuleGroup -> {
-                val group = it
-                EvalRule(it.getExpr()?:TrueExpression, it.exclusive == 1, null, null, it, true)//{ "group-${group.id}: ${group.label}"}
-            }
-            else -> {
-                System.err.println("toEvalRule: only support Rule/RuleGroup as extra for EvalRule： ${it.toString()}")
-                throw Exception("only support Rule/RuleGroup as extra")
-            }
-        }
-    }
-
-//    RuleEngine.defaultAction = {currentRule, parentRule ->
+    //    RuleEngine.defaultAction = {currentRule, parentRule ->
 //        val parent = extra2RuleCommon(parentRule?.extra)
 //        val current = extra2RuleCommon(currentRule.extra)
 //        println("collect ${current?.typedId}: ${current?.label},  parent: ${parent?.typedId}, ${parent?.label}")
@@ -214,8 +192,32 @@ fun runRuleEval(service: MyBaseCrudService, gongNameIndex: Int, dateTime: LocalD
         Pair(key, data)
     }
 
+    val toEvalRule: (extra: Any) -> LogicalEvalRule<MyData> = {
+        when (it) {
+            is Rule ->{
+                val rule = it
+                try {
+                    LogicalEvalRule(it.getExpr(), it.exclusive == 1,dataProvider, loadChildrenFunc, collector, it, false)//{ "${rule.id}: ${rule.description}"}
+                }catch (e: Exception){
+                    println("Exception=${e.message}, it.id=${it.id}")
+                    throw e
+                }
+            }
+            is RuleGroup -> {
+                val group = it
+                LogicalEvalRule(it.getExpr()?:TrueExpression, it.exclusive == 1,dataProvider, loadChildrenFunc, collector, it, true)//{ "group-${group.id}: ${group.label}"}
+            }
+            else -> {
+                System.err.println("toEvalRule: only support Rule/RuleGroup as extra for EvalRule： ${it.toString()}")
+                throw Exception("only support Rule/RuleGroup as extra")
+            }
+        }
+    }
 
-    RuleEngine.eval(rootList, dataProvider, loadChildrenFunc, toEvalRule, collector)
+
+
+
+    RuleEngine<MyData>().eval(rootList, toEvalRule)
 
     //println收集的结果
     println("traverseResult: ${collector.resultMap.size}, root.children.size=${collector.root.children.size}")
