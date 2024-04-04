@@ -24,6 +24,7 @@ import com.github.rwsbillyang.ktorKit.db.AbstractSqlService
 import com.github.rwsbillyang.ktorKit.db.SqlLiteHelper
 import com.github.rwsbillyang.rule.composer.*
 import com.github.rwsbillyang.yinyang.core.Gender
+import com.github.rwsbillyang.yinyang.ziwei.GongStars
 import com.github.rwsbillyang.yinyang.ziwei.ZwPanData
 import com.github.rwsbillyang.yinyang.ziwei.rrt.GongType
 import com.github.rwsbillyang.yinyang.ziwei.rrt.StarType
@@ -52,7 +53,7 @@ fun main(){
 /**
  * 将docker中的MySQL8中的Rule和RuleGroup，迁移到MingLi app的assets中的sqlite app.db中
  * */
-class RuleMigrateController(val service: AbstractSqlService) {
+class RuleMigrateController(val service: BaseCrudService) {
 
     fun dropCreateTableAndMigrate(): String{
         val sqlLiteHelper = SqlLiteHelper(HelpBooksController.sqliteDb)
@@ -208,16 +209,19 @@ class RuleMigrateController(val service: AbstractSqlService) {
             Gender.Female,
             LocalDateTime.now())
 
-        val gongStars = zwPanData.getGongStarsByName("命宫")
+        val scopedGongStars = zwPanData.getGongStarsByName("命宫")
 
         val dataProvider: (key: String, keyExtra: String?) -> Any? = { key, keyExtra ->
             when (key) {
                 "zwPanData" -> zwPanData
-                "currentGong" -> gongStars
+                "scopedGongStars" -> scopedGongStars //指定了当前宫，则限制在当前宫
                 "shenGong" -> zwPanData.getGongStarsByZhi(zwPanData.shenGong)
                 "yearGan" -> zwPanData.fourZhu.year.gan
                 "yearZhi" -> zwPanData.fourZhu.year.zhi
+                "birthMonth" -> zwPanData.adjustedLeapMonth()
+                "hourZhi" -> zwPanData.fourZhu.hour.zhi
                 "gender" -> zwPanData.gender.ordinal
+                "x" -> 0
                 else -> {
                     when (keyExtra) {
                         GongType.classDiscriminator -> zwPanData.getGongStarsByName(key)
@@ -274,6 +278,18 @@ class RuleMigrateController(val service: AbstractSqlService) {
         }
         return list.size
     }
+
+    fun testRule(ruleId: Int): String{
+        val rootList = service.findAll(Meta.rule, {Meta.rule.id eq ruleId})
+        val birthDate = LocalDateTime.of(1985,4,18,14,0)        //LocalDateTime.now(),
+
+        val zwPanData = ZwPanData.fromLocalDateTime(Gender.Female, birthDate)
+        val scopedGongStars: GongStars? = zwPanData.getGongStarsByName("福德宫") //null//
+        //println("====check gongStars: ${gongStars.name}======")
+
+        return runRuleEval(rootList, service, zwPanData, scopedGongStars) //0 命宫， 1 父母宫 2 福德宫...
+    }
+
 //    fun exportAsCsvFile(){
 //        //SELECT id,label,rule_parent_ids,rule_group_parent_ids,rule_children_ids,rule_group_children_ids,description,remark,expr_remark,expr_str,priority,tags,domain_id,level,exclusive,threshhold FROM t_rule where domain_id=1 and enable=1;
 //        //SELECT id,label,rule_parent_ids,rule_group_parent_ids,rule_children_ids,rule_group_children_ids,description,remark,expr_remark,expr_str,priority,tags,domain_id,level,exclusive,threshhold INTO OUTFILE '~/dev/dbDataBackup/rule.csv' FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '\n' FROM t_rule where domain_id=1 and enable=1;

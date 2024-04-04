@@ -29,6 +29,7 @@ import com.github.rwsbillyang.ktorKit.db.SqlLiteHelper
 import com.github.rwsbillyang.rule.composer.*
 import com.github.rwsbillyang.rule.runtime.*
 import com.github.rwsbillyang.yinyang.core.Gender
+import com.github.rwsbillyang.yinyang.ziwei.GongStars
 import com.github.rwsbillyang.yinyang.ziwei.ZwConstants
 import com.github.rwsbillyang.yinyang.ziwei.ZwPanData
 import com.github.rwsbillyang.yinyang.ziwei.rrt.*
@@ -49,11 +50,16 @@ class MyBaseCrudService2: AbstractSqlService(VoidCache())
 fun main(){
     val service = MyBaseCrudService()
     //val rootList = service.findAll(Meta.ruleGroup, {Meta.ruleGroup.label eq "太微赋"}) //{Meta.ruleGroup.level eq 0}
-    val rootList = service.findAll(Meta.rule, {Meta.rule.id eq 716})
-    runRuleEval(service, 0,
-        LocalDateTime.of(1979,12,8,10,0),
-        //LocalDateTime.now(),
-        rootList) //0 命宫， 1 父母宫 2 福德宫...
+    val rootList = service.findAll(Meta.rule, {Meta.rule.id eq 23})
+    val birthDate = LocalDateTime.of(1985,4,18,14,0)        //LocalDateTime.now(),
+
+    val zwPanData = ZwPanData.fromLocalDateTime(Gender.Female, birthDate)
+    //val gongStars = zwPanData.getGongStarsByName("命宫")
+    //println("====check gongStars: ${gongStars.name}======")
+
+    runRuleEval(rootList, service,zwPanData,
+        null
+        ) //0 命宫， 1 父母宫 2 福德宫...
 
 
   //testSerialize() //sealed class 不能🈶多个层次的继承
@@ -63,7 +69,8 @@ fun main(){
  //   sqlLiteHelper.close()
 }
 
-fun extra2RuleCommon(extra: Any?,service: MyBaseCrudService): RuleCommon?{
+
+fun extra2RuleCommon(extra: Any?,service: BaseCrudService): RuleCommon?{
     if(extra == null) return null
     return when (extra) {
         is Rule -> extra.toRuleCommon(service, TableChildrenMode.None)
@@ -75,14 +82,13 @@ fun extra2RuleCommon(extra: Any?,service: MyBaseCrudService): RuleCommon?{
     }
 }
 
-fun runRuleEval(service: MyBaseCrudService, gongNameIndex: Int, dateTime: LocalDateTime, rootList: List<Any>){
-
-    val zwPanData = ZwPanData.fromLocalDateTime(
-        Gender.Female,
-        dateTime)
-
-    val gongStars = zwPanData.getGongStarsByName(ZwConstants.twelveGongName[gongNameIndex])
-    println("====check gongStars: ${gongStars.name}======")
+/**
+ * @param rootList 规则根节点列表
+ * @param service 数据加载dao
+ * @param zwPanData 全盘数据
+ * @param scopedGongStars 对哪个宫垣进行规则验证分析，若规则不是针对本宫垣，则规则命中失败；若是全盘分析，则为空
+ * */
+fun runRuleEval(rootList: List<Any>, service: BaseCrudService, zwPanData:ZwPanData, scopedGongStars: GongStars?): String{
 
     val dataPicker: (key: String, keyExtra: String?) -> Any? = {it, keyExtra->
         if(it.startsWith("pos|")){
@@ -95,10 +101,13 @@ fun runRuleEval(service: MyBaseCrudService, gongNameIndex: Int, dateTime: LocalD
         }else{
             when(it){
                 "zwPanData" -> zwPanData
+                "scopedGongStars" -> scopedGongStars //指定了当前宫，则限制在当前宫
+                "shenGong" -> zwPanData.getGongStarsByZhi(zwPanData.shenGong)
+                "yearGan" -> zwPanData.fourZhu.year.gan
+                "yearZhi" -> zwPanData.fourZhu.year.zhi
+                "birthMonth" -> zwPanData.adjustedLeapMonth()
                 "gender" -> zwPanData.gender.ordinal
-                "gongName" -> gongStars.name
-                "zhengYao" -> gongStars.zheng14Stars?.toSet()
-                "gongZhi" -> gongStars.zhi
+                "x" -> 0
                 else -> {
                     System.err.println("not support key=$it, please check")
                     null
@@ -109,11 +118,13 @@ fun runRuleEval(service: MyBaseCrudService, gongNameIndex: Int, dateTime: LocalD
     val dataProvider: (key: String, keyExtra: String?) -> Any? = {key, keyExtra->
         when(key){
             "zwPanData" -> zwPanData
-            "currentGong" -> gongStars
+            "scopedGongStars" -> scopedGongStars //指定了当前宫，则限制在当前宫
             "shenGong" -> zwPanData.getGongStarsByZhi(zwPanData.shenGong)
             "yearGan" -> zwPanData.fourZhu.year.gan
             "yearZhi" -> zwPanData.fourZhu.year.zhi
+            "birthMonth" -> zwPanData.adjustedLeapMonth()
             "gender" -> zwPanData.gender.ordinal
+            "x" -> 0
             else -> {
                 when(keyExtra){
                     GongType.classDiscriminator -> zwPanData.getGongStarsByName(key)
@@ -219,14 +230,18 @@ fun runRuleEval(service: MyBaseCrudService, gongNameIndex: Int, dateTime: LocalD
 
     RuleEngine<MyData>().eval(rootList, toEvalRule)
 
+    val sb = StringBuilder()
     //println收集的结果
     println("traverseResult: ${collector.resultMap.size}, root.children.size=${collector.root.children.size}")
     collector.traverseResult{
-        println("${it.data?.key}. ${it.data?.label}, desc=${it.data?.desc}")
+        val msg = "${it.data?.key}. ${it.data?.label}, desc=${it.data?.desc}\n"
+        sb.append(msg)
+        println(msg)
     }
 //    collector.resultMap.forEach { k, v ->
 //        println("key=${k} v=${v.data?.label}, v.parents=${v.parents.joinToString(",")},v.children=${v.children.joinToString(",")}")
 //    }
+    return sb.toString()
 }
 
 

@@ -54,6 +54,14 @@ fun Routing.devApi() {
             call.respondBoxOK(RuleMigrateController(crudController.service).runRuleExprCheck(lastId))
         }
 
+        //http://localhost:18000/api/dev/testRule?id=23
+        get("/testRule"){
+            val ruleId = call.request.queryParameters["id"]?.toInt() //ruleId
+            if(ruleId == null)
+                call.respondBoxKO("no id of rule")
+            else
+                call.respondBoxOK(RuleMigrateController(crudController.service).testRule(ruleId))
+        }
 
         //============== for App Client ===================//
         //app获取birthInfo最后一条记录的id，然后增量上传，回流到开发环境sqlite数据库
