@@ -6,8 +6,7 @@ import { AllDomainKey, AllParamTypeKey, Constant, ConstantQueryParams, Domain, D
 import { useSearchParams } from "react-router-dom"
 import { Cache } from "@rwsbillyang/usecache"
 
-import { MyProTable } from "@/myPro/MyProTable"
-import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps"
+import {EasyProTable, EasyProTableProps, asyncSelectProps2Request } from "easy-antd-pro"
 import { ProColumns } from "@ant-design/pro-table"
 import { EnableParamCategory, Host } from "@/Config"
 import { type2Both } from "../utils"
@@ -142,13 +141,13 @@ export const ParamTable: React.FC = () => {
   }
 
 
-  const props: MyProTableProps<Param, ParamQueryParams> = {
+  const props: EasyProTableProps<Param, ParamQueryParams> = {
     ...defaultProps(name),
     transformBeforeSave,
     transformBeforeEdit
   }
 
-  return <MyProTable<Param, ParamQueryParams> {...props} columns={columns}
+  return <EasyProTable<Param, ParamQueryParams> {...props} columns={columns}
     initialQuery={initialQuery}
   />
 }

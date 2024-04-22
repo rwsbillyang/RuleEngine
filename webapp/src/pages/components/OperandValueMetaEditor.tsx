@@ -2,7 +2,7 @@ import { Cascader, Form, Select, Space } from "antd"
 import { Constant, ConstantQueryParams, OperandConfig, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, OperandMeta, JsonValue, LabelValue } from "../DataType"
 import { JsonValueEditor } from "./JsonValueEditor"
 import React, { useEffect, useState } from "react"
-import { MyAsyncSelectProps } from "@/myPro/MyProTableProps"
+import { EasyAsyncSelectProps } from "easy-antd-pro"
 import { cachedFetch, Cache, TreeCache } from "@rwsbillyang/usecache"
 import { DefaultOptionType } from "antd/es/select"
 import { EnableParamCategory, Host } from "@/Config"
@@ -73,13 +73,13 @@ export const OperandValueMetaEditor: React.FC<{
    // console.log("OperandValueMetaEditor, constantQueryParams=",constantQueryParams)
 
     //变量加载只是与paramType同类型的变量
-    const paramCategoryAsyncSelectProps: MyAsyncSelectProps<ParamCategory, ParamCategoryQueryParams> = {
+    const paramCategoryAsyncSelectProps: EasyAsyncSelectProps<ParamCategory, ParamCategoryQueryParams> = {
         key: "paramCategory/domain/" + domainId + "/type/" + paramType.id,
         url: `${Host}/api/rule/composer/list/paramCategory`,
         query: { domainId: domainId, typeId: paramType.id, setupChildren: true, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
         convertFunc: (item) => { return { label: item.label, value: item.id, children: item.children?.map((e) => ({ label: e.label, value: e.id })) } }
     }
-    const paramAsyncSelectProps: MyAsyncSelectProps<Param, ParamQueryParams> = {
+    const paramAsyncSelectProps: EasyAsyncSelectProps<Param, ParamQueryParams> = {
         key: "param/type/" + paramType.id,
         url: `${Host}/api/rule/composer/list/param`,
         query: { domainId: domainId, typeId: paramType.id, pagination: { pageSize: -1, sKey: "id", sort: 1 } },//pageSize: -1为全部加载
@@ -87,7 +87,7 @@ export const OperandValueMetaEditor: React.FC<{
     }
 
     //常量加载，可能是同类型，更可能是值域，作为参数由constantQueryParams传递过来
-    const constantAsyncSelectProps: MyAsyncSelectProps<Constant, ConstantQueryParams> = {
+    const constantAsyncSelectProps: EasyAsyncSelectProps<Constant, ConstantQueryParams> = {
         key: "constant/t/" + constantQueryParams?.typeIds + "/d/" + domainId + "/ids/" + constantQueryParams.ids, //ConstantQueryParams中的参数各种变化，不仅仅是paramType?.id一种
         url: `${Host}/api/rule/composer/list/constant`,
         query: constantQueryParams,

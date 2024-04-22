@@ -5,8 +5,7 @@ import { AllDomainKey, BasicExpressionRecord, ComplexExpressionRecord, Domain, D
 import { useSearchParams } from "react-router-dom"
 
 
-import { MyProTable, deleteOne } from "@/myPro/MyProTable"
-import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps"
+import {EasyProTable, deleteOne, EasyProTableProps, asyncSelectProps2Request } from "easy-antd-pro"
 import { ProColumns } from "@ant-design/pro-table"
 import { Host } from "@/Config"
 
@@ -75,7 +74,7 @@ export const BasicExpressionTable: React.FC = () => {
   const [searchParams] = useSearchParams();
   const initialQuery: ExpressionQueryParams = { domainId: searchParams["domainId"], type: 'Basic' }
 
-  const props: MyProTableProps<BasicExpressionRecord, ExpressionQueryParams> = {
+  const props: EasyProTableProps<BasicExpressionRecord, ExpressionQueryParams> = {
     ...defaultProps(name),
     cacheKey: "basicExpression",
     transformBeforeSave: (e) => { //props.editConfig.transform, transform(modify shape) before save 
@@ -129,7 +128,7 @@ export const BasicExpressionTable: React.FC = () => {
 
 
   //因为共用columns，故先解构，避免相互干扰
-  return <MyProTable<BasicExpressionRecord, ExpressionQueryParams>
+  return <EasyProTable<BasicExpressionRecord, ExpressionQueryParams>
     {...props}
     columns={[...columns]}
     initialQuery={initialQuery}
@@ -151,7 +150,7 @@ export const ComplexExpressionTable: React.FC = () => {
   //   editForm: (e) => "/basic/expression/editComplex"
   // }
 
-  const props: MyProTableProps<ComplexExpressionRecord, ExpressionQueryParams> = {
+  const props: EasyProTableProps<ComplexExpressionRecord, ExpressionQueryParams> = {
     ...defaultProps(name),
     cacheKey: "complexExpression",
     transformBeforeSave: (e) => { //props.editConfig.transform, transform(modify shape) before save 
@@ -200,7 +199,7 @@ export const ComplexExpressionTable: React.FC = () => {
 
 
   //因为共用columns，故先解构，避免相互干扰
-  return <MyProTable<ComplexExpressionRecord, ExpressionQueryParams>
+  return <EasyProTable<ComplexExpressionRecord, ExpressionQueryParams>
     {...props}
     columns={[...columns]}
     initialQuery={initialQuery}

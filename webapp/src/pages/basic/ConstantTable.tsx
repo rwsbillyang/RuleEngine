@@ -4,9 +4,8 @@ import { useSearchParams } from "react-router-dom"
 //import locale from 'antd/es/date-picker/locale/zh_CN';
 //import locale from "antd/es/date-picker/locale/en_US"
 
-import { MyProTable } from "@/myPro/MyProTable"
 
-import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps"
+import { EasyProTable, EasyProTableProps, asyncSelectProps2Request } from "easy-antd-pro"
 import { Host } from "@/Config"
 import { AllDomainKey, AllParamTypeKey, Constant, ConstantQueryParams, Domain, DomainQueryParams, ParamType, ParamTypeQueryParams } from "../DataType"
 import { defaultProps, mustFill } from "../moduleTableProps"
@@ -202,9 +201,9 @@ export const ConstantTable: React.FC = () => {
     return e
   }
 
-  const props: MyProTableProps<Constant, ConstantQueryParams> = { ...defaultProps(name), transformBeforeSave, transformBeforeEdit }
+  const props: EasyProTableProps<Constant, ConstantQueryParams> = { ...defaultProps(name), transformBeforeSave, transformBeforeEdit }
 
-  return <MyProTable<Constant, ConstantQueryParams> {...props} columns={columns} formColumns={formColumns} initialValues={{ isEnum: false }} initialQuery={initialQuery} />
+  return <EasyProTable<Constant, ConstantQueryParams> {...props} columns={columns} formColumns={formColumns} initialValues={{ isEnum: false }} initialQuery={initialQuery} />
 }
 
 

@@ -2,7 +2,7 @@ import { UseCacheConfig, TreeCache, cachedFetchPromise } from "@rwsbillyang/usec
 import { Rule, RuleCommon, RuleGroup } from "../DataType"
 import { RuleName, rubleTableProps } from "./RuleTable"
 import { dispatch } from "use-bus"
-import { UpdateTreeNodeParams, deleteOne, saveOne } from "@/myPro/MyProTable"
+import { UpdateTreeNodeParams, deleteOne, saveOne } from "easy-antd-pro"
 import { RuleGroupName, rubleGroupTableProps } from "./RuleGroupTable"
 
 import { message } from "antd"

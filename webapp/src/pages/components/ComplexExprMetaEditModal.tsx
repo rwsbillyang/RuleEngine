@@ -6,7 +6,7 @@ import { ComplexExpressionMeta, BaseExpressionRecord, ExpressionMeta, Expression
 
 import { Host } from '@/Config';
 import { ModalForm, ProFormInstance, ProFormSelect, ProFormText } from '@ant-design/pro-form';
-import { asyncSelectProps2Request } from '@/myPro/MyProTableProps';
+import { asyncSelectProps2Request } from 'easy-antd-pro';
 
 //import { ComplexExprTransfer } from './ComplexExprTransfer';
 import { ComplexExprListEditor } from './ComplexExprListEditor';

@@ -2,11 +2,10 @@
 import React from "react"
 
 
-import { MyProTable, MySchemaFormEditor, deleteOne } from "../../myPro/MyProTable"
 import { ProColumns } from "@ant-design/pro-table"
 import { AllDomainKey, Domain, DomainQueryParams, Opcode, OpcodeQueryParams, ParamType, ParamTypeQueryParams } from "../DataType"
 import { defaultProps, mustFill } from "../moduleTableProps"
-import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps"
+import { EasyProTable, EasySchemaFormEditor, deleteOne, EasyProTableProps, asyncSelectProps2Request } from "easy-antd-pro"
 import { UseCacheConfig } from "@rwsbillyang/usecache"
 import { Host } from "@/Config"
 
@@ -126,7 +125,7 @@ export const ParamTypeTable: React.FC = () => {
   }
 
   const initialValue: Partial<ParamType> = { type: 'Customize', isSys: false }
-  const props: MyProTableProps<ParamType, ParamTypeQueryParams> = {
+  const props: EasyProTableProps<ParamType, ParamTypeQueryParams> = {
     ...defaultProps(name),
     initialValues: initialValue,
     transformBeforeSave,
@@ -139,7 +138,7 @@ export const ParamTypeTable: React.FC = () => {
 
   //新增时使用columns，多数字段可编辑
   const toolBarRender = () => [
-    <MySchemaFormEditor isAdd={true} columns={customColumns}  tableProps={props} style="Button" key="addOne" />
+    <EasySchemaFormEditor isAdd={true} columns={customColumns}  tableProps={props} style="Button" key="addOne" />
   ]
 
   //自定义编辑 删除和编辑 针对不同元素不同的配置
@@ -148,12 +147,12 @@ export const ParamTypeTable: React.FC = () => {
     valueType: 'option',
     dataIndex: 'actions',
     render: (text, row) => [
-      <MySchemaFormEditor columns={row.isSys ? sysColumns : customColumns} isAdd={false} record={props.transformBeforeEdit ? props.transformBeforeEdit(row) : row} tableProps={props} style="Link" key="editOne" />,
+      <EasySchemaFormEditor columns={row.isSys ? sysColumns : customColumns} isAdd={false} record={props.transformBeforeEdit ? props.transformBeforeEdit(row) : row} tableProps={props} style="Link" key="editOne" />,
       row.isSys ? undefined : <a onClick={() => deleteOne(row, props.delApi + "/" + row[(props.idKey || UseCacheConfig.defaultIdentiyKey || "id")], undefined, props.listApi, props.cacheKey, props.idKey)} key="delete">删除</a>
     ].filter(e => !!e)
   }
 
-  return <MyProTable<ParamType, ParamTypeQueryParams> {...props}
+  return <EasyProTable<ParamType, ParamTypeQueryParams> {...props}
     initialQuery={initialQuery}
     columns={sysColumns}
     toolBarRender={toolBarRender} actions={actions} />

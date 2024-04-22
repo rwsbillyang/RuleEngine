@@ -3,6 +3,7 @@ myTable/
 yinyang/
 # Compiled class file
 *.class
+/dev
 
 # Log file
 *.log

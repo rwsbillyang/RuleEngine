@@ -1,4 +1,4 @@
-import { asyncSelectProps2Request } from "@/myPro/MyProTableProps"
+import { asyncSelectProps2Request } from "easy-antd-pro"
 import ProForm, {  ModalForm, ProFormDependency, ProFormDigit, ProFormSelect,  ProFormText, ProFormTextArea } from "@ant-design/pro-form"
 import React, { useState } from "react"
 import { RuleAction, AllDomainKey, Domain, DomainQueryParams, Rule, RuleActionQueryParams, RuleCommon, RuleGroup } from "../DataType"

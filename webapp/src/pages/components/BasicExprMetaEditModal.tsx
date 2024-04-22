@@ -3,7 +3,7 @@ import { ModalForm, ProFormCascader, ProFormDependency, ProFormInstance, ProForm
 import { AllParamTypeKey, BasicExpressionMeta, ConstantQueryParams, BaseExpressionRecord, ExpressionQueryParams, Opcode, OpcodeQueryParams, OperandConfig, Param, ParamCategory, ParamCategoryQueryParams, ParamQueryParams, ParamType, ParamTypeQueryParams, OperandMeta, ParamOperandConfigKey, OperandConfigItem } from "../DataType";
 
 import { TreeCache, Cache, deepCopy, ArrayUtil } from "@rwsbillyang/usecache"
-import { asyncSelect2Request, asyncSelectProps2Request } from "@/myPro/MyProTableProps";
+import { asyncSelect2Request, asyncSelectProps2Request } from "easy-antd-pro";
 import { EnableParamCategory, Host } from "@/Config";
 import { OperandValueMetaEditor } from "./OperandValueMetaEditor";
 import { Space, message } from "antd";

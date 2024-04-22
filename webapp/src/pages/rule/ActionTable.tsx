@@ -4,7 +4,7 @@ import React from "react"
 import { ProColumns } from "@ant-design/pro-table"
 
 import { RuleAction, RuleActionQueryParams } from "../DataType"
-import { MyProTable } from "@/myPro/MyProTable"
+import { EasyProTable } from "easy-antd-pro"
 import { defaultProps, mustFill } from "../moduleTableProps"
 
 
@@ -34,5 +34,5 @@ export const ActionTable: React.FC = () => {
   
     const props = defaultProps(name) 
 
-    return <MyProTable<RuleAction, RuleActionQueryParams> {...props}  columns={columns}   />
+    return <EasyProTable<RuleAction, RuleActionQueryParams> {...props}  columns={columns}   />
   }

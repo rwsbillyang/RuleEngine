@@ -5,8 +5,8 @@ import { AllDomainKey, Domain, DomainQueryParams, Rule, RuleCommon, RuleQueryPar
 import { useSearchParams } from "react-router-dom"
 import { DownOutlined, PlusCircleTwoTone, MinusCircleTwoTone } from '@ant-design/icons'
 
-import { MyProTable } from "@/myPro/MyProTable"
-import { asyncSelectProps2Request } from "@/myPro/MyProTableProps"
+import { EasyProTable, asyncSelectProps2Request } from "easy-antd-pro"
+
 import { ProColumns } from "@ant-design/pro-table"
 import { Host } from "@/Config"
 
@@ -297,7 +297,7 @@ export const RuleTable: React.FC = () => {
     }
 
     return <>
-        <MyProTable<RuleCommon, RuleQueryParams>
+        <EasyProTable<RuleCommon, RuleQueryParams>
             {...rubleTableProps}
             expandable={expandable}
             columns={ruleColumns}

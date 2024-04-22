@@ -5,8 +5,8 @@ import { AllDomainKey, ComplexExpressionRecord, Domain, DomainQueryParams, Expre
 
 import { Host } from '@/Config';
 import { ModalForm, ProFormDependency, ProFormSelect, ProFormText, ProFormTextArea } from '@ant-design/pro-form';
-import { MyProTableProps, asyncSelectProps2Request } from '@/myPro/MyProTableProps';
-import { saveOne } from '@/myPro/MyProTable';
+import { EasyProTableProps, asyncSelectProps2Request } from 'easy-antd-pro';
+import { saveOne } from 'easy-antd-pro';
 import { complexExpressionMeta2String } from '../utils';
 
 import { ComplexExprMetaEditModal } from './ComplexExprMetaEditModal';
@@ -21,7 +21,7 @@ import { ComplexExprMetaEditModal } from './ComplexExprMetaEditModal';
 export const ComplexExpressionRecordEditor: React.FC<{
   isAdd: boolean,
   record?: Partial<ComplexExpressionRecord>,
-  tableProps: MyProTableProps<ComplexExpressionRecord, ExpressionQueryParams>
+  tableProps: EasyProTableProps<ComplexExpressionRecord, ExpressionQueryParams>
 }> = ({ isAdd, record, tableProps }) => {
   // let { state } = useLocation();
 

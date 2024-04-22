@@ -7,8 +7,8 @@ import { Cache } from '@rwsbillyang/usecache';
 
 import { NoFoundPage } from './pages/404'
 
-import { MyRoute } from './myPro/MyRoute'
-//import { MySimpleLayout } from './myPro/MySimpleLayout'
+
+//import { EasySimpleLayout } from './EasyPro/EasySimpleLayout'
 import { ParamTable, ParamTableTab } from './pages/basic/ParamTable'
 import { ParamTypeTable } from './pages/basic/ParamTypeTable'
 import { OpcodeTable } from './pages/basic/OpcodeTable'
@@ -20,7 +20,7 @@ import { RuleTable } from './pages/rule/RuleTable'
 import { ActionTable } from './pages/rule/ActionTable'
 import { RuleGroupTable } from './pages/rule/RuleGroupTable'
 import { EnableDev, EnableParamCategory } from './Config'
-import MyProLayout, { MyProLayoutProps } from './myPro/MyProLayout';
+import {EasyProLayout, EasyRoute, EasyProLayoutProps } from 'easy-antd-pro';
 
 
 import {
@@ -42,7 +42,7 @@ export const lazyLoad = (children: ReactNode): ReactNode => {
   </Suspense>
 }
 
-const menuRoutes: MyRoute[] = [
+const menuRoutes: EasyRoute[] = [
   {
     path: '/meta',
     id: 'meta',
@@ -139,7 +139,7 @@ const menuRoutes: MyRoute[] = [
 
 
 
-const proLayoutProps: MyProLayoutProps = {
+const proLayoutProps: EasyProLayoutProps = {
   title: "Rule Composer",
   //logo: null,
   //layout: 'mix',
@@ -185,8 +185,8 @@ const proLayoutProps: MyProLayoutProps = {
 export const AppRoutes: RouteObject[] = [
   {
     path: '/',
-    //element: <MySimpleLayout menuRoutes={menuRoutes} navRoutes={actions}/>,
-    element: <MyProLayout {...proLayoutProps} />,
+    //element: <EasySimpleLayout menuRoutes={menuRoutes} navRoutes={actions}/>,
+    element: <EasyProLayout {...proLayoutProps} />,
     children: menuRoutes as RouteObject[]  //路由嵌套，子路由的元素需使用<Outlet />
   },
   {
@@ -202,7 +202,7 @@ export const AppRoutes: RouteObject[] = [
 ].filter(e=> e.path !== "/tmp")
 
 
-// const actions: MyRouteObject[] = [
+// const actions: EasyRouteObject[] = [
 //   {
 //     path: '',
 //     name: "zn/en",

@@ -2,11 +2,12 @@ import React, {  useState } from "react";
 import { ModalForm, ProFormDependency, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-form";
 import { AllDomainKey,  BasicExpressionRecord, Domain, DomainQueryParams, ExpressionQueryParams } from "../DataType";
 
-import { MyProTableProps, asyncSelectProps2Request } from "@/myPro/MyProTableProps";
+
 import { Host } from "@/Config";
 import { Button, Form, message } from "antd";
 
-import { saveOne } from "@/myPro/MyProTable";
+import { EasyProTableProps, asyncSelectProps2Request,saveOne } from "easy-antd-pro";
+
 import { basicExpressionMeta2String} from "../utils";
 import { BasicExprMetaEditModalV2 } from "./BasicExprMetaEditModalV2";
 
@@ -20,7 +21,7 @@ import { BasicExprMetaEditModalV2 } from "./BasicExprMetaEditModalV2";
 export const BaiscExpressionRecordEditor: React.FC<{
   isAdd: boolean,
   record?: Partial<BasicExpressionRecord>,
-  tableProps: MyProTableProps<BasicExpressionRecord, ExpressionQueryParams>
+  tableProps: EasyProTableProps<BasicExpressionRecord, ExpressionQueryParams>
 }> = ({ isAdd, record, tableProps }) => {
 
   //const initialMeta: BasicExpressionMeta = { _class: "Basic" }

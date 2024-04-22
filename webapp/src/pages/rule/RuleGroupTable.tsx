@@ -4,8 +4,7 @@ import React, { useRef, useState } from "react"
 import { AllDomainKey, Domain, DomainQueryParams, RuleCommon, RuleGroup, RuleGroupQueryParams } from "../DataType"
 import { useSearchParams } from "react-router-dom"
 
-import { MyProTable } from "@/myPro/MyProTable"
-import { asyncSelectProps2Request } from "@/myPro/MyProTableProps"
+import { EasyProTable, asyncSelectProps2Request } from "easy-antd-pro"
 import { ProColumns } from "@ant-design/pro-table"
 import { Host } from "@/Config"
 
@@ -154,7 +153,7 @@ export const rubleGroupTableProps = {
 
 
 
-//基本表达式列表管理
+
 export const RuleGroupTable: React.FC = () => {
 
     const [searchParams] = useSearchParams();
@@ -265,7 +264,7 @@ export const RuleGroupTable: React.FC = () => {
     }
 
     return <>
-        <MyProTable<RuleCommon, RuleGroupQueryParams>
+        <EasyProTable<RuleCommon, RuleGroupQueryParams>
             {...rubleGroupTableProps}
             expandable={expandable}
             columns={ruleGroupColumns}

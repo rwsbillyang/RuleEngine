@@ -1,5 +1,5 @@
 import { Host } from "@/Config";
-import { MyProTableProps } from "@/myPro/MyProTableProps";
+import { EasyProTableProps } from "easy-antd-pro";
 import { BasePageQuery, BaseRecord } from "@rwsbillyang/usecache";
 
 
@@ -17,9 +17,9 @@ export const mustFill = {
  * 
  * @param name object name
  * @param supportDel defalut true
- * @returns 返回 MyProTableProps的部分属性
+ * @returns 返回 EasyProTableProps的部分属性
  */
-export interface ModuleProps<T extends BaseRecord, Q extends BasePageQuery> extends MyProTableProps<T, Q>{
+export interface ModuleProps<T extends BaseRecord, Q extends BasePageQuery> extends EasyProTableProps<T, Q>{
   title?: string,
   name: string,
   supportDel?: boolean //default true,
@@ -27,7 +27,7 @@ export interface ModuleProps<T extends BaseRecord, Q extends BasePageQuery> exte
 
 /**
  * 
- * @returns 返回 MyProTableProps的部分属性
+ * @returns 返回 EasyProTableProps的部分属性
  */
 export function defaultProps(name: string, cacheTable: boolean = true, supportDel: boolean = true, supportAdd: boolean = true) {
     const host =  Host

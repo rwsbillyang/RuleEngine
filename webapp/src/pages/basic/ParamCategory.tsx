@@ -3,10 +3,9 @@ import React from "react"
 
 
 import { AllDomainKey, Domain, DomainQueryParams, ParamCategory, ParamCategoryQueryParams } from "../DataType"
-import { MyProTable } from "@/myPro/MyProTable"
 import { ProColumns } from "@ant-design/pro-table"
 import { defaultProps, mustFill } from "../moduleTableProps"
-import { asyncSelectProps2Request } from "@/myPro/MyProTableProps"
+import { EasyProTable, asyncSelectProps2Request } from "easy-antd-pro"
 import { Host } from "@/Config"
 
 
@@ -48,5 +47,5 @@ export const ParamCategoryTable: React.FC = () => {
   
   const props = defaultProps(name) 
 
-  return <MyProTable<ParamCategory, ParamCategoryQueryParams> {...props}  columns={columns}   />
+  return <EasyProTable<ParamCategory, ParamCategoryQueryParams> {...props}  columns={columns}   />
 }
