@@ -1,40 +1,21 @@
-package com.github.rwsbillyang.rule.composer
+package com.github.rwsbillyang.rule.composer.app
 
 
 
-import com.github.rwsbillyang.ktorKit.ApiJson.apiJsonBuilder
-import com.github.rwsbillyang.ktorKit.LocalDateTimeAsStringSerializer
 import com.github.rwsbillyang.ktorKit.db.DbType
 import com.github.rwsbillyang.ktorKit.log.LogBackUtil
 import com.github.rwsbillyang.ktorKit.server.AppModule
 import com.github.rwsbillyang.ktorKit.server.defaultInstall
 import com.github.rwsbillyang.ktorKit.server.installCORS
 import com.github.rwsbillyang.ktorKit.server.installModule
-import com.github.rwsbillyang.rule.runtime.ruleRuntimeExprSerializersModule
-import com.github.rwsbillyang.yinyang.ziwei.rrt.zwSerializersModule
+import com.github.rwsbillyang.rule.composer.MySerializeJson
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-
-
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
-import kotlinx.serialization.modules.plus
-
-
 import org.koin.dsl.module
-
-//默认情况下enableJsonApi为true，使用的是LocalDateTimeAsLongSerializer and ObjectId64Serializer
-val MySerializeJson = Json {
-    apiJsonBuilder()
-    serializersModule = SerializersModule {
-        contextual(LocalDateTimeAsStringSerializer) //默认情况下enableJsonApi为true，使用的是LocalDateTimeAsLongSerializer and ObjectId64Serializer
-    } + ruleRuntimeExprSerializersModule + zwSerializersModule
-}
 
 
 @Suppress("unused") // Referenced in application.conf
@@ -51,14 +32,15 @@ fun Application.module(testing: Boolean = false) { //"X-Auth-uId", "X-Auth-oId",
     val withSPA = System.getProperty("withSPA")
 
     //-DdevMode=prod
-    val isDev = (System.getProperty("dev.mode") ?: "dev") == "dev"
-    if(isDev){
-        LogBackUtil.setupForConsole()
-    }else{
-        LogBackUtil.setupForFile()
-        //LogBackUtil.setupForRollingFile()
-    }
-    log.info("==================isDev=$isDev(default: dev)==================")
+    LogBackUtil.setupForConsole()
+//    val isDev = (System.getProperty("dev.mode") ?: "dev") == "dev"
+//    if(isDev){
+//        LogBackUtil.setupForConsole()
+//    }else{
+//        LogBackUtil.setupForFile()
+//        //LogBackUtil.setupForRollingFile()
+//    }
+//    log.info("==================isDev=$isDev(default: dev)==================")
 
     val app = this
     val mainModule = AppModule(
@@ -71,7 +53,7 @@ fun Application.module(testing: Boolean = false) { //"X-Auth-uId", "X-Auth-oId",
     //使用SQL数据库，非默认设置
     installModule(bizModule,dbName, DbType.SQL, dbUser, dbPwd, dbHost, dbPort)
 
-    defaultInstall(enableJwt = false, false, enableWebSocket = false)
+    defaultInstall(enableJwt = false, enableJsonApi = false, enableWebSocket = false)
 
     //https://ktor.io/servers/features/content-negotiation/serialization-converter.html
     //https://github.com/Kotlin/kotlinx.serialization/blob/master/docs/custom_serializers.md

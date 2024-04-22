@@ -31,7 +31,8 @@ dependencyResolutionManagement {
     // 使用版本目录
     versionCatalogs {
         libs {
-            from(files("../../libs.versions.toml"))
+            //from(files("../../libs.versions.toml"))
+            from("com.github.rwsbillyang:version-catalog:1.0.0")
         }
     }
 }

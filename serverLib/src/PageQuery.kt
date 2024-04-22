@@ -27,10 +27,9 @@ import org.komapper.core.dsl.Meta
 import org.komapper.core.dsl.expression.SortExpression
 import org.komapper.core.dsl.expression.WhereDeclaration
 import org.komapper.core.dsl.operator.asc
-import org.komapper.core.dsl.operator.concat
 import org.komapper.core.dsl.operator.desc
 import org.komapper.core.dsl.operator.or
-import org.komapper.core.dsl.query.orderBy
+
 
 
 @Resource("/param")

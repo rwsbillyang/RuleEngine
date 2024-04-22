@@ -29,7 +29,7 @@ import org.komapper.core.dsl.Meta
  * 一个service实现了对各个model的crud的处理，添加新的model时，需将model放到EnumMeta中
  * 若需自定义功能，可在子类中实现
  * */
-open class BaseCrudService(cache: ICache): SqlGenericService(bizModule.dbName!!, cache){
+open class BaseCrudService(cache: ICache, dbName: String): SqlGenericService(dbName, cache){
 
 
     /**

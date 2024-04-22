@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.rule.composer
+package com.github.rwsbillyang.rule.composer.app
 
 
 
@@ -24,8 +24,7 @@ import com.github.rwsbillyang.ktorKit.apiBox.BatchOperationParams
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.ktorKit.apiBox.PostData
 import com.github.rwsbillyang.ktorKit.server.*
-import com.github.rwsbillyang.rule.composer.dev.devApi
-
+import com.github.rwsbillyang.rule.composer.*
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -40,7 +39,7 @@ import org.koin.ktor.ext.inject
 val bizModule = AppModule(
     listOf(
         module {
-            single { BaseCrudService(get()) }
+            single { BaseCrudService(get(), "ruleEngineDb") }
             single { BaseCrudController() }
             single { RuleTreeController() }
 
@@ -48,11 +47,6 @@ val bizModule = AppModule(
     "ruleEngineDb"
 ) {
     composerApi()
-
-    val isDev = (System.getProperty("dev.mode") ?: "dev") == "dev"
-    if(isDev){
-        devApi()
-    }
 }
 
 fun Routing.composerApi() {

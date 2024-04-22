@@ -1,5 +1,9 @@
 
-## serverApp
+
+
+
+## From dev
+### serverApp
 cd ./serverApp
 ./gradlew run
 
@@ -8,7 +12,7 @@ http://localhost:18000/api/rule/engine/initDb
 
 
 
-## webapp
+### webapp
 
 npm create vite webapp
 
@@ -28,5 +32,3 @@ npm i --save @ant-design/pro-table  @ant-design/pro-form @ant-design/pro-layout 
 npm i tslib
 npm i md5 --save
 npm i --save-dev @types/md5
-
-

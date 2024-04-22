@@ -1,29 +1,5 @@
 //gradle wrapper 生成gradle wrapper及脚本
-// gradle build   
-buildscript {
-    repositories {
-        mavenLocal()
-        maven { url 'https://mirrors.cloud.tencent.com/gradle/'}
-		maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
-		maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
-		maven { url 'https://maven.aliyun.com/nexus/content/groups/public' }
-		maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' }
-		maven { url 'https://maven.aliyun.com/repository/jcenter' }
-		maven { url 'https://maven.aliyun.com/repository/google' }
-        mavenCentral()
-        maven { url 'https://jitpack.io' }
-        maven { url "https://maven.pkg.jetbrains.space/public/p/ktor/eap"}
-        //jcenter()
-        google()
-    }
-
-   // dependencies {
-   //    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10"  //TODO：使用${libs.versions.kotlinVersion}出现错误
-   //    classpath "org.jetbrains.kotlin:kotlin-serialization:${libs.versions.kotlinVersion}"
-   //  }
-}
-
-
+// gradle build
 plugins{
 	id 'java-library'
 	id 'maven-publish'

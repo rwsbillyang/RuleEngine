@@ -18,17 +18,23 @@
 
 package com.github.rwsbillyang.rule.composer
 
-import com.github.rwsbillyang.ktorKit.ApiJson
+
+import com.github.rwsbillyang.ktorKit.ApiJson.apiJsonBuilder
+import com.github.rwsbillyang.ktorKit.LocalDateTimeAsStringSerializer
 import com.github.rwsbillyang.ktorKit.apiBox.BatchOperationParams
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.ktorKit.apiBox.IUmiPaginationParams
 import com.github.rwsbillyang.ktorKit.db.andWhere
+import com.github.rwsbillyang.rule.runtime.ruleRuntimeExprSerializersModule
 
-import com.github.rwsbillyang.rule.runtime.*
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.contextual
+import kotlinx.serialization.modules.plus
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.komapper.core.dsl.Meta

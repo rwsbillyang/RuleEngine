@@ -1,6 +1,8 @@
 pluginManagement {
     repositories {
         mavenLocal()
+        maven { url 'https://mirrors.cloud.tencent.com/gradle/'}
+		maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
         maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
         maven { url 'https://maven.aliyun.com/repository/google/' }
         maven { url 'https://maven.aliyun.com/repository/jcenter/'}
@@ -15,7 +17,7 @@ dependencyResolutionManagement {
     repositories {
         mavenLocal()
         maven { url 'https://mirrors.cloud.tencent.com/gradle/'}
-        maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
+		maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
         maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
         maven { url 'https://maven.aliyun.com/repository/google/' }
         maven { url 'https://maven.aliyun.com/repository/jcenter/'}
@@ -23,6 +25,7 @@ dependencyResolutionManagement {
         mavenCentral()
         gradlePluginPortal()
         google()
+
     }
 
     // 使用版本目录
@@ -34,4 +37,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "rule-runtime"
+rootProject.name = "rule-composer-serverLib"

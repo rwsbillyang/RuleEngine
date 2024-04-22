@@ -1,28 +1,18 @@
 //gradle wrapper 生成gradle wrapper及脚本
 // gradle build   
 
-plugins {
-    id 'application'
+
+
+plugins{
+	id 'java-library'
+	id 'maven-publish'
 	alias libs.plugins.kotlin
 	alias libs.plugins.kotlin.serialization
-	alias libs.plugins.devtools.ksp
-	alias libs.plugins.shadow
+    alias libs.plugins.devtools.ksp
 }
 
-
-group 'com.github.rwsbillyang' //必须放在plugins后面，否则报错
-version "1.0.0"
-
-
-//application { mainClass = 'io.ktor.server.netty.EngineMain'}
-mainClassName = "io.ktor.server.netty.EngineMain"
-
-shadowJar {
-    //minimize()
-    manifest {
-        attributes 'Main-Class': mainClassName
-    }
-}
+group 'com.github.rwsbillyang'  //必须放在plugins后面，否则报错
+version '1.0'
 
 
 dependencies {
@@ -69,9 +59,6 @@ dependencies {
     //implementation project(":rule-runtime")
     implementation libs.rule.runtime
     implementation libs.ktorKit
-
-   // implementation project(":rule-composer-serverLib")
-    implementation "com.github.rwsbillyang:rule-composer-serverLib:1.0"
 }
 
 kotlin {
@@ -95,3 +82,10 @@ sourceSets {
     test.resources.srcDirs = ['testresources']
 }
 
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}
