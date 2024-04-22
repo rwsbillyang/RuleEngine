@@ -1,0 +1,105 @@
+//gradle wrapper 生成gradle wrapper及脚本
+// gradle build   
+
+plugins {
+    id 'application'
+	alias libs.plugins.kotlin
+	alias libs.plugins.kotlin.serialization
+	alias libs.plugins.devtools.ksp
+	alias libs.plugins.shadow
+}
+
+
+group 'com.github.rwsbillyang' //必须放在plugins后面，否则报错
+version "1.0.0"
+
+
+//application { mainClass = 'io.ktor.server.netty.EngineMain'}
+mainClassName = "io.ktor.server.netty.EngineMain"
+
+shadowJar {
+    //minimize()
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
+}
+
+
+dependencies {
+    implementation libs.kotlin.stdlib.jdk8
+    implementation libs.kotlin.serialization.json
+
+    implementation libs.logback.classic
+
+    implementation libs.ktor.serialization
+    implementation libs.ktor.serialization.kotlinx.json
+
+    implementation libs.ktor.server.netty
+    implementation libs.ktor.server.cors
+    implementation libs.ktor.server.data.conversion
+    implementation libs.ktor.server.forwarded.header
+    implementation libs.ktor.server.partial.content
+    implementation libs.ktor.server.auto.head.response
+    implementation libs.ktor.server.status.pages
+    implementation libs.ktor.server.call.logging
+    implementation libs.ktor.server.content.negotiation
+    //implementation libs.ktor.server.call.id
+    implementation libs.ktor.server.resources
+	testImplementation libs.ktor.server.tests
+    testImplementation libs.ktor.server.test.host
+    testImplementation libs.kotlin.test.junit
+
+    implementation libs.koin.core
+    testImplementation libs.koin.test
+    implementation libs.koin.ktor
+    implementation libs.koin.logger
+    
+	implementation libs.caffeine
+    testImplementation libs.caffeine
+    
+    implementation libs.mysql.connector.java
+    implementation libs.hikariCP
+
+    implementation platform(libs.komapper.platform)
+    ksp platform(libs.komapper.platform)
+    implementation libs.komapper.starter.jdbc
+    implementation libs.komapper.dialect.mysql.jdbc
+    ksp("org.komapper:komapper-processor")//ksp libs.komapper.processor //error
+
+    //implementation project(":rule-runtime")
+    implementation libs.rule.runtime
+
+    //implementation project(":ktorKit")
+    implementation libs.ktorKit
+
+
+    //only for dev
+    //compileOnly "com.github.rwsbillyang:yinyang:1.0.0"
+    implementation "com.github.rwsbillyang:yinyang:1.0.0"
+    implementation 'org.xerial:sqlite-jdbc:3.43.0.0'
+
+    //implementation project(":rule-composer-serverLib")
+    implementation "com.github.rwsbillyang:rule-composer-serverLib:1.0"
+}
+
+kotlin {
+    sourceSets.main {
+        kotlin.srcDir("build/generated/ksp/main/kotlin")
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    sourceCompatibility = "1.8"
+    targetCompatibility = "17" //komapper要求java11
+}
+
+sourceSets {
+    main.kotlin.srcDirs = main.java.srcDirs = ['src']
+    test.kotlin.srcDirs = test.java.srcDirs = ['test']
+    main.resources.srcDirs = ['resources']
+    test.resources.srcDirs = ['testresources']
+}
+

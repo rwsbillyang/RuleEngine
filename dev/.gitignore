@@ -1,9 +1,13 @@
 .idea/
+build/
+.gradle/
+
 # Compiled class file
 *.class
 
 # Log file
 *.log
+/log/logback.xml
 
 # BlueJ files
 *.ctxt
