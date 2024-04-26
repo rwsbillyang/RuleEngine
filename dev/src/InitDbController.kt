@@ -93,7 +93,7 @@ class InitDbController: KoinComponent{
         )
         val types = service.batchSave(Meta.paramType, list, true)
 
-        val json = ApiJson.serverSerializeJson()
+        val json = ApiJson.json()
         val opsJson = json.encodeToString(map)
         val typesJson = json.encodeToString(types)
         return "opsJson=$opsJson, typesJson=$typesJson"

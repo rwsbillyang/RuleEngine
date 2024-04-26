@@ -22,7 +22,7 @@ package com.github.rwsbillyang.rule.composer.dev
 
 
 import com.github.rwsbillyang.ktorKit.server.*
-
+import com.github.rwsbillyang.rule.composer.BaseCrudService
 
 
 import org.koin.dsl.module
@@ -36,6 +36,7 @@ val bizModule = AppModule(
             single { HelpBooksController() }
             single { InitDbController() }
             single { RuleMigrateController() }
+            single { BaseCrudService(get(), "ruleEngineDb") }
         }),
     "ruleEngineDb"
 ) {
