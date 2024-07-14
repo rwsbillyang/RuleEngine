@@ -133,7 +133,7 @@ class RuleMigrateController: KoinComponent {
             	"level"	INTEGER,
             	"exclusive"	INTEGER NOT NULL,
             	"enable"	INTEGER NOT NULL,
-            	"threshhold"	INTEGER
+            	"threshhold"	INTEGER NOT NULL
             ); 
         """.trimIndent()
         sqlLiteHelper.createTable(sql)

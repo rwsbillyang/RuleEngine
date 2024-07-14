@@ -7,6 +7,7 @@ import { RuleGroupName, rubleGroupTableProps } from "./RuleGroupTable"
 
 import { message } from "antd"
 import { MoveNodeParamWithParent } from "./MoveRuleNode"
+import { EnableRefreshListAfterUpdate } from "@/Config"
 
 
 export const SaveSubInRuleAPI = "/api/rule/composer/saveSubInRule/" //   {name}/{parentRuleId}"
@@ -99,7 +100,7 @@ function getOnUpdateNodeOk(fromTable: string, isAdd: boolean, debug: boolean, cu
 
         //树形遍历，找到树形的根，然后保存到缓存
         if (debug) console.log(log)
-        if (currentRow.posPath) {
+        if (EnableRefreshListAfterUpdate && currentRow.posPath) {
             //编辑时，节点后端返回从自身开始的parentPath，应该从根节点开始，后更改为自己的typeId，前端恢复原值
             data.posPath = currentRow.posPath
             data.children = currentRow.children
@@ -242,6 +243,7 @@ export function saveRuleOrGroup(
         } else {
             console.warn("not provdide row rule common when edit, fromTable=" + fromTable)
         }
+        
     }
 }
 

@@ -65,6 +65,11 @@ class HelpBooksController: KoinComponent  {
             sqlLiteHelper.updateById("SeniorBookGongYuan", it.id, it.toMap())
         }
     }
+    fun updateMiscBookGongYuan(list: List<MiscBookGongYuan>){
+        list.forEach {
+            sqlLiteHelper.updateById("MiscBookGongYuan", it.id, it.toMap())
+        }
+    }
     fun updateLbzRemark(list: List<LbzRemark>){
         list.forEach {
             sqlLiteHelper.updateById("LbzRemark", it.id, it.toMap())
@@ -109,12 +114,13 @@ class JuniorBookStar(
     val star: String,
     val category: String,
     val looks: String?, //; appearance ; bearing: String,
-    val character: String?,// 性格
     val remark: String?, //备注说明
     val likes: String?, //喜忌
-    val sick: String? //疾病
+    val sick: String?, //疾病
+    val character: String?,//性质 from 陈雪涛 紫微讲义
+    val layout: String? //安星法
 ){
-    fun toMap() = mapOf("looks" to looks, "character" to character, "remark" to remark, "likes" to likes, "sick" to sick)
+    fun toMap() = mapOf("looks" to looks, "character" to character, "remark" to remark, "likes" to likes, "sick" to sick, "layout" to layout)
 }
 /**
  * 王亭之-中州派紫微斗数 深造讲义
@@ -125,9 +131,10 @@ class SeniorBookStar(
     val star: String,
     val category: String,
     val description: String,
-    val fromStar: String? //四化
+    val fromStar: String?, //四化
+    val brief: String? = null // from陈雪涛 紫微讲义
 ){
-    fun toMap() = mapOf("description" to description)
+    fun toMap() = mapOf("description" to description, "brief" to brief)
 }
 
 /**
@@ -170,7 +177,16 @@ class SeniorBookGongYuan(
     fun toMap() = mapOf("description" to description)
 }
 
-
+@Serializable
+class MiscBookGongYuan(
+    val id: Int,
+    val gongyuan: String,
+    val star: String,
+    val description: String,
+    val pos: String? = null //紫微位置|宫支,eg: 子|未
+) {
+    fun toMap() = mapOf("description" to description)
+}
 /**
  * 陆斌兆紫微斗数评注
  * @param id

@@ -76,13 +76,13 @@ fun Routing.devApi() {
             if(name == null)
                 call.respondBoxKO("delSubInRuleGroup, invalid parameter: no name")
             else{
-
                 val result = when(name){
                     "JuniorBookStar" -> helpBooksController.updateJuniorBookStar(call.receive())
                     "SeniorBookStar" -> helpBooksController.updateSeniorBookStar(call.receive())
                     "SixtyStarSerials" -> helpBooksController.updateSixtyStarSerials(call.receive())
                     "JuniorBookGongYuan" -> helpBooksController.updateJuniorBookGongYuan(call.receive())
                     "SeniorBookGongYuan" -> helpBooksController.updateSeniorBookGongYuan(call.receive())
+                    "MiscBookGongYuan" -> helpBooksController.updateMiscBookGongYuan(call.receive())
                     "LbzRemark" -> helpBooksController.updateLbzRemark(call.receive())
                     "BirthInfo" -> helpBooksController.updateBirthInfo(call.receive())
                     else -> null
