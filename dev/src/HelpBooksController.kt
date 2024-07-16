@@ -117,10 +117,9 @@ class JuniorBookStar(
     val remark: String?, //备注说明
     val likes: String?, //喜忌
     val sick: String?, //疾病
-    val character: String?,//性质 from 陈雪涛 紫微讲义
     val layout: String? //安星法
 ){
-    fun toMap() = mapOf("looks" to looks, "character" to character, "remark" to remark, "likes" to likes, "sick" to sick, "layout" to layout)
+    fun toMap() = mapOf("looks" to looks,  "remark" to remark, "likes" to likes, "sick" to sick, "layout" to layout)
 }
 /**
  * 王亭之-中州派紫微斗数 深造讲义
