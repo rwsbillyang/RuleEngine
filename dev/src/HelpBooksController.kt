@@ -17,8 +17,8 @@ package com.github.rwsbillyang.rule.composer.dev
 
 import com.github.rwsbillyang.ktorKit.apiBox.Sort
 import com.github.rwsbillyang.ktorKit.apiBox.UmiPagination
-import com.github.rwsbillyang.ktorKit.db.AbstractSqlService
 import com.github.rwsbillyang.ktorKit.db.SqlLiteHelper
+import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import org.komapper.core.dsl.Meta
@@ -26,6 +26,9 @@ import org.komapper.core.dsl.Meta
 import com.github.rwsbillyang.rule.composer.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.io.File
+import java.io.FileOutputStream
+import java.time.LocalDateTime
 
 /**
  * MingLi helpbooks 更新后，提交更新后，将数据写入sqllite：
@@ -102,7 +105,93 @@ class HelpBooksController: KoinComponent  {
         val p = RuleGroupQueryParams(MySerializeJson.encodeToString(UmiPagination(sort = Sort.ASC, pageSize = pageSize, lastId = lastId)),  enable= 1, domainId = domainId)
         return service.findPage(Meta.ruleGroup, p.toSqlPagination())
     }
+
+
+    /**
+     * 生成markdown文档：简明笔记
+     * */
+    fun generateMd1(): String{
+      //简明教程 14 正曜
+        var resultSet = sqlLiteHelper.find("select * from SeniorBookStar WHERE id < 15 ORDER BY id ASC")
+        val path = "/Users/bill/Documents/vnote_notebooks/vnotebook/myth/紫微斗数简明笔记2.md"
+
+
+        val dateTime = DatetimeUtil.format(LocalDateTime.now())
+        val fos = FileOutputStream(path, false)
+        fos.write(("紫微斗数简明笔记2\n generated from sqliteDB at $dateTime\n\n[toc]\n\n" +
+                "# 十四正曜\n").toByteArray())
+        while (resultSet.next()) {
+             resultSet.getInt("id")
+            val star = resultSet.getString("star")
+            val brief = resultSet.getString("brief")
+            fos.write("## $star\n$brief\n\n".toByteArray())
+        }
+        resultSet.close()
+
+        fos.write("# 星系\n".toByteArray())
+        val titleList = listOf("紫微子午", "紫破丑未","紫府寅申","紫贪卯酉","紫相辰戌","紫杀巳亥")
+        listOf("子|", "丑|","寅|","卯|","辰|","巳|").forEachIndexed { index, e ->
+            fos.write("\n## ${titleList[index]}\n".toByteArray())
+            val rs = sqlLiteHelper.find("select * from MiscBookGongYuan WHERE gongyuan='命宫' AND pos Like '%$e%' ORDER BY sort ASC")
+            while (rs.next()) {
+                val star = rs.getString("star")
+                val description = rs.getString("description")
+                val pos = rs.getString("pos")
+                fos.write("### ${extractPos(pos)}「$star」\n$description\n".toByteArray())
+            }
+            rs.close()
+        }
+
+        fos.flush()
+        fos.close()
+        return path
+    }
+
+    /**
+     * 生成markdown文档：六十星系
+     * */
+    fun generateMd2(): String{
+        val path = "/Users/bill/Documents/vnote_notebooks/vnotebook/myth/六十星系2.md"
+        val dateTime = DatetimeUtil.format(LocalDateTime.now())
+        val fos = FileOutputStream(path, false)
+        fos.write(("六十星系2\n generated from sqliteDB at $dateTime\n\n[toc]\n\n" ).toByteArray())
+
+        val titleList = listOf("紫微子午", "紫破丑未","紫府寅申","紫贪卯酉","紫相辰戌","紫杀巳亥")
+        listOf("子|", "丑|","寅|","卯|","辰|","巳|").forEachIndexed { index, e ->
+            fos.write("\n# ${titleList[index]}\n".toByteArray())
+            val rs = sqlLiteHelper.find("select * from SixtyStarSerials WHERE pos Like '%$e%' ORDER BY id ASC")
+            while (rs.next()) {
+                val star = rs.getString("stars")
+                val description = rs.getString("description")
+                val pos = rs.getString("pos")
+                fos.write("## ${extractPos(pos)}「$star」\n$description\n\n".toByteArray())
+            }
+            rs.close()
+        }
+
+        fos.flush()
+        fos.close()
+        return path
+    }
+
+    /**
+     * 提取位置信息
+     * 子|子,午|午  -> 子午
+     * 子|未 午|丑 子|丑 午|未 -> 未丑
+     *
+     */
+    private fun extractPos(pos: String): String{
+        val arry = pos.split(',',' ').map{ it.trim()}.filter { !it.isNullOrEmpty() }
+        if(arry.size == 1) println("pos=$pos")
+        val f = arry[0].split('|')
+        val s = arry[1].split('|')
+        if(f.size == 1)println("pos=$pos, first=$f")
+        if(s.size == 1)println("pos=$pos, second=$s")
+        return f[1]+s[1]
+    }
 }
+
+
 
 
 /**

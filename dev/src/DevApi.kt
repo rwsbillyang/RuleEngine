@@ -108,5 +108,13 @@ fun Routing.devApi() {
             val list = helpBooksController.getRuleGroupPage(lastId, pageSize, domainId)
             call.respondBoxOK(list)
         }
+       //紫微斗数简明笔记2  http://0.0.0.0:18000/api/dev/generateMd1
+        get("/generateMd1"){
+            call.respondBoxOK(helpBooksController.generateMd1())
+        }
+        //紫微斗六十星系2  http://0.0.0.0:18000/api/dev/generateMd2
+        get("/generateMd2"){
+            call.respondBoxOK(helpBooksController.generateMd2())
+        }
     }
 }
