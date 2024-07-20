@@ -271,6 +271,7 @@ class MiscBookGongYuan(
     val gongyuan: String,
     val star: String,
     val description: String,
+    val sort: Int?,
     val pos: String? = null //紫微位置|宫支,eg: 子|未
 ) {
     fun toMap() = mapOf("description" to description)
@@ -289,9 +290,10 @@ class LbzRemark(
     val star: String,
     val origin: String,
     val remark: String,
+    val remark2: String?,
     val gongyuan: String?
 ){
-    fun toMap() = mapOf("origin" to origin, "remark" to remark)
+    fun toMap() = mapOf("origin" to origin, "remark" to remark, "remark2" to remark2)
 }
 
 @Serializable
